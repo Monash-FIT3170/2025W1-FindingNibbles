@@ -1,7 +1,7 @@
 # 2025W1-FindingNibbles
 <!-- Test - Ubaid Irfan -->
 Michael's commit
-Aaron 
+Aaron Tran - atra0053@student.monash.edu - aarrron.tran@gmail.com
 
 
 Omila Herath (oher0004@student.monash.edu)
