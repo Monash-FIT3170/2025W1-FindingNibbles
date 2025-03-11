@@ -17,3 +17,5 @@ Jack Bastasin's commit - jbas0020@student.monash.edu
 Arnav's Commit - aset0018@student.monash.edu
 
 Mankirat Dhillon - mdhi0005@student.monash.edu
+
+Koharu Numaga - koharunumaga54@gmail.com - knum0001@gstudent.monash.edu
