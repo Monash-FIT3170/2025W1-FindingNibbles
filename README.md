@@ -7,3 +7,5 @@ Krishna - kman0030@student.monash.edu - kpillaai@gmail.com
 Hello World! - Daksh
 
 Omila Herath (oher0004@student.monash.edu)
+
+Chetan Somuse - csom0007@student.monash.edu - chetan.somuse2@gmail.com
