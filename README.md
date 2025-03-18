@@ -20,4 +20,4 @@ Mankirat Dhillon - mdhi0005@student.monash.edu
 
 Koharu Numaga - koharunumaga54@gmail.com - knum0001@gstudent.monash.edu
 
-Kuhu Tosniwal - kuhutosniwal@gmail.com  -  ktos0001@student.monash.edu
+Kuhu Tosniwal - kuhutosniwal@gmail.com - ktos0001@student.monash.edu
