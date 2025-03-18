@@ -1,6 +1,6 @@
 # 2025W1-FindingNibbles
 
-<!-- Test - Ubaid Irfan -->
+<!-- Test -->
 
 Michael's commit
 Aaron Tran - atra0053@student.monash.edu - aarrron.tran@gmail.com
@@ -20,4 +20,6 @@ Mankirat Dhillon - mdhi0005@student.monash.edu
 
 Koharu Numaga - koharunumaga54@gmail.com - knum0001@gstudent.monash.edu
 
-Kuhu Tosniwal - kuhutosniwal@gmail.com - ktos0001@student.monash.edu
+Kuhu Tosniwal - kuhutosniwal@gmail.com  -  ktos0001@student.monash.edu
+
+Ubaid Irfan - uirf0001@student.monash.edu
