@@ -1,38 +1,52 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import MapScreen from './MapScreen'; // Make sure this path is correct
+import Login from './Login';
 
 export const App = () => {
-  const login = false; // Change to false to see MapScreen
+  const login = true; // Change to false to see MapScreen
 
-  return (
-    <div className="app">
-      {login ? (
-        <>
-          <header className="header">
-            <div className="logo">
-              {/* Replace this with an actual icon if you have one */}
-              <img src="/images/bunny-icon.png" alt="bunny icon" className="bunny-icon" />
-              FindingNibbles
-            </div>
-            <button className="account-button">Account</button>
-          </header>
+  const MainUI = () => {
+    const navigate = useNavigate();
 
-          <div className="main-content">
-            <div className="background-image">
-              <div className="location-box">
-                <h2>What can we eat today...?</h2>
-                <input
-                  type="text"
-                  className="location-input"
-                  placeholder="Enter your location"
-                />
+    return (
+      <div className="app">
+        {login ? (
+          <>
+            <header className="header">
+              <div className="logo">
+                {/* Replace this with an actual icon if you have one */}
+                <img src="/images/bunny-icon.png" alt="bunny icon" className="bunny-icon" />
+                FindingNibbles
+              </div>
+              <button className="account-button" onClick={() => navigate('/login')}>Account</button>
+            </header>
+
+            <div className="main-content">
+              <div className="background-image">
+                <div className="location-box">
+                  <h2>What can we eat today...?</h2>
+                  <input
+                    type="text"
+                    className="location-input"
+                    placeholder="Enter your location"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </>
-      ) : (
-        <MapScreen />
-      )}
-    </div>
+          </>
+        ) : (
+          <MapScreen />
+        )}
+      </div>
+    );
+  };
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainUI />} />
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    </Router>
   );
 };
