@@ -1,129 +1,152 @@
 import React, { useState, useEffect } from "react";
-import {
-  GoogleMap,
-  LoadScript,
-  Marker,
-  useLoadScript
-} from "@react-google-maps/api";
-import { Button } from "@mui/material"; // You can use Material UI for the button.
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { Button } from "@mui/material";
 
 const Map = () => {
   const [userLocation, setUserLocation] = useState(null);
   const [restaurants, setRestaurants] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [map, setMap] = useState(null);
-
+  // Map container styling
   const mapContainerStyle = {
+    position: "absolute",
+    top: "60px", // leave space for navbar
+    left: 0,
+    right: 0,
+    bottom: 0,
     width: "100%",
-    height: "500px"
+    height: "calc(100vh - 60px)" // Dynamic height for the map container
   };
 
-  // Function to fetch restaurants within a radius of 20km
+  // Fetch restaurants near user location
   const fetchRestaurants = (latitude, longitude, radius = 20000) => {
-    const placesService = new window.google.maps.places.PlacesService(map);
+    if (!map) return;
 
+    console.log("Fetching restaurants for:", latitude, longitude); // Log the coordinates
+
+    const placesService = new window.google.maps.places.PlacesService(map);
     const request = {
       location: new window.google.maps.LatLng(latitude, longitude),
       radius: radius,
       type: ["restaurant"]
-    };
-
+      };
+      
     placesService.nearbySearch(request, (results, status) => {
+      console.log("API Status:", status); // Log API response status
       if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-        setRestaurants(results); // Store the restaurants for later use
+        console.log("Restaurants found:", results); // Log the results
+        setRestaurants(results);
       } else {
-        console.error("Places API error:", status);
+        console.error("Places API error:", status); // If API fails, log error
       }
     });
   };
 
-  // Get user location and set map center
+
+  // Get user location
   const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setUserLocation({ lat: latitude, lng: longitude });
-          fetchRestaurants(latitude, longitude); // Fetch restaurants after getting location
         },
         (error) => {
           console.error("Error getting geolocation:", error);
+          // Set default location (can be changed to any fallback coordinates)
+          setUserLocation({ lat: 37.7749, lng: -122.4194 }); // San Francisco as fallback
         }
       );
     } else {
       console.error("Geolocation is not supported by this browser.");
+      setUserLocation({ lat: 37.7749, lng: -122.4194 }); // San Francisco as fallback
     }
   };
 
   useEffect(() => {
-    getUserLocation(); // Fetch user location when component mounts
+    getUserLocation();
   }, []);
+
+  useEffect(() => {
+    if (userLocation && map) {
+      fetchRestaurants(userLocation.lat, userLocation.lng);
+    }
+  }, [userLocation, map]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
-    <LoadScript googleMapsApiKey="AIzaSyAhbbEBNoy7_QrgyGmj2qy5oVPPUJ2VfTw">
-      <div style={{ display: "flex" }}>
+    <LoadScript
+      googleMapsApiKey="AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM"
+      libraries={["places"]}
+    >
+      <div style={{ position: "relative", height: "100vh" }}>
         {/* Map */}
-        <div style={{ flex: 1 }}>
-          {userLocation && (
-            <GoogleMap
-              mapContainerStyle={mapContainerStyle}
-              center={userLocation}
-              zoom={14}
-              onLoad={(mapInstance) => setMap(mapInstance)} // Set map instance
-            >
-              {/* Place markers for each restaurant */}
-              {restaurants.map((restaurant, index) => (
-                <Marker
-                  key={index}
-                  position={{
-                    lat: restaurant.geometry.location.lat(),
-                    lng: restaurant.geometry.location.lng()
-                  }}
-                  label={restaurant.name}
-                />
-              ))}
-            </GoogleMap>
-          )}
-        </div>
-
-        {/* Sidebar */}
-        <div
-          style={{
-            width: isSidebarOpen ? "300px" : "0",
-            height: "100vh",
-            backgroundColor: "white",
-            position: "fixed",
-            top: 0,
-            right: 0,
-            overflowY: "auto",
-            transition: "width 0.3s",
-            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)"
-          }}
-        >
-          <Button onClick={toggleSidebar} style={{ margin: "10px" }}>
-            {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-          </Button>
-          <div
-            style={{
-              padding: "20px",
-              overflowY: "scroll",
-              maxHeight: "90vh" // Make the sidebar scrollable
-            }}
+        {userLocation && (
+          <GoogleMap
+            mapContainerStyle={mapContainerStyle}
+            center={userLocation}
+            zoom={14}
+            onLoad={(mapInstance) => setMap(mapInstance)}
           >
             {restaurants.map((restaurant, index) => (
-              <div key={index} style={{ marginBottom: "20px" }}>
-                <h3>{restaurant.name}</h3>
-                <p>{restaurant.vicinity}</p>
-                <p>Rating: {restaurant.rating}</p>
-                <p>Price Level: {restaurant.price_level}</p>
-              </div>
+              <Marker
+                key={index}
+                position={{
+                  lat: restaurant.geometry.location.lat(),
+                  lng: restaurant.geometry.location.lng()
+                }}
+              />
             ))}
+          </GoogleMap>
+        )}
+
+        {/* Sidebar Toggle Button */}
+        <Button
+          variant="contained"
+          onClick={toggleSidebar}
+          style={{
+            position: "absolute",
+            top: "15px",
+            right: "10px",
+            zIndex: 1000
+          }}
+        >
+          {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+        </Button>
+
+        {/* Sidebar */}
+        {isSidebarOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "60px",
+              right: 0,
+              width: "300px",
+              height: "calc(100vh - 60px)",
+              backgroundColor: "white",
+              overflowY: "scroll",
+              zIndex: 999,
+              padding: "20px",
+              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)"
+            }}
+          >
+            {restaurants.length > 0 ? (
+              restaurants.map((restaurant, index) => (
+                <div key={index} style={{ marginBottom: "20px" }}>
+                  <h3>{restaurant.name}</h3>
+                  <p>{restaurant.vicinity}</p>
+                  <p>Rating: {restaurant.rating}</p>
+                  <p>Price Level: {restaurant.price_level || "N/A"}</p>
+                </div>
+              ))
+            ) : (
+              <p>Loading restaurants...</p>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </LoadScript>
   );

@@ -203,9 +203,14 @@ body {
   border-radius: 20%;
 }
 
-/* Add these styles to your App's CSS file */
 .map-container {
-  display: flex;
+  position: absolute;
+  top: 60px; /* Leave 60px from top for the navbar */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(100vh - 60px); /* Full viewport height minus navbar */
+  width: 100%;
 }
 
 .map-content {
