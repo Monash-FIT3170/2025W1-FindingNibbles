@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import MapScreen from "./MapScreen"; // Make sure this path is correct
 import Login from "./Login";
+import Map from "./Map";
 
 export const App = () => {
   const login = true; // Change to false to see MapScreen
@@ -64,6 +65,7 @@ export const App = () => {
       <Routes>
         <Route path="/" element={<MainUI />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/map" element={<Map />} />
       </Routes>
     </Router>
   );

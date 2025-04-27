@@ -202,3 +202,49 @@ body {
 .login-logo{
   border-radius: 20%;
 }
+
+/* Add these styles to your App's CSS file */
+.map-container {
+  display: flex;
+}
+
+.map-content {
+  flex: 1;
+}
+
+.side-menu {
+  width: 300px;
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  background: white;
+  padding: 20px;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.menu-button {
+  display: block;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #f0f0f0;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+}
+
+.menu-button.active {
+  background-color: #4caf50;
+  color: white;
+}
+
+.menu-button.logout {
+  background-color: red;
+  color: white;
+}
+
+.location-input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+}
