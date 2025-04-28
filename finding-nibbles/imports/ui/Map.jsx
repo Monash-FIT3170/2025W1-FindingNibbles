@@ -7,39 +7,62 @@ const Map = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [map, setMap] = useState(null);
-  // Map container styling
+
   const mapContainerStyle = {
     position: "absolute",
-    top: "60px", // leave space for navbar
+    top: "60px",
     left: 0,
     right: 0,
     bottom: 0,
     width: "100%",
-    height: "calc(100vh - 60px)" // Dynamic height for the map container
+    height: "calc(100vh - 60px)"
   };
 
-  // Fetch restaurants near user location
-  const fetchRestaurants = (latitude, longitude, radius = 20000) => {
-    if (!map) return;
+  async function fetchRestaurants(latitude, longitude) {
+    const API_KEY = "AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM";
+    const URL = "https://places.googleapis.com/v1/places:searchNearby";
 
-    const placesService = new window.google.maps.places.PlacesService(map);
-
-    const request = {
-      location: new window.google.maps.LatLng(latitude, longitude),
-      radius: radius,
-      type: ["restaurant"]
+    const payload = {
+      includedTypes: ["restaurant"],
+      maxResultCount: 10,
+      locationRestriction: {
+        circle: {
+          center: { latitude, longitude },
+          radius: 2000.0
+        }
+      }
     };
 
-    placesService.nearbySearch(request, (results, status) => {
-      if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-        setRestaurants(results);
-      } else {
-        console.error("Places API error:", status);
-      }
-    });
-  };
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": API_KEY,
+      "X-Goog-FieldMask":
+        "places.displayName,places.formattedAddress,places.location,places.rating"
+    };
 
-  // Get user location
+    try {
+      const response = await fetch(URL, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      const restaurants = data.places || [];
+
+      console.log("Fetched Restaurants:", restaurants);
+      return restaurants;
+    } catch (error) {
+      console.error("Error fetching restaurants:", error.message);
+      return [];
+    }
+  }
+
   const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -49,13 +72,12 @@ const Map = () => {
         },
         (error) => {
           console.error("Error getting geolocation:", error);
-          // Set default location (can be changed to any fallback coordinates)
-          setUserLocation({ lat: 37.7749, lng: -122.4194 }); // San Francisco as fallback
+          setUserLocation({ lat: 37.7749, lng: -122.4194 });
         }
       );
     } else {
       console.error("Geolocation is not supported by this browser.");
-      setUserLocation({ lat: 37.7749, lng: -122.4194 }); // San Francisco as fallback
+      setUserLocation({ lat: 37.7749, lng: -122.4194 });
     }
   };
 
@@ -65,7 +87,9 @@ const Map = () => {
 
   useEffect(() => {
     if (userLocation && map) {
-      fetchRestaurants(userLocation.lat, userLocation.lng);
+      fetchRestaurants(userLocation.lat, userLocation.lng)
+        .then((data) => setRestaurants(data))
+        .catch((error) => console.error("Error fetching restaurants:", error));
     }
   }, [userLocation, map]);
 
@@ -79,7 +103,6 @@ const Map = () => {
       libraries={["places"]}
     >
       <div style={{ position: "relative", height: "100vh" }}>
-        {/* Map */}
         {userLocation && (
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
@@ -91,15 +114,14 @@ const Map = () => {
               <Marker
                 key={index}
                 position={{
-                  lat: restaurant.geometry.location.lat(),
-                  lng: restaurant.geometry.location.lng()
+                  lat: restaurant.location.latitude,
+                  lng: restaurant.location.longitude
                 }}
               />
             ))}
           </GoogleMap>
         )}
 
-        {/* Sidebar Toggle Button */}
         <Button
           variant="contained"
           onClick={toggleSidebar}
@@ -113,7 +135,6 @@ const Map = () => {
           {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
         </Button>
 
-        {/* Sidebar */}
         {isSidebarOpen && (
           <div
             style={{
@@ -132,10 +153,9 @@ const Map = () => {
             {restaurants.length > 0 ? (
               restaurants.map((restaurant, index) => (
                 <div key={index} style={{ marginBottom: "20px" }}>
-                  <h3>{restaurant.name}</h3>
-                  <p>{restaurant.vicinity}</p>
-                  <p>Rating: {restaurant.rating}</p>
-                  <p>Price Level: {restaurant.price_level || "N/A"}</p>
+                  <h3>{restaurant.displayName?.text || "N/A"}</h3>
+                  <p>{restaurant.formattedAddress || "N/A"}</p>
+                  <p>Rating: {restaurant.rating || "N/A"}</p>
                 </div>
               ))
             ) : (
