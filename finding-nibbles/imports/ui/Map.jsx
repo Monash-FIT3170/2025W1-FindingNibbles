@@ -22,26 +22,22 @@ const Map = () => {
   const fetchRestaurants = (latitude, longitude, radius = 20000) => {
     if (!map) return;
 
-    console.log("Fetching restaurants for:", latitude, longitude); // Log the coordinates
-
     const placesService = new window.google.maps.places.PlacesService(map);
+
     const request = {
       location: new window.google.maps.LatLng(latitude, longitude),
       radius: radius,
       type: ["restaurant"]
-      };
-      
+    };
+
     placesService.nearbySearch(request, (results, status) => {
-      console.log("API Status:", status); // Log API response status
       if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-        console.log("Restaurants found:", results); // Log the results
         setRestaurants(results);
       } else {
-        console.error("Places API error:", status); // If API fails, log error
+        console.error("Places API error:", status);
       }
     });
   };
-
 
   // Get user location
   const getUserLocation = () => {
