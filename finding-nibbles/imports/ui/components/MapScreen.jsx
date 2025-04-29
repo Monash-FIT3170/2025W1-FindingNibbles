@@ -1,6 +1,6 @@
 import React from 'react';
 
-const MapScreen = () => {
+export const MapScreen = () => {
     return (
       <div className="map-container">
         <div className="top-bar">
@@ -41,4 +41,3 @@ const MapScreen = () => {
     );
   };
   
-  export default MapScreen;
