@@ -265,3 +265,31 @@ body {
   cursor: pointer;
 }
 
+/* Dice Popup - Cuisine Selection */
+.cuisine-selection {
+  margin: 1rem 0;
+}
+
+.cuisine-selection h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.cuisine-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.cuisine-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+}
+
+.cuisine-checkbox input {
+  cursor: pointer;
+}
+
