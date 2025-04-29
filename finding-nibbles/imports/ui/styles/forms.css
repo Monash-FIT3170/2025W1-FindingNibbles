@@ -1,0 +1,94 @@
+/* Font */
+.register-title {
+    font-size: 24px;
+    color: #c17030;
+    margin-bottom: 10px;
+}
+
+/* Form Container */
+.register-container {
+    width: 50%;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #fdf2e3;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Form Fields */
+.form-field {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #c17030;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    color: #c17030;
+}
+
+.form-input:focus {
+    border-color: #c17030;
+    box-shadow: 0 0 10px rgba(193, 112, 48, 0.5);
+}
+
+/* Form Labels */
+.form-label {
+    font-size: 14px;
+    color: #c17030;
+    margin-bottom: 5px;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+/* Register Button */
+.register-button {
+    padding: 12px 20px;
+    background-color: #fbe4c4;
+    color: #c17030;
+    border: none;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.register-button:hover {
+    background-color: #f9dcb5;
+    transform: scale(1.05);
+}
+
+.register-button:active {
+    background-color: #f7d4a6;
+    transform: scale(0.98);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
