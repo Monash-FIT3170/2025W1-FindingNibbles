@@ -11,27 +11,6 @@ export const MainUI = () => {
         <div className="app">
             {login ? (
                 <>
-                    <div>
-                        <h1>Finding Nibbles</h1>
-                    </div>
-                    <header className="header">
-                        <div className="logo">
-                            {/* Replace this with an actual icon if you have one */}
-                            <img
-                                src="/images/bunnyIcon.png"
-                                alt="bunny icon"
-                                className="bunny-icon"
-                            />
-                            FindingNibbles
-                        </div>
-                        <button
-                            className="account-button"
-                            onClick={() => navigate("/register")}
-                        >
-                            Account
-                        </button>
-                    </header>
-
                     <div className="main-content">
                         <div className="background-image">
                             <div className="location-box">
