@@ -26,7 +26,7 @@ export const MainUI = () => {
                         </div>
                         <button
                             className="account-button"
-                            onClick={() => navigate("/login")}
+                            onClick={() => navigate("/register")}
                         >
                             Account
                         </button>
