@@ -6,7 +6,7 @@ import { MapScreen } from "../components/MapScreen"; // Make sure this path is c
 export const MainUI = () => {
     const navigate = useNavigate();
     console.log("App is rendering");
-    const login = true; // Change to false to see MapScreen
+    const login = false; // Change to false to see MapScreen
     return (
         <div className="app">
             {login ? (

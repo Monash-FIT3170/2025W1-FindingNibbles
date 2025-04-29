@@ -1,4 +1,5 @@
 import React from 'react';
+import DicePopup from './popups/DicePopup';
 
 export const MapScreen = () => {
     return (
@@ -31,7 +32,7 @@ export const MapScreen = () => {
   
         <div className="side-menu">
           <button className="menu-button active">Map</button>
-          <button className="menu-button">Roll a dice</button>
+          <DicePopup/>
           <button className="menu-button">AI suggestion</button>
           <button className="menu-button">Travel Plan</button>
           <button className="menu-button">Meal Plan</button>
