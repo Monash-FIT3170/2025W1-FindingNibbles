@@ -10,7 +10,6 @@ import { RoutesConfig } from "./routes/RoutesConfig";
 import { NavBar } from "./components/layouts/NavBar";
 
 export const App = () => {
-    const login = true; // Change to false to see MapScreen
 
     return (
         <Router>
