@@ -1,32 +1,96 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+import {
+    AppBar,
+    Toolbar,
+    Typography,
+    Box,
+    Button,
+    IconButton,
+} from '@mui/material';
 
-const bunnyIcon = "/images/bunnyIcon.png";
+const bunnyIcon = './images/bunnyIcon.png';
 
 export const NavBar = () => {
     return (
-        <nav className="flex justify-between items-center p-4 bg-[#c17030] text-white font-['Comic_Sans_MS',cursive,sans-serif]">
-            <div className="flex items-center gap-2.5 pr-2.5">
-                <Link to="/" className="text-white no-underline text-xl font-bold flex items-center">
-                    <img
-                        src={bunnyIcon}
-                        alt="Bunny Icon"
-                        className="w-[30px] h-[30px] object-contain"
-                    />
-                    <span>Finding Nibbles</span>
-                </Link>
-            </div>
-            <ul className="list-none flex gap-4 m-0 p-0">
-                <li className="inline">
-                    <Link to="/login" className="no-underline text-white text-base transition-colors hover:text-[#fdf2e3]">Login</Link>
-                </li>
-                <li className="inline">
-                    <Link to="/register" className="no-underline text-white text-base transition-colors hover:text-[#fdf2e3]">Register</Link>
-                </li>
-                <li className="inline">
-                    <Link to="/map" className="no-underline text-white text-base transition-colors hover:text-[#fdf2e3]">Map</Link>
-                </li>
-            </ul>
-        </nav>
+        <AppBar
+            position="static"
+            elevation={0}
+            sx={{
+                backgroundColor: '#C47B4D',
+                fontFamily: '"Comic Sans MS", cursive, sans-serif',
+            }}
+        >
+            <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <IconButton component={RouterLink} to="/" edge="start" >
+                        <img
+                            src={bunnyIcon}
+                            alt="Bunny Icon"
+                            style={{
+                                width: '32px',
+                                height: '32px',
+                                objectFit: 'contain',
+                            }}
+                        />
+                    </IconButton>
+                    <Typography
+                        variant="h6"
+                        component={RouterLink}
+                        to="/"
+                        sx={{
+                            textDecoration: 'none',
+                            color: '#ffffff',
+                            fontWeight: 'bold',
+                            fontSize: '1.25rem',
+                        }}
+                    >
+                        Finding Nibbles
+                    </Typography>
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button
+                        component={RouterLink}
+                        to="/login"
+                        sx={{
+                            color: 'white',
+                            textTransform: 'none',
+                            '&:hover': {
+                                color: '#FDF2E3',
+                            },
+                        }}
+                    >
+                        Login
+                    </Button>
+                    <Button
+                        component={RouterLink}
+                        to="/register"
+                        sx={{
+                            color: 'white',
+                            textTransform: 'none',
+                            '&:hover': {
+                                color: '#FDF2E3',
+                            },
+                        }}
+                    >
+                        Register
+                    </Button>
+                    <Button
+                        component={RouterLink}
+                        to="/map"
+                        sx={{
+                            color: 'white',
+                            textTransform: 'none',
+                            '&:hover': {
+                                color: '#FDF2E3',
+                            },
+                        }}
+                    >
+                        Map
+                    </Button>
+                </Box>
+            </Toolbar>
+        </AppBar>
     );
 };
