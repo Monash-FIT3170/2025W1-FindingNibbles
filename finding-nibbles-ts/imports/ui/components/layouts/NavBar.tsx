@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
     AppBar,
     Toolbar,
@@ -8,10 +8,21 @@ import {
     Button,
     IconButton,
 } from '@mui/material';
+import { useTracker } from 'meteor/react-meteor-data';
+import { Meteor } from 'meteor/meteor';
 
 const bunnyIcon = './images/bunnyIcon.png';
 
 export const NavBar = () => {
+    const navigate = useNavigate();
+    const isLoggedIn = useTracker(() => !!Meteor.userId(), []);
+
+    const handleLogout = () => {
+        Meteor.logout(() => {
+            navigate('/login');
+        });
+    };
+
     return (
         <AppBar
             position="static"
@@ -22,8 +33,9 @@ export const NavBar = () => {
             }}
         >
             <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                {/* Logo and Title */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <IconButton component={RouterLink} to="/" edge="start" >
+                    <IconButton component={RouterLink} to="/" edge="start">
                         <img
                             src={bunnyIcon}
                             alt="Bunny Icon"
@@ -49,46 +61,58 @@ export const NavBar = () => {
                     </Typography>
                 </Box>
 
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button
-                        component={RouterLink}
-                        to="/login"
-                        sx={{
-                            color: 'white',
-                            textTransform: 'none',
-                            '&:hover': {
-                                color: '#FDF2E3',
-                            },
-                        }}
-                    >
-                        Login
-                    </Button>
-                    <Button
-                        component={RouterLink}
-                        to="/register"
-                        sx={{
-                            color: 'white',
-                            textTransform: 'none',
-                            '&:hover': {
-                                color: '#FDF2E3',
-                            },
-                        }}
-                    >
-                        Register
-                    </Button>
-                    <Button
-                        component={RouterLink}
-                        to="/map"
-                        sx={{
-                            color: 'white',
-                            textTransform: 'none',
-                            '&:hover': {
-                                color: '#FDF2E3',
-                            },
-                        }}
-                    >
-                        Map
-                    </Button>
+                {/* Right-Side Navigation Buttons */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {!isLoggedIn ? (
+                        <>
+                            <Button
+                                component={RouterLink}
+                                to="/login"
+                                sx={{
+                                    color: 'white',
+                                    textTransform: 'none',
+                                    '&:hover': { color: '#FDF2E3' },
+                                }}
+                            >
+                                Login
+                            </Button>
+                            <Button
+                                component={RouterLink}
+                                to="/register"
+                                sx={{
+                                    color: 'white',
+                                    textTransform: 'none',
+                                    '&:hover': { color: '#FDF2E3' },
+                                }}
+                            >
+                                Register
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Button
+                                component={RouterLink}
+                                to="/map"
+                                sx={{
+                                    color: 'white',
+                                    textTransform: 'none',
+                                    '&:hover': { color: '#FDF2E3' },
+                                }}
+                            >
+                                Map
+                            </Button>
+                            <Button
+                                onClick={handleLogout}
+                                sx={{
+                                    color: 'white',
+                                    textTransform: 'none',
+                                    '&:hover': { color: '#FDF2E3' },
+                                }}
+                            >
+                                Logout
+                            </Button>
+                        </>
+                    )}
                 </Box>
             </Toolbar>
         </AppBar>

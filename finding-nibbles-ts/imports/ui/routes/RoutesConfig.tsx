@@ -1,18 +1,31 @@
-import React from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-import { Login } from "../pages/Login";
-import { Map } from "../pages/Map";
-import { MainUI } from "../pages/MainUI";
-import { Register } from "../pages/Register";
+import { Login } from '../pages/Login';
+import { Register } from '../pages/Register';
+import { MainUI } from '../pages/MainUI';
+import { Map } from '../pages/Map';
+import { RoutesConfigProps } from '../types/User';
 
-export const RoutesConfig = () => {
+export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
+    const requireAuth = (component: JSX.Element) =>
+        isLoggedIn ? component : <Navigate to="/login" replace />;
+
+    const redirectIfAuth = (component: JSX.Element) =>
+        isLoggedIn ? <Navigate to="/" replace /> : component;
+
     return (
         <Routes>
-            <Route path="/" element={<MainUI />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/map" element={<Map />} />
-            <Route path="/register" element={<Register />} />
+            {/* Public Routes */}
+            <Route path="/login" element={redirectIfAuth(<Login />)} />
+            <Route path="/register" element={redirectIfAuth(<Register />)} />
+
+            {/* Protected Routes */}
+            <Route path="/" element={requireAuth(<MainUI />)} />
+            <Route path="/map" element={requireAuth(<Map />)} />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
 };
