@@ -1,0 +1,61 @@
+/* login page */
+.auth-container {
+    min-height: 100vh !important;
+    min-width: 100vw !important;
+    background-image: url('/images/login.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+    font-family: 'Segoe UI', sans-serif !important;
+  }
+  
+  /* form */
+  .auth-paper {
+    backdrop-filter: blur(6px) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    padding: 32px !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 700px !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+    transition: transform 0.3s ease-in-out !important;
+  }
+  
+  .auth-paper:hover {
+    transform: scale(1.1) !important;
+  }
+  
+  .auth-title {
+    font-size: 28px !important;
+    font-weight: bold !important;
+    color: black !important;
+    font-family: 'Segoe UI', sans-serif !important;
+  }
+  
+  /* fields */
+  .auth-input .MuiInputBase-root {
+    backdrop-filter: blur(8px) !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+  }
+  
+  .forgot-password {
+    font-size: 0.85rem;
+    color: #1976d2;
+    text-decoration: none;
+  }
+  
+  .forgot-password:hover {
+    text-decoration: underline;
+  }
+  
+  #checkbox {
+    margin-right: 8px;
+  }
+
+  

@@ -10,7 +10,7 @@ import {
 import { Accounts } from 'meteor/accounts-base';
 import { useNavigate } from 'react-router-dom';
 
-import '../styling/register.css';
+import '../styling/auth.css';
 
 import { RegisterFormData } from '../types/User';
 
@@ -56,14 +56,14 @@ export const Register = () => {
     };
 
     return (
-        <Container maxWidth="sm" className="register-container" sx={{ mb: 5 }}>
-            <Paper elevation={3} className="register-paper">
-                <Typography variant="h5" className="register-heading">
+        <Container maxWidth="sm" className="auth-container" sx={{ mb: 5 }}>
+            <Paper elevation={3} className="auth-paper">
+                <Typography variant="h5" className="auth-title">
                     Welcome to Finding Nibbles!
-                </Typography>
+                </Typography><br></br>
 
-                <Box component="form" onSubmit={handleSubmit} className="register-form">
-                    <TextField
+                <Box component="form" onSubmit={handleSubmit} className="auth-input" display="flex" flexDirection="column" gap={2}>
+                    <TextField 
                         label="Username"
                         name="username"
                         placeholder="Enter your username"
@@ -105,7 +105,7 @@ export const Register = () => {
                     <Button
                         type="submit"
                         variant="contained"
-                        className="register-button"
+                        className="auth-button"
                     >
                         Register
                     </Button>
