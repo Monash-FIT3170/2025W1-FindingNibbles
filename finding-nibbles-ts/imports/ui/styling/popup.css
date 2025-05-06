@@ -180,3 +180,35 @@
   .cuisine-checkbox input {
     cursor: pointer;
   }
+
+  /* Add Cuisines Section */
+.add-cuisines {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.add-cuisines h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.add-cuisine-button {
+  background: #4285f4;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin: 0.3rem;
+  transition: background 0.3s ease;
+}
+
+.add-cuisine-button:hover {
+  background: #357ae8;
+}
+
+.add-cuisine-button:active {
+  background: #2a65c7;
+}

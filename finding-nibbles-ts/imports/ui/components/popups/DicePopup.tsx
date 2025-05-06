@@ -10,6 +10,17 @@ interface DicePopupProps {
 const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines }) => {
   if (!open) return null;
 
+  const allCuisines = [
+    'Italian',
+    'French',
+    'Spanish',
+    'Chinese',
+    'Thai',
+    'Indian',
+    'German',
+    'Korean',
+  ]; // Full list of cuisines
+
   const [rolledCuisine, setRolledCuisine] = useState<string | null>(null);
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
   const [isRolling, setIsRolling] = useState(false);
@@ -38,7 +49,7 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
 
   const rollDice = () => {
     if (selectedCuisines.length === 0) {
-      alert('Please select at least one cuisine!');
+      alert('No cuisines available to roll!');
       return;
     }
     setIsRolling(true);
@@ -51,6 +62,16 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
       setRolledCuisine(selected);
       setIsRolling(false);
     }, 1000);
+  };
+
+  const handleRemoveCuisine = (cuisine: string) => {
+    setSelectedCuisines((prev) => prev.filter((c) => c !== cuisine));
+  };
+
+  const handleAddCuisine = (cuisine: string) => {
+    if (!selectedCuisines.includes(cuisine)) {
+      setSelectedCuisines((prev) => [...prev, cuisine]);
+    }
   };
 
   return (
@@ -99,15 +120,31 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
                 {cuisine}
                 <button
                   className="tag-remove"
-                  onClick={() => handleCuisineToggle(cuisine)}
+                  onClick={() => handleRemoveCuisine(cuisine)}
                 >
                   ×
                 </button>
               </span>
             ))
           ) : (
-            <p>No cuisines selected</p>
+            <p>No cuisines available</p>
           )}
+        </div>
+
+        {/* Add Cuisines Back */}
+        <div className="add-cuisines">
+          <h3>Add Cuisines</h3>
+          {allCuisines
+            .filter((cuisine) => !selectedCuisines.includes(cuisine))
+            .map((cuisine) => (
+              <button
+                key={cuisine}
+                className="add-cuisine-button"
+                onClick={() => handleAddCuisine(cuisine)}
+              >
+                {cuisine}
+              </button>
+            ))}
         </div>
       </div>
     </div>
