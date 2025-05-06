@@ -24,9 +24,6 @@ export const NavBar = () => {
             <Link to="/map">Map</Link>
           </li>
           <li>
-            <Link to="/map">Map</Link>
-          </li>
-          <li>
             <Link to="/">AI suggestion</Link>
           </li>
           <li>
