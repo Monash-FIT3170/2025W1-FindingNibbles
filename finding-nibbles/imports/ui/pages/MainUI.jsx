@@ -13,14 +13,6 @@ export const MainUI = () => {
                 <>
                     <div className="main-content">
                         <div className="background-image">
-                            <div className="location-box">
-                                <h2>What can we eat today...?</h2>
-                                <input
-                                    type="text"
-                                    className="location-input"
-                                    placeholder="Enter your location"
-                                />
-                            </div>
                         </div>
                     </div>
                 </>
