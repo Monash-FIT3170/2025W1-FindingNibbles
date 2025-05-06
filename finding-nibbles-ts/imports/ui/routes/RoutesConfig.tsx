@@ -6,6 +6,7 @@ import { Register } from '../pages/Register';
 import { MainUI } from '../pages/MainUI';
 import { Map } from '../pages/Map';
 import { RoutesConfigProps } from '../types/User';
+import { Profile } from '../pages/Profile';
 
 export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
     const requireAuth = (component: JSX.Element) =>
@@ -23,6 +24,7 @@ export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
             {/* Protected Routes */}
             <Route path="/" element={requireAuth(<Map />)} />
             <Route path="/map" element={requireAuth(<Map />)} />
+            <Route path="/profile" element={requireAuth(<Profile />)} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

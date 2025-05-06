@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
-import { Button } from "@mui/material";
+import { GoogleMap, LoadScript, Marker, Circle } from "@react-google-maps/api";
+import { Box, Button, Slider, Typography } from "@mui/material";
 import DicePopup from "../components/popups/DicePopup";
 
 interface Location {
@@ -28,6 +28,7 @@ export const Map = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDicePopupOpen, setIsDicePopupOpen] = useState(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [radius, setRadius] = useState(2000);
 
   const mapContainerStyle: google.maps.MapOptions = {
     fullscreenControl: false,
@@ -94,7 +95,7 @@ export const Map = () => {
       locationRestriction: {
         circle: {
           center: { latitude, longitude },
-          radius: 2000.0
+          radius: radius
         }
       }
     };
@@ -171,10 +172,22 @@ export const Map = () => {
         .then((data) => setRestaurants(data))
         .catch((error) => console.error("Error fetching restaurants:", error));
     }
-  }, [userLocation, map]);
+  }, [userLocation, map, radius]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleRadiusChange = (event, newValue) => {
+    setRadius(newValue)
+  };
+
+  const formatRadius = (value) => {
+    if (value < 1000) {
+      return `${value} m`;
+    } else {
+      return `${(value / 1000).toFixed(1)} km`;
+    }
   };
 
   return (
@@ -191,6 +204,19 @@ export const Map = () => {
             options={mapContainerStyle}
             onLoad={(mapInstance) => setMap(mapInstance)}
           >
+            <Marker position={userLocation} />
+
+            <Circle
+              center={userLocation}
+              radius={radius}
+              options={{
+                fillColor: "rgba(100, 158, 255, 0.2)",
+                strokeColor: "#4285F4",
+                strokeOpacity: 0.8,
+                strokeWeight: 2
+              }}
+            />
+
             {restaurants.map((restaurant, index) => (
               <Marker
                 key={index}
@@ -203,20 +229,44 @@ export const Map = () => {
           </GoogleMap>
         )}
 
-        <div style={{ position: "absolute", top: "15px", right: "10px", zIndex: 1000, display: "flex", gap: "10px" }}>
-          <Button
-            variant="contained"
-            onClick={toggleSidebar}
-          >
-            {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => setIsDicePopupOpen(true)}
-          >
-            Roll the Dice 
-          </Button>
-        </div>
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: "30px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "300px",
+            bgcolor: "white",
+            p: 2,
+            borderRadius: 2,
+            boxShadow: 3,
+            zIndex: 1000
+          }}
+        >
+          <Typography gutterBottom>Search Radius: {formatRadius(radius)}</Typography>
+          <Slider
+            value={radius}
+            onChange={handleRadiusChange}
+            valueLabelDisplay="auto"
+            valueLabelFormat={formatRadius}
+            min={500}
+            max={5000}
+            step={100}
+          />
+        </Box>
+
+        <Button
+          variant="contained"
+          onClick={toggleSidebar}
+          style={{
+            position: "absolute",
+            top: "15px",
+            right: "10px",
+            zIndex: 1000
+          }}
+        >
+          {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+        </Button>
 
         {isSidebarOpen && (
           <div
@@ -233,6 +283,12 @@ export const Map = () => {
               boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)"
             }}
           >
+            <Box mb={2}>
+              <Typography variant="h6">
+                Showing restaurants within {formatRadius(radius)}
+              </Typography>
+            </Box>
+            
             {restaurants.length > 0 ? (
               restaurants.map((restaurant, index) => (
                 <div key={index} style={{ marginBottom: "20px" }}>

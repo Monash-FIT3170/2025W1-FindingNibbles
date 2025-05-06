@@ -81,6 +81,7 @@ body {
 .top-bar {
   position: fixed;
   top: 0;
+  left: 0;
   width: 100%;
   background-color: #cc814a;
   display: flex;
@@ -90,7 +91,10 @@ body {
   height: 70px;
   z-index: 10;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  overflow-x: auto;
 }
+
 
 .logo {
   height: 48px;
@@ -193,14 +197,74 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
-  font-family: 'Poppins', sans-serif;
-  background-color: rgba(255, 202, 77, 0.374);
-  height: 100vh;
+  min-height: 100vh;
+  background-color: #fef6f0;
+  padding: 20px;
 }
 
-.login-logo{
-  border-radius: 20%;
+.login-container h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #cc814a;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 350px;
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.login-form input {
+  margin-bottom: 15px;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  transition: border 0.3s ease;
+}
+
+.login-form input:focus {
+  border-color: #cc814a;
+  outline: none;
+}
+
+.login-form button {
+  padding: 12px;
+  font-size: 1rem;
+  background-color: #cc814a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.register-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh; /* Full height of the viewport */
+  background-color: #fef6f0; /* Optional background */
+  padding: 20px;
+}
+
+.login-form button:hover {
+  background-color: #b36f3a;
+}
+.nav-link-button {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
 }
 
 .map-container {
@@ -363,4 +427,87 @@ body {
 
 .cuisine-checkbox input {
   cursor: pointer;
+}
+
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #cc814a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  height: 70px;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+}
+
+.nav-home-link {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.nav-icon {
+  height: 40px;
+  width: 40px;
+  margin-right: 10px;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.nav-links li {
+  display: flex;
+}
+
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 8px 12px;
+  transition: background-color 0.3s;
+  border-radius: 4px;
+}
+
+.nav-links a:hover {
+  background-color: #b36f3a;
+}
+
+/* Responsive: Collapse links on smaller screens */
+@media (max-width: 768px) {
+  .nav-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+    padding: 12px;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .nav-links a {
+    width: 100%;
+  }
 }

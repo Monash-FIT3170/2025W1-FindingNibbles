@@ -1,6 +1,6 @@
-// Login.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Meteor } from "meteor/meteor"; // Import Meteor's login API
 
 export const Login = () => {
   const [username, setUsername] = useState("");
@@ -9,9 +9,15 @@ export const Login = () => {
 
   const handleLogin = () => {
     if (username && password) {
-      // Simulate a successful login (you can replace this with your actual login logic)
-      console.log("Login successful");
-      navigate("/"); // Navigate to the main page after successful login
+      Meteor.loginWithPassword(username, password, (err) => {
+        if (err) {
+          alert("Invalid username or password");
+          console.error("Login error:", err);
+        } else {
+          console.log("Login successful");
+          navigate("/"); // Redirect to home on successful login
+        }
+      });
     } else {
       alert("Please enter both username and password");
     }
@@ -38,4 +44,3 @@ export const Login = () => {
     </div>
   );
 };
-

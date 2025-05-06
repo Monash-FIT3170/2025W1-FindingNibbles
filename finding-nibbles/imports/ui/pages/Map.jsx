@@ -127,13 +127,14 @@ export const Map = () => {
           onClick={toggleSidebar}
           style={{
             position: "absolute",
-            top: "15px",
+            top: "125px",
             right: "10px",
-            zIndex: 1000
+            zIndex: 1000,
+            backgroundColor: "#cc814a"
           }}
         >
           {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-        </Button>
+        </Button> 
 
         {isSidebarOpen && (
           <div

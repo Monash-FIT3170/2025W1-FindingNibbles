@@ -42,7 +42,7 @@ export const Login = () => {
         alert(`Login failed: ${error.reason || 'Unknown error'}`);
       }
     } else {
-      alert('Please enter both username and password');
+      alert('Please enter both username and password'); //implement error popup later
     }
   };
 
