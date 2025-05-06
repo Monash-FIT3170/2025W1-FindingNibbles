@@ -1,15 +1,50 @@
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import { Button } from "@mui/material";
+import DicePopup from "../components/popups/DicePopup";
+
+interface Location {
+  lat: number;
+  lng: number;
+}
+
+interface Restaurant {
+  displayName?: {
+    text: string;
+  };
+  formattedAddress?: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  rating?: number;
+  types?: string[];
+}
 
 export const Map = () => {
-  const [userLocation, setUserLocation] = useState(null);
-  const [restaurants, setRestaurants] = useState([]);
+  const [userLocation, setUserLocation] = useState<Location | null>(null);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [availableCuisines, setAvailableCuisines] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [map, setMap] = useState(null);
+  const [isDicePopupOpen, setIsDicePopupOpen] = useState(false);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  const mapContainerStyle = {
-    position: "absolute",
+  const mapContainerStyle: google.maps.MapOptions = {
+    fullscreenControl: false,
+    mapTypeControl: false,
+    streetViewControl: false,
+    zoomControl: true,
+    styles: [
+      {
+        featureType: "poi",
+        elementType: "labels",
+        stylers: [{ visibility: "off" }]
+      }
+    ]
+  };
+
+  const containerStyle = {
+    position: "absolute" as const,
     top: "60px",
     left: 0,
     right: 0,
@@ -18,13 +53,44 @@ export const Map = () => {
     height: "calc(100vh - 60px)"
   };
 
-  async function fetchRestaurants(latitude, longitude) {
+  // Function to normalize cuisine types from Google Places API
+  const normalizeCuisineType = (type: string): string => {
+    // Remove '_restaurant' suffix and capitalize first letter
+    const baseType = type.replace('_restaurant', '');
+    return baseType.charAt(0).toUpperCase() + baseType.slice(1);
+  };
+
+  // Function to check if a type is a cuisine
+  const isCuisineType = (type: string): boolean => {
+    // List of generic restaurant types to exclude
+    const genericTypes = [
+      'restaurant',
+      'food',
+      'meal_delivery',
+      'meal_takeaway',
+      'cafe',
+      'bar',
+      'bakery',
+      'fast_food',
+      'hamburger',
+      'pizza',
+      'sandwich',
+      'breakfast',
+      'lunch',
+      'dinner'
+    ];
+
+    // Check if the type is not in the generic types list and contains 'restaurant'
+    return type.includes('restaurant') && !genericTypes.some(genericType => type === genericType);
+  };
+
+  async function fetchRestaurants(latitude: number, longitude: number): Promise<Restaurant[]> {
     const API_KEY = "AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM";
     const URL = "https://places.googleapis.com/v1/places:searchNearby";
 
     const payload = {
       includedTypes: ["restaurant"],
-      maxResultCount: 10,
+      maxResultCount: 20, // Increased to get more variety of cuisines
       locationRestriction: {
         circle: {
           center: { latitude, longitude },
@@ -37,7 +103,7 @@ export const Map = () => {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": API_KEY,
       "X-Goog-FieldMask":
-        "places.displayName,places.formattedAddress,places.location,places.rating"
+        "places.displayName,places.formattedAddress,places.location,places.rating,places.types"
     };
 
     try {
@@ -55,10 +121,24 @@ export const Map = () => {
       const data = await response.json();
       const restaurants = data.places || [];
 
-      console.log("Fetched Restaurants:", restaurants);
+      // Extract and process cuisine types
+      const cuisineTypes = new Set<string>();
+      restaurants.forEach((restaurant: Restaurant) => {
+        if (restaurant.types) {
+          restaurant.types.forEach((type: string) => {
+            if (isCuisineType(type)) {
+              cuisineTypes.add(normalizeCuisineType(type));
+            }
+          });
+        }
+      });
+
+      const availableCuisines = Array.from(cuisineTypes);
+      console.log("Available Cuisines:", availableCuisines);
+      setAvailableCuisines(availableCuisines);
       return restaurants;
     } catch (error) {
-      console.error("Error fetching restaurants:", error.message);
+      console.error("Error fetching restaurants:", error instanceof Error ? error.message : String(error));
       return [];
     }
   }
@@ -105,9 +185,10 @@ export const Map = () => {
       <div style={{ position: "relative", height: "100vh" }}>
         {userLocation && (
           <GoogleMap
-            mapContainerStyle={mapContainerStyle}
+            mapContainerStyle={containerStyle}
             center={userLocation}
             zoom={14}
+            options={mapContainerStyle}
             onLoad={(mapInstance) => setMap(mapInstance)}
           >
             {restaurants.map((restaurant, index) => (
@@ -122,18 +203,20 @@ export const Map = () => {
           </GoogleMap>
         )}
 
-        <Button
-          variant="contained"
-          onClick={toggleSidebar}
-          style={{
-            position: "absolute",
-            top: "15px",
-            right: "10px",
-            zIndex: 1000
-          }}
-        >
-          {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-        </Button>
+        <div style={{ position: "absolute", top: "15px", right: "10px", zIndex: 1000, display: "flex", gap: "10px" }}>
+          <Button
+            variant="contained"
+            onClick={toggleSidebar}
+          >
+            {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => setIsDicePopupOpen(true)}
+          >
+            Roll the Dice 
+          </Button>
+        </div>
 
         {isSidebarOpen && (
           <div
@@ -156,6 +239,7 @@ export const Map = () => {
                   <h3>{restaurant.displayName?.text || "N/A"}</h3>
                   <p>{restaurant.formattedAddress || "N/A"}</p>
                   <p>Rating: {restaurant.rating || "N/A"}</p>
+                  <p>Cuisine: {restaurant.types?.filter(type => type.includes('restaurant')).map(normalizeCuisineType).join(', ') || "N/A"}</p>
                 </div>
               ))
             ) : (
@@ -163,6 +247,12 @@ export const Map = () => {
             )}
           </div>
         )}
+
+        <DicePopup 
+          open={isDicePopupOpen} 
+          onClose={() => setIsDicePopupOpen(false)}
+          availableCuisines={availableCuisines}
+        />
       </div>
     </LoadScript>
   );
