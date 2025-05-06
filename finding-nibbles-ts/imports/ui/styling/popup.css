@@ -3,24 +3,24 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     z-index: 1000;
   }
   
   .dice-modal {
     background: #f4e1d2;
-    border-radius: 20px;
     padding: 2rem;
-    width: 350px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    position: relative;
+    width: 500px;
     max-width: 90%;
     text-align: center;
-    position: relative;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   }
   
   .close-button {
@@ -33,125 +33,18 @@
     cursor: pointer;
   }
   
-  .dice-graphic {
-    width: 200px;
-    height: 200px;
-    margin: 1rem auto;
-    perspective: 1000px;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-  }
-
-  .dice-graphic:hover {
-    transform: scale(1.05);
-  }
-  
-  .dice {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 1s ease-out;
-  }
-  
-  .dice.rolling {
-    animation: roll 1s ease-out;
-  }
-  
-  .dice-face {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(145deg, #ffffff, #f0f0f0);
-    border: 2px solid #ccc;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    font-weight: bold;
-    backface-visibility: hidden;
-    box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
-    padding: 10px;
-    text-align: center;
+  .dice-modal h2 {
     color: #333;
-    transition: all 0.3s ease;
-  }
-
-  .dice-face:hover {
-    background: linear-gradient(145deg, #f0f0f0, #ffffff);
+    margin-bottom: 1.5rem;
   }
   
-  .dice-face.front { transform: translateZ(100px); }
-  .dice-face.back { transform: rotateY(180deg) translateZ(100px); }
-  .dice-face.right { transform: rotateY(90deg) translateZ(100px); }
-  .dice-face.left { transform: rotateY(-90deg) translateZ(100px); }
-  .dice-face.top { transform: rotateX(90deg) translateZ(100px); }
-  .dice-face.bottom { transform: rotateX(-90deg) translateZ(100px); }
-  
-  @keyframes roll {
-    0% {
-      transform: rotateX(0) rotateY(0) rotateZ(0);
-    }
-    25% {
-      transform: rotateX(180deg) rotateY(90deg) rotateZ(45deg);
-    }
-    50% {
-      transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg);
-    }
-    75% {
-      transform: rotateX(540deg) rotateY(270deg) rotateZ(135deg);
-    }
-    100% {
-      transform: rotateX(720deg) rotateY(360deg) rotateZ(180deg);
-    }
+  .dice-modal h3 {
+    color: #333;
+    margin-bottom: 1rem;
   }
   
-  .cuisine-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-  }
-  
-  .cuisine-tag {
-    background: #fff;
-    border: 1px solid #aaa;
-    border-radius: 20px;
-    padding: 0.4rem 0.8rem;
-    display: flex;
-    align-items: center;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-  }
-
-  .cuisine-tag:hover {
-    background: #f0f0f0;
-    transform: translateY(-2px);
-  }
-  
-  .tag-remove {
-    margin-left: 5px;
-    background: transparent;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    color: #666;
-    transition: color 0.3s ease;
-  }
-
-  .tag-remove:hover {
-    color: #ff4444;
-  }
-  
-  /* Dice Popup - Cuisine Selection */
   .cuisine-selection {
     margin: 1rem 0;
-  }
-  
-  .cuisine-selection h3 {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
   }
   
   .cuisine-checkboxes {
@@ -171,7 +64,7 @@
     background: #fff;
     transition: all 0.3s ease;
   }
-
+  
   .cuisine-checkbox:hover {
     background: #f0f0f0;
     transform: translateY(-2px);
@@ -180,35 +73,145 @@
   .cuisine-checkbox input {
     cursor: pointer;
   }
-
-  /* Add Cuisines Section */
-.add-cuisines {
-  margin-top: 1.5rem;
-  text-align: center;
-}
-
-.add-cuisines h3 {
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  color: #333;
-}
-
-.add-cuisine-button {
-  background: #4285f4;
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  margin: 0.3rem;
-  transition: background 0.3s ease;
-}
-
-.add-cuisine-button:hover {
-  background: #357ae8;
-}
-
-.add-cuisine-button:active {
-  background: #2a65c7;
-}
+  
+  .dice-graphic {
+    perspective: 1200px;
+    width: 200px;
+    height: 200px;
+    margin: 2rem auto;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+  
+  .dice-graphic:hover {
+    transform: scale(1.05);
+  }
+  
+  .dice {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 1s ease-out;
+  }
+  
+  .dice.rolling {
+    animation: roll 1s ease-out;
+  }
+  
+  @keyframes roll {
+    0% {
+      transform: rotateX(0) rotateY(0) rotateZ(0);
+    }
+    25% {
+      transform: rotateX(180deg) rotateY(90deg) rotateZ(45deg);
+    }
+    50% {
+      transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg);
+    }
+    75% {
+      transform: rotateX(540deg) rotateY(270deg) rotateZ(135deg);
+    }
+    100% {
+      transform: rotateX(720deg) rotateY(360deg) rotateZ(180deg);
+    }
+  }
+  
+  .dice-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border: 2px solid #ccc;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    backface-visibility: hidden;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+    padding: 10px;
+    transition: all 0.3s ease;
+  }
+  
+  .dice-face:hover {
+    background: linear-gradient(145deg, #f0f0f0, #ffffff);
+  }
+  
+  .dice-face.front { 
+    transform: translateZ(100px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .dice-face.back { 
+    transform: rotateY(180deg) translateZ(100px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .dice-face.right { 
+    transform: rotateY(90deg) translateZ(100px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .dice-face.left { 
+    transform: rotateY(-90deg) translateZ(100px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .dice-face.top { 
+    transform: rotateX(90deg) translateZ(100px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .dice-face.bottom { 
+    transform: rotateX(-90deg) translateZ(100px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .selected-cuisines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .cuisine-tag {
+    background: #fff;
+    border: 1px solid #aaa;
+    border-radius: 20px;
+    padding: 0.4rem 0.8rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    color: #333;
+  }
+  
+  .cuisine-tag:hover {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+  }
+  
+  .tag-remove {
+    margin-left: 5px;
+    background: transparent;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s ease;
+  }
+  
+  .tag-remove:hover {
+    color: #ff4444;
+  }

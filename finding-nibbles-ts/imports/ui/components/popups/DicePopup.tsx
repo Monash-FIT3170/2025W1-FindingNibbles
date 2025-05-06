@@ -64,11 +64,11 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
           ×
         </button>
 
-        <h2>Roll a Dice</h2>
+        <h2>Roll the Dice</h2>
 
-        {/* Cuisine Selection */}
+        {/* Available Cuisines Section */}
         <div className="cuisine-selection">
-          <h3>Select Cuisines</h3>
+          <h3>Nearby Cuisines</h3>
           <div className="cuisine-checkboxes">
             {availableCuisines.map((cuisine) => (
               <label key={cuisine} className="cuisine-checkbox">
@@ -95,23 +95,26 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
           </div>
         </div>
 
-        {/* Display Selected Cuisines */}
-        <div className="selected-cuisines">
-          {selectedCuisines.length > 0 ? (
-            selectedCuisines.map((cuisine) => (
-              <span key={cuisine} className="cuisine-tag">
-                {cuisine}
-                <button
-                  className="tag-remove"
-                  onClick={() => handleRemoveCuisine(cuisine)}
-                >
-                  ×
-                </button>
-              </span>
-            ))
-          ) : (
-            <p>No cuisines selected</p>
-          )}
+        {/* Selected Cuisines Section */}
+        <div className="selected-cuisines-section">
+          <h3>Selected Cuisines</h3>
+          <div className="selected-cuisines">
+            {selectedCuisines.length > 0 ? (
+              selectedCuisines.map((cuisine) => (
+                <span key={cuisine} className="cuisine-tag">
+                  {cuisine}
+                  <button
+                    className="tag-remove"
+                    onClick={() => handleRemoveCuisine(cuisine)}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))
+            ) : (
+              <p>No cuisines selected</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
