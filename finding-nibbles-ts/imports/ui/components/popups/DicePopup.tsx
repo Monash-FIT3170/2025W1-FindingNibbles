@@ -10,17 +10,6 @@ interface DicePopupProps {
 const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines }) => {
   if (!open) return null;
 
-  const allCuisines = [
-    'Italian',
-    'French',
-    'Spanish',
-    'Chinese',
-    'Thai',
-    'Indian',
-    'German',
-    'Korean',
-  ]; // Full list of cuisines
-
   const [rolledCuisine, setRolledCuisine] = useState<string | null>(null);
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
   const [isRolling, setIsRolling] = useState(false);
@@ -68,12 +57,6 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
     setSelectedCuisines((prev) => prev.filter((c) => c !== cuisine));
   };
 
-  const handleAddCuisine = (cuisine: string) => {
-    if (!selectedCuisines.includes(cuisine)) {
-      setSelectedCuisines((prev) => [...prev, cuisine]);
-    }
-  };
-
   return (
     <div className="dice-modal-overlay">
       <div className="dice-modal">
@@ -113,7 +96,7 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
         </div>
 
         {/* Display Selected Cuisines */}
-        <div className="cuisine-tags">
+        <div className="selected-cuisines">
           {selectedCuisines.length > 0 ? (
             selectedCuisines.map((cuisine) => (
               <span key={cuisine} className="cuisine-tag">
@@ -127,24 +110,8 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
               </span>
             ))
           ) : (
-            <p>No cuisines available</p>
+            <p>No cuisines selected</p>
           )}
-        </div>
-
-        {/* Add Cuisines Back */}
-        <div className="add-cuisines">
-          <h3>Add Cuisines</h3>
-          {allCuisines
-            .filter((cuisine) => !selectedCuisines.includes(cuisine))
-            .map((cuisine) => (
-              <button
-                key={cuisine}
-                className="add-cuisine-button"
-                onClick={() => handleAddCuisine(cuisine)}
-              >
-                {cuisine}
-              </button>
-            ))}
         </div>
       </div>
     </div>

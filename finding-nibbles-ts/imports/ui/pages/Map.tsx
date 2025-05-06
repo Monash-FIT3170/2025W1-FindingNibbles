@@ -91,7 +91,7 @@ export const Map = () => {
 
     const payload = {
       includedTypes: ["restaurant"],
-      maxResultCount: 20, // Increased to get more variety of cuisines
+      maxResultCount: 20,
       locationRestriction: {
         circle: {
           center: { latitude, longitude },
@@ -178,11 +178,11 @@ export const Map = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleRadiusChange = (event, newValue) => {
-    setRadius(newValue)
+  const handleRadiusChange = (_event: Event, newValue: number | number[]) => {
+    setRadius(newValue as number);
   };
 
-  const formatRadius = (value) => {
+  const formatRadius = (value: number): string => {
     if (value < 1000) {
       return `${value} m`;
     } else {
@@ -255,18 +255,20 @@ export const Map = () => {
           />
         </Box>
 
-        <Button
-          variant="contained"
-          onClick={toggleSidebar}
-          style={{
-            position: "absolute",
-            top: "15px",
-            right: "10px",
-            zIndex: 1000
-          }}
-        >
-          {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-        </Button>
+        <div style={{ position: "absolute", top: "15px", right: "10px", zIndex: 1000, display: "flex", gap: "10px" }}>
+          <Button
+            variant="contained"
+            onClick={toggleSidebar}
+          >
+            {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => setIsDicePopupOpen(true)}
+          >
+            Roll the Dice
+          </Button>
+        </div>
 
         {isSidebarOpen && (
           <div
@@ -288,7 +290,7 @@ export const Map = () => {
                 Showing restaurants within {formatRadius(radius)}
               </Typography>
             </Box>
-            
+
             {restaurants.length > 0 ? (
               restaurants.map((restaurant, index) => (
                 <div key={index} style={{ marginBottom: "20px" }}>
