@@ -257,6 +257,15 @@ body {
 .login-form button:hover {
   background-color: #b36f3a;
 }
+.nav-link-button {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+}
 
 .map-container {
   position: absolute;
