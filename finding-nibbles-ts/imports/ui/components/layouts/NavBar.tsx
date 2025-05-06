@@ -18,10 +18,13 @@ import { Meteor } from "meteor/meteor";
 
 const bunnyIcon = "./images/bunnyIcon.png";
 
+import DicePopup from "../popups/DicePopup";
+
 export const NavBar = () => {
   const navigate = useNavigate();
   const isLoggedIn = useTracker(() => !!Meteor.userId(), []);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [showDicePopup, setShowDicePopup] = useState(false);
 
   const handleLogout = () => {
     Meteor.logout(() => {
@@ -150,7 +153,7 @@ export const NavBar = () => {
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/roll-a-dice">
+              <ListItemButton onClick={() => setShowDicePopup(true)}>
                 <ListItemText primary="Roll a dice" />
               </ListItemButton>
             </ListItem>
@@ -177,6 +180,9 @@ export const NavBar = () => {
           </List>
         </Box>
       </Drawer>
+      {showDicePopup && (
+      <DicePopup open={showDicePopup} onClose={() => setShowDicePopup(false)} />
+    )}
     </>
   );
 };

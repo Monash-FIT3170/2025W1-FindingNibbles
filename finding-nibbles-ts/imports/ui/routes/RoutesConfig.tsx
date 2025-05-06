@@ -21,7 +21,7 @@ export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
             <Route path="/register" element={redirectIfAuth(<Register />)} />
 
             {/* Protected Routes */}
-            <Route path="/" element={requireAuth(<MainUI />)} />
+            <Route path="/" element={requireAuth(<Map />)} />
             <Route path="/map" element={requireAuth(<Map />)} />
 
             {/* Fallback */}
