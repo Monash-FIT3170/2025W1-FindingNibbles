@@ -1,14 +1,15 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-
-import { MapScreen } from "../components/MapScreen"; // Make sure this path is correct
+import { NavBar } from "../components/layouts/NavBar";
 
 export const MainUI = () => {
     const navigate = useNavigate();
     console.log("App is rendering");
     const login = false; // Change to false to see MapScreen
+    
     return (
         <div className="app">
+            
             {login ? (
                 <>
                     <div className="main-content">
@@ -17,7 +18,13 @@ export const MainUI = () => {
                     </div>
                 </>
             ) : (
-                <MapScreen />
+                <div className="map-container">
+                    <NavBar/>
+                    <div className="top-bar">
+                        <img src="/images/bunnyIcon.png" alt="logo" className="logo" />
+                        <h1 className="title">FindingNibbles</h1>
+                    </div>
+                </div>
             )}
         </div>
     );

@@ -244,6 +244,16 @@ body {
   transition: background-color 0.3s ease;
 }
 
+.register-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh; /* Full height of the viewport */
+  background-color: #fef6f0; /* Optional background */
+  padding: 20px;
+}
+
 .login-form button:hover {
   background-color: #b36f3a;
 }
