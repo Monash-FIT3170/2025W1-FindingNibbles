@@ -58,13 +58,14 @@ export const Map = () => {
   };
 
   const containerStyle = {
-    position: "absolute" as const,
-    top: "60px",
+    position: "fixed" as const,
+    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     width: "100%",
-    height: "calc(100vh - 60px)",
+    height: "100vh",
+    zIndex: 0 // Ensure it's behind navbar and controls
   };
 
   // Normalize cuisine type from Google Places API
@@ -204,7 +205,10 @@ export const Map = () => {
             mapContainerStyle={containerStyle}
             center={userLocation}
             zoom={14}
-            options={mapContainerStyle}
+            options={{
+              ...mapContainerStyle,
+              scrollwheel: false,
+            }}
             onLoad={(mapInstance) => setMap(mapInstance)}
           >
             <Marker position={userLocation} />
@@ -235,8 +239,8 @@ export const Map = () => {
         <Box
           sx={{
             position: "absolute",
-            bottom: "30px",
-            left: "50%",
+            bottom: "70px",
+            left: "11%",
             transform: "translateX(-50%)",
             width: "300px",
             bgcolor: "white",
@@ -259,28 +263,30 @@ export const Map = () => {
         </Box>
 
         <div
-          style={{
-            position: "absolute",
-            top: "15px",
-            right: "10px",
-            zIndex: 1000,
-            display: "flex",
-            gap: "10px",
-          }}
-        >
-          <Button variant="contained" onClick={toggleSidebar}>
-            {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+        style={{
+          position: "absolute",     // Use fixed so it stays pinned to viewport
+          bottom: "25%",        // Anchor to bottom
+          left: "7%",          // Anchor to left
+          zIndex: 2000,
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",           // Space between buttons
+        }}
+      >
+        <Button variant="contained" onClick={toggleSidebar}>
+          {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
           </Button>
           <Button variant="contained" onClick={() => setIsDicePopupOpen(true)}>
             Roll the Dice
           </Button>
         </div>
 
+
         {isSidebarOpen && (
           <div
             style={{
               position: "absolute",
-              top: "60px",
+              top: 0,
               right: 0,
               width: "300px",
               height: "calc(100vh - 60px)",

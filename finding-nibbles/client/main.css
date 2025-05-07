@@ -92,7 +92,6 @@ body {
   z-index: 10;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
-  overflow-x: auto;
 }
 
 
@@ -161,7 +160,7 @@ body {
   flex: 1;
   padding: 80px 20px 20px;
   position: relative;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .location-input,
