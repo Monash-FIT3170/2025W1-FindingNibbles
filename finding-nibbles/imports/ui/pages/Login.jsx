@@ -15,7 +15,6 @@ export const Login = () => {
           console.error("Login error:", err);
         } else {
           console.log("Login successful");
-          navigate("/"); // Redirect to home on successful login
         }
       });
     } else {
