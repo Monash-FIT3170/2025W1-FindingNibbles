@@ -153,11 +153,6 @@ export const NavBar = () => {
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton onClick={() => setShowDicePopup(true)}>
-                <ListItemText primary="Roll a dice" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
               <ListItemButton component={RouterLink} to="/ai-suggestion">
                 <ListItemText primary="AI suggestion" />
               </ListItemButton>
@@ -180,9 +175,6 @@ export const NavBar = () => {
           </List>
         </Box>
       </Drawer>
-      {showDicePopup && (
-      <DicePopup open={showDicePopup} onClose={() => setShowDicePopup(false)} />
-    )}
-    </>
+      </>
   );
 };
