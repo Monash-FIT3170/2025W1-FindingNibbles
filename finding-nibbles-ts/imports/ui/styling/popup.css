@@ -75,16 +75,18 @@
   }
   
   .dice-graphic {
-    perspective: 1200px;
-    width: 200px;
-    height: 200px;
+    perspective: 1000px;
+    width: 160px;
+    height: 160px;
     margin: 2rem auto;
     cursor: pointer;
     transition: transform 0.3s ease;
+    transform-style: preserve-3d;
+    transform: rotateX(-15deg) rotateY(-15deg);
   }
   
   .dice-graphic:hover {
-    transform: scale(1.05);
+    transform: rotateX(-20deg) rotateY(-20deg) scale(1.05);
   }
   
   .dice {
@@ -101,19 +103,19 @@
   
   @keyframes roll {
     0% {
-      transform: rotateX(0) rotateY(0) rotateZ(0);
+      transform: rotateX(-15deg) rotateY(-15deg);
     }
     25% {
-      transform: rotateX(180deg) rotateY(90deg) rotateZ(45deg);
+      transform: rotateX(165deg) rotateY(75deg);
     }
     50% {
-      transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg);
+      transform: rotateX(345deg) rotateY(165deg);
     }
     75% {
-      transform: rotateX(540deg) rotateY(270deg) rotateZ(135deg);
+      transform: rotateX(525deg) rotateY(255deg);
     }
     100% {
-      transform: rotateX(720deg) rotateY(360deg) rotateZ(180deg);
+      transform: rotateX(-15deg) rotateY(-15deg);
     }
   }
   
@@ -127,11 +129,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     font-weight: bold;
     color: #333;
     text-align: center;
-    backface-visibility: hidden;
+    backface-visibility: visible;
     box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
     padding: 10px;
     transition: all 0.3s ease;
@@ -142,37 +144,37 @@
   }
   
   .dice-face.front { 
-    transform: translateZ(100px);
+    transform: translateZ(80px);
     background: linear-gradient(145deg, #ffffff, #f0f0f0);
     border-color: #ddd;
   }
   
   .dice-face.back { 
-    transform: rotateY(180deg) translateZ(100px);
+    transform: rotateY(180deg) translateZ(80px);
     background: linear-gradient(145deg, #ffffff, #f0f0f0);
     border-color: #ddd;
   }
   
   .dice-face.right { 
-    transform: rotateY(90deg) translateZ(100px);
+    transform: rotateY(90deg) translateZ(80px);
     background: linear-gradient(145deg, #ffffff, #f0f0f0);
     border-color: #ddd;
   }
   
   .dice-face.left { 
-    transform: rotateY(-90deg) translateZ(100px);
+    transform: rotateY(-90deg) translateZ(80px);
     background: linear-gradient(145deg, #ffffff, #f0f0f0);
     border-color: #ddd;
   }
   
   .dice-face.top { 
-    transform: rotateX(90deg) translateZ(100px);
+    transform: rotateX(90deg) translateZ(80px);
     background: linear-gradient(145deg, #ffffff, #f0f0f0);
     border-color: #ddd;
   }
   
   .dice-face.bottom { 
-    transform: rotateX(-90deg) translateZ(100px);
+    transform: rotateX(-90deg) translateZ(80px);
     background: linear-gradient(145deg, #ffffff, #f0f0f0);
     border-color: #ddd;
   }
