@@ -10,7 +10,7 @@ import { Profile } from '../pages/Profile';
 
 export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
     const requireAuth = (component: JSX.Element) =>
-        isLoggedIn ? component : <Navigate to="/login" replace />;
+        isLoggedIn ? component : <Navigate to="/mainUI" replace />;
 
     const redirectIfAuth = (component: JSX.Element) =>
         isLoggedIn ? <Navigate to="/" replace /> : component;
@@ -18,6 +18,7 @@ export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
     return (
         <Routes>
             {/* Public Routes */}
+            <Route path="/mainUI" element={redirectIfAuth(<MainUI />)} />
             <Route path="/login" element={redirectIfAuth(<Login />)} />
             <Route path="/register" element={redirectIfAuth(<Register />)} />
 
