@@ -7,6 +7,8 @@ import { MainUI } from '../pages/MainUI';
 import { Map } from '../pages/Map';
 import { RoutesConfigProps } from '../types/User';
 import { Profile } from '../pages/Profile';
+import { MealPlanner } from '../pages/MealPlanner';
+import { SearchHistory } from '../pages/SearchHistory';
 
 export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
     const requireAuth = (component: JSX.Element) =>
@@ -26,6 +28,8 @@ export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
             <Route path="/" element={requireAuth(<Map />)} />
             <Route path="/map" element={requireAuth(<Map />)} />
             <Route path="/profile" element={requireAuth(<Profile />)} />
+            <Route path="/meal-planner" element={requireAuth(<MealPlanner />)} />
+            <Route path="/search-history" element={requireAuth(<SearchHistory />)} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
