@@ -187,6 +187,11 @@ export const NavBar = () => {
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to="/profile">
+                <ListItemText primary="Profile" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
               <ListItemButton onClick={handleLogout}>
                 <ListItemText primary="Logout" />
               </ListItemButton>

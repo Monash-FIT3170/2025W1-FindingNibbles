@@ -1,0 +1,118 @@
+.profile-container {
+    display: flex;
+    flex-direction: row;
+    min-height: 100vh;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    background-color: #FAF7F4;
+  }
+  
+  /* Left sidebar is handled in Sidebar.css */
+  .profile-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    flex: 1;
+  }
+  
+  .profile-heading {
+    font-size: 1.875rem;
+    font-weight: bold;
+    color: #2E2E2E;
+    margin-bottom: 0.75rem;
+  }
+  
+  .profile-avatar {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 9999px;
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Main form layout */
+  .form-container {
+    max-width: 500px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+    margin-top: 1rem;
+  }
+  
+  /* Rounded inputs (TextFields) */
+  .rounded-input .MuiOutlinedInput-root {
+    border-radius: 25px;
+    background-color: #ffffff;
+  }
+  
+  /* Section title */
+  .profile-preferences-label {
+    margin-top: 0.5rem;
+    margin-bottom: 0rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  
+  /* Preference box styling */
+  .profile-preferences-box {
+    margin-top: 0rem;
+    border: 2px solid #b87b45;
+    border-radius: 20px;
+    padding: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    background-color: #fff;
+    width: 100%;
+    max-width: 500px;
+    justify-content: flex-start;
+  }
+  
+  /* Each preference chip */
+  .preference-chip {
+    background-color: #d5a16e;
+    color: white;
+    border-radius: 9999px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Remove button on each chip */
+  .preference-remove {
+    margin-left: 8px;
+    font-weight: bold;
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+  }
+  
+  /* Add preference button */
+  .preference-add {
+    color: #b87b45;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+  }
+  
+  /* Save changes button */
+  .profile-save-button {
+    margin-top: 1rem;
+    background-color: #b87b45;
+    font-weight: bold;
+    padding: 0.5rem 2rem;
+    border-radius: 20px;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .profile-save-button:hover {
+    background-color: #a4693c;
+  }
+  
