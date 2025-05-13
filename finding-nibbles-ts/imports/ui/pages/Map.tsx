@@ -1,7 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { GoogleMap, LoadScript, Marker, Circle } from "@react-google-maps/api";
-import { Box, Button, Slider, Typography, CircularProgress } from "@mui/material";
 import DicePopup from "../components/popups/DicePopup";
+
+// Add debounce utility
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+};
 
 interface Location {
   lat: number;
@@ -32,26 +40,35 @@ export const Map = () => {
   const [isMapLoading, setIsMapLoading] = useState(true);
   const [sortedRestaurants, setSortedRestaurants] = useState<Restaurant[]>([]);
 
-  useEffect(() => {
-    const updateMaxResults = async () => {
-      if (userLocation && map) {
-          const fetchedRestaurants = await fetchRestaurants(userLocation.lat, userLocation.lng);
-          const limitedRestaurants = fetchedRestaurants.slice(0, 20); // cap at 20
-          setRestaurants(limitedRestaurants);
-        }
-    };
+  const [debouncedRadius, setDebouncedRadius] = useState(radius);
 
-    updateMaxResults();
-  }, [userLocation, map, radius]);
+  // Create debounced fetch function with useCallback
+  const debouncedFetchRestaurants = useCallback(
+    debounce(async (lat: number, lng: number, rad: number) => {
+      setIsMapLoading(true);
+      try {
+        const data = await fetchRestaurants(lat, lng, rad);
+        setRestaurants(data);
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
+      } finally {
+        setIsMapLoading(false);
+      }
+    }, 500), // 500ms delay
+    []
+  );
 
+  // Update debounced radius when radius changes
   useEffect(() => {
-    const sorted = [...restaurants].sort((restaurant1, restaurant2) => {
-      const rating1 = restaurant1.rating ?? 0;
-      const rating2 = restaurant2.rating ?? 0;
-      return rating2 - rating1;
-    });
-    setSortedRestaurants(sorted);
-  }, [restaurants]);
+    setDebouncedRadius(radius);
+  }, [radius]);
+
+  // Update restaurants when debounced radius changes
+  useEffect(() => {
+    if (userLocation && map) {
+      debouncedFetchRestaurants(userLocation.lat, userLocation.lng, debouncedRadius);
+    }
+  }, [userLocation, map, debouncedRadius, debouncedFetchRestaurants]);
 
   const mapContainerStyle: google.maps.MapOptions = {
     fullscreenControl: false,
@@ -105,7 +122,7 @@ export const Map = () => {
     return type.includes("restaurant") && !genericTypes.some((genericType) => type === genericType);
   };
 
-  async function fetchRestaurants(latitude: number, longitude: number): Promise<Restaurant[]> {
+  async function fetchRestaurants(latitude: number, longitude: number, searchRadius: number = radius): Promise<Restaurant[]> {
     const API_KEY = "AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM";
     const URL = "https://places.googleapis.com/v1/places:searchNearby";
 
@@ -115,7 +132,7 @@ export const Map = () => {
       locationRestriction: {
         circle: {
           center: { latitude, longitude },
-          radius: radius,
+          radius: searchRadius,
         },
       },
     };
@@ -183,27 +200,12 @@ export const Map = () => {
     getUserLocation();
   }, []);
 
-  useEffect(() => {
-    if (userLocation && map) {
-      setIsMapLoading(true);
-      fetchRestaurants(userLocation.lat, userLocation.lng)
-        .then((data) => {
-          setRestaurants(data);
-          setIsMapLoading(false);
-        })
-        .catch((error) => {
-          console.error("Error fetching restaurants:", error);
-          setIsMapLoading(false);
-        });
-    }
-  }, [userLocation, map, radius]);
-
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleRadiusChange = (_event: Event, newValue: number | number[]) => {
-    setRadius(newValue as number);
+  const handleRadiusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRadius(Number(e.target.value));
   };
 
   const formatRadius = (value: number): string => {
@@ -220,22 +222,13 @@ export const Map = () => {
       libraries={["places"]}
       onLoad={() => console.log("Google Maps API loaded")}
       loadingElement={
-        <Box 
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100vh',
-            width: '100%',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)'
-          }}
-        >
-          <CircularProgress size={60} thickness={4} color="primary" />
-          <Typography variant="h6" sx={{ ml: 2 }}>Loading Maps...</Typography>
-        </Box>
+        <div className="flex justify-center items-center h-screen w-full bg-white bg-opacity-80">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+          <h6 className="ml-2 text-lg font-medium">Loading Maps...</h6>
+        </div>
       }
     >
-      <div style={{ position: "relative", height: "100vh" }}>
+      <div className="relative h-screen">
         {userLocation && (
           <>
             <GoogleMap
@@ -276,118 +269,70 @@ export const Map = () => {
             </GoogleMap>
             
             {isMapLoading && (
-              <Box 
-                sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  height: '100%',
-                  width: '100%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                  zIndex: 1001
-                }}
-              >
-                <CircularProgress size={60} thickness={4} color="primary" />
-                <Typography variant="h6" sx={{ ml: 2 }}>Loading restaurants...</Typography>
-              </Box>
+              <div className="absolute top-4 right-4 flex items-center bg-white p-3 rounded-lg shadow-md z-[1001]">
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+                <span className="text-sm font-medium">Updating restaurants...</span>
+              </div>
             )}
           </>
         )}
 
         {!userLocation && (
-          <Box 
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: '100vh',
-              width: '100%',
-              backgroundColor: '#f5f5f5'
-            }}
-          >
-            <CircularProgress size={60} thickness={4} color="primary" />
-            <Typography variant="h6" sx={{ mt: 2 }}>Getting your location...</Typography>
-          </Box>
+          <div className="flex flex-col justify-center items-center h-screen w-full bg-gray-100">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+            <h6 className="mt-2 text-lg font-medium">Getting your location...</h6>
+          </div>
         )}
 
-        <Box
-          sx={{
-            position: "absolute",
-            bottom: "70px",
-            left: "11%",
-            transform: "translateX(-50%)",
-            width: "300px",
-            bgcolor: "white",
-            p: 2,
-            borderRadius: 2,
-            boxShadow: 3,
-            zIndex: 1000,
-          }}
-        >
-          <Typography gutterBottom>Search Radius: {formatRadius(radius)}</Typography>
-          <Slider
-            value={radius}
-            onChange={handleRadiusChange}
-            valueLabelDisplay="auto"
-            valueLabelFormat={formatRadius}
-            min={500}
-            max={5000}
-            step={100}
-          />
-        </Box>
-
-        <div
-        style={{
-          position: "absolute",     // Use fixed so it stays pinned to viewport
-          bottom: "25%",        // Anchor to bottom
-          left: "7%",          // Anchor to left
-          zIndex: 2000,
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",           // Space between buttons
-        }}
-      >
-        <Button variant="contained" onClick={toggleSidebar}>
-          {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-          </Button>
-          <Button variant="contained" onClick={() => setIsDicePopupOpen(true)}>
-            Roll the Dice
-          </Button>
+        <div className="absolute bottom-[70px] left-[11%] transform -translate-x-1/2 w-[300px] bg-white p-4 rounded-lg shadow-md z-[1000]">
+          <p className="mb-2">Search Radius: {formatRadius(radius)}</p>
+          <div className="w-full">
+            <input
+              type="range"
+              value={radius}
+              onChange={handleRadiusChange}
+              min="500"
+              max="5000"
+              step="100"
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <div className="flex justify-between text-xs text-gray-500 px-1">
+              <span>500m</span>
+              <span>5km</span>
+            </div>
+          </div>
         </div>
 
+        <div className="absolute bottom-1/4 left-[7%] z-[2000] flex flex-col gap-2.5">
+          <button 
+            className="bg-[#C47B4D] hover:bg-[#A35F35] text-white py-2 px-4 rounded shadow transition-colors"
+            onClick={toggleSidebar}
+          >
+            {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+          </button>
+          <button 
+            className="bg-[#C47B4D] hover:bg-[#A35F35] text-white py-2 px-4 rounded shadow transition-colors"
+            onClick={() => setIsDicePopupOpen(true)}
+          >
+            Roll the Dice
+          </button>
+        </div>
 
         {isSidebarOpen && (
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              width: "300px",
-              height: "calc(100vh - 60px)",
-              backgroundColor: "white",
-              overflowY: "scroll",
-              zIndex: 999,
-              padding: "20px",
-              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <Box mb={2}>
-              <Typography variant="h6">
+          <div className="absolute top-0 right-0 w-[300px] h-[calc(100vh-60px)] bg-white overflow-y-auto z-[999] p-5 shadow-md">
+            <div className="mb-4">
+              <h6 className="text-lg font-medium">
                 Showing restaurants within {formatRadius(radius)}
-              </Typography>
-            </Box>
+              </h6>
+            </div>
 
             {sortedRestaurants.length > 0 ? (
               sortedRestaurants.map((restaurant, index) => (
-                <div key={index} style={{ marginBottom: "20px" }}>
-                  <h3>{restaurant.displayName?.text || "N/A"}</h3>
-                  <p>{restaurant.formattedAddress || "N/A"}</p>
-                  <p>Rating: {restaurant.rating || "N/A"}</p>
-                  <p>
+                <div key={index} className="mb-5 p-3 bg-gray-50 rounded-lg shadow-sm">
+                  <h3 className="font-bold text-lg">{restaurant.displayName?.text || "N/A"}</h3>
+                  <p className="text-gray-600 mt-1">{restaurant.formattedAddress || "N/A"}</p>
+                  <p className="mt-1">Rating: {restaurant.rating || "N/A"}</p>
+                  <p className="mt-1">
                     Cuisine:{" "}
                     {restaurant.types?.filter((type) => type.includes("restaurant")).map(normalizeCuisineType).join(", ") ||
                       "N/A"}
@@ -395,7 +340,7 @@ export const Map = () => {
                 </div>
               ))
             ) : (
-              <p>Loading restaurants...</p>
+              <p className="text-gray-500">Loading restaurants...</p>
             )}
           </div>
         )}
