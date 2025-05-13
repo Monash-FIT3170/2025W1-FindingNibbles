@@ -11,20 +11,17 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
   if (!open) return null;
 
   const [rolledCuisine, setRolledCuisine] = useState<string | null>(null);
-  const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
+  const [selectedCuisines, setSelectedCuisines] = useState<string[]>(availableCuisines); // Initialize with all cuisines
   const [isRolling, setIsRolling] = useState(false);
   const [diceFaces, setDiceFaces] = useState<string[]>([]);
 
   // Update dice faces when selected cuisines change
   useEffect(() => {
     if (selectedCuisines.length > 0) {
-      // Create an array of 6 different cuisines
       let faces = [...selectedCuisines];
-      // If we have less than 6 cuisines, cycle through them
       while (faces.length < 6) {
         faces = [...faces, ...selectedCuisines.slice(0, 6 - faces.length)];
       }
-      // Shuffle the faces to ensure different cuisines on each face
       faces = faces.slice(0, 6).sort(() => Math.random() - 0.5);
       setDiceFaces(faces);
     } else {
@@ -49,26 +46,21 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
     setRolledCuisine(null);
 
     setTimeout(() => {
-      // Pick the rolled cuisine
       const randomIndex = Math.floor(Math.random() * selectedCuisines.length);
       const selected = selectedCuisines[randomIndex];
       setRolledCuisine(selected);
       setIsRolling(false);
 
-      // Remove rolled cuisine and shuffle the rest
       const otherCuisines = selectedCuisines.filter(c => c !== selected);
       let shuffled = [...otherCuisines].sort(() => Math.random() - 0.5);
-      // Pick unique for right and top
       const rightFace = shuffled[0] || selected;
       const topFace = shuffled[1] && shuffled[1] !== rightFace ? shuffled[1] : (shuffled[2] || selected);
 
-      // Fill the rest (back, left, bottom) with any cuisines (can repeat if not enough)
       let used = [selected, rightFace, topFace];
       let rest = shuffled.filter(c => !used.includes(c));
       while (used.length < 6) {
         used.push(rest.shift() || selected);
       }
-      // Dice face order: front, right, back, left, top, bottom
       setDiceFaces([selected, rightFace, used[3], used[4], topFace, used[5]]);
     }, 1000);
   };
@@ -120,17 +112,26 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
           <h3>Selected Cuisines</h3>
           <div className="selected-cuisines">
             {selectedCuisines.length > 0 ? (
-              selectedCuisines.map((cuisine) => (
-                <span key={cuisine} className="cuisine-tag">
-                  {cuisine}
-                  <button
-                    className="tag-remove"
-                    onClick={() => handleRemoveCuisine(cuisine)}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))
+              <>
+                {selectedCuisines.map((cuisine) => (
+                  <span key={cuisine} className="cuisine-tag">
+                    {cuisine}
+                    <button
+                      className="tag-remove"
+                      onClick={() => handleRemoveCuisine(cuisine)}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                {/* Add a "Remove Cuisines" button */}
+                <button
+                  className="remove-all-button"
+                  onClick={() => setSelectedCuisines([])}
+                >
+                  Remove All Cuisines
+                </button>
+              </>
             ) : (
               <p>No cuisines selected</p>
             )}
