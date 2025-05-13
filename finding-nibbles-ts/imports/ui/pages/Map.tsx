@@ -30,6 +30,7 @@ export const Map = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
   const [isMapLoading, setIsMapLoading] = useState(true);
+  const [sortedRestaurants, setSortedRestaurants] = useState<Restaurant[]>([]);
 
   useEffect(() => {
     const updateMaxResults = async () => {
@@ -43,6 +44,14 @@ export const Map = () => {
     updateMaxResults();
   }, [userLocation, map, radius]);
 
+  useEffect(() => {
+    const sorted = [...restaurants].sort((restaurant1, restaurant2) => {
+      const rating1 = restaurant1.rating ?? 0;
+      const rating2 = restaurant2.rating ?? 0;
+      return rating2 - rating1;
+    });
+    setSortedRestaurants(sorted);
+  }, [restaurants]);
 
   const mapContainerStyle: google.maps.MapOptions = {
     fullscreenControl: false,
@@ -372,8 +381,8 @@ export const Map = () => {
               </Typography>
             </Box>
 
-            {restaurants.length > 0 ? (
-              restaurants.map((restaurant, index) => (
+            {sortedRestaurants.length > 0 ? (
+              sortedRestaurants.map((restaurant, index) => (
                 <div key={index} style={{ marginBottom: "20px" }}>
                   <h3>{restaurant.displayName?.text || "N/A"}</h3>
                   <p>{restaurant.formattedAddress || "N/A"}</p>
