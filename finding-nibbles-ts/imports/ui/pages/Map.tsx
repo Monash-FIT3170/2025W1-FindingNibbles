@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, Marker, Circle } from "@react-google-maps/api";
-import { Box, Button, Slider, Typography } from "@mui/material";
+import { Box, Button, Slider, Typography, CircularProgress } from "@mui/material";
 import DicePopup from "../components/popups/DicePopup";
 
 interface Location {
@@ -29,6 +29,7 @@ export const Map = () => {
   const [isDicePopupOpen, setIsDicePopupOpen] = useState(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
+  const [isMapLoading, setIsMapLoading] = useState(true);
 
   useEffect(() => {
     const updateMaxResults = async () => {
@@ -175,9 +176,16 @@ export const Map = () => {
 
   useEffect(() => {
     if (userLocation && map) {
+      setIsMapLoading(true);
       fetchRestaurants(userLocation.lat, userLocation.lng)
-        .then((data) => setRestaurants(data))
-        .catch((error) => console.error("Error fetching restaurants:", error));
+        .then((data) => {
+          setRestaurants(data);
+          setIsMapLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching restaurants:", error);
+          setIsMapLoading(false);
+        });
     }
   }, [userLocation, map, radius]);
 
@@ -198,42 +206,103 @@ export const Map = () => {
   };
 
   return (
-    <LoadScript googleMapsApiKey="AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM" libraries={["places"]}>
+    <LoadScript 
+      googleMapsApiKey="AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM" 
+      libraries={["places"]}
+      onLoad={() => console.log("Google Maps API loaded")}
+      loadingElement={
+        <Box 
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+            width: '100%',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)'
+          }}
+        >
+          <CircularProgress size={60} thickness={4} color="primary" />
+          <Typography variant="h6" sx={{ ml: 2 }}>Loading Maps...</Typography>
+        </Box>
+      }
+    >
       <div style={{ position: "relative", height: "100vh" }}>
         {userLocation && (
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={userLocation}
-            zoom={14}
-            options={{
-              ...mapContainerStyle,
-              scrollwheel: false,
-            }}
-            onLoad={(mapInstance) => setMap(mapInstance)}
-          >
-            <Marker position={userLocation} />
-
-            <Circle
+          <>
+            <GoogleMap
+              mapContainerStyle={containerStyle}
               center={userLocation}
-              radius={radius}
+              zoom={14}
               options={{
-                fillColor: "rgba(100, 158, 255, 0.2)",
-                strokeColor: "#4285F4",
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
+                ...mapContainerStyle,
+                scrollwheel: false,
               }}
-            />
+              onLoad={(mapInstance) => {
+                setMap(mapInstance);
+                setIsMapLoading(false);
+              }}
+            >
+              <Marker position={userLocation} />
 
-            {restaurants.map((restaurant, index) => (
-              <Marker
-                key={index}
-                position={{
-                  lat: restaurant.location.latitude,
-                  lng: restaurant.location.longitude,
+              <Circle
+                center={userLocation}
+                radius={radius}
+                options={{
+                  fillColor: "rgba(100, 158, 255, 0.2)",
+                  strokeColor: "#4285F4",
+                  strokeOpacity: 0.8,
+                  strokeWeight: 2,
                 }}
               />
-            ))}
-          </GoogleMap>
+
+              {restaurants.map((restaurant, index) => (
+                <Marker
+                  key={index}
+                  position={{
+                    lat: restaurant.location.latitude,
+                    lng: restaurant.location.longitude,
+                  }}
+                />
+              ))}
+            </GoogleMap>
+            
+            {isMapLoading && (
+              <Box 
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '100%',
+                  width: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                  zIndex: 1001
+                }}
+              >
+                <CircularProgress size={60} thickness={4} color="primary" />
+                <Typography variant="h6" sx={{ ml: 2 }}>Loading restaurants...</Typography>
+              </Box>
+            )}
+          </>
+        )}
+
+        {!userLocation && (
+          <Box 
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100vh',
+              width: '100%',
+              backgroundColor: '#f5f5f5'
+            }}
+          >
+            <CircularProgress size={60} thickness={4} color="primary" />
+            <Typography variant="h6" sx={{ mt: 2 }}>Getting your location...</Typography>
+          </Box>
         )}
 
         <Box
