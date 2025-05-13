@@ -1,10 +1,23 @@
 import React, { useState } from 'react';
+import { Meteor } from 'meteor/meteor';
+import type {CustomUser} from '../types/User.ts';
+import Button from '@mui/material/Button';
+import '../styling/profile-form.css';
+import { TextField } from '@mui/material';
+
 
 export const Profile = () => {
-  const [name, setName] = useState('Ubaid Irfan');
-  const [email, setEmail] = useState('ubaidirfan@gmail.com');
+  // const [name, setName] = useState('Ubaid Irfan');
+  // const [email, setEmail] = useState('ubaidirfan@gmail.com');
+  // const [password, setPassword] = useState('********');
+  // const [preferences, setPreferences] = useState<string[]>(['Vegetarian', 'Vegan', 'Gluten-Free']);
+
+  const user = Meteor.user() as CustomUser;
+  const [name, setName] = useState(user?.profile?.name || '');
+  const [email, setEmail] = useState(user?.emails?.[0]?.address || '');
   const [password, setPassword] = useState('********');
-  const [preferences, setPreferences] = useState<string[]>(['Vegetarian', 'Vegan', 'Gluten-Free']);
+  const [preferences, setPreferences] = useState<string[]>(user?.profile?.preferences || []);
+
 
   //removing food preferences from list
     const handleRemovePreference = (pref: string) => {
@@ -19,6 +32,22 @@ export const Profile = () => {
     }
   };
 
+  const handleSave = () => {
+    Meteor.call(
+      'users.updateProfile',
+      { name, email, preferences },
+      (err: Meteor.Error | undefined) => {
+        if (err) {
+          alert(`Failed to save profile: ${err.reason}`);
+        } else {
+          alert('Profile updated successfully!');
+        }
+      }
+    );
+  };
+  
+  
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen font-[Comic_Sans_MS]">
 
@@ -30,42 +59,42 @@ export const Profile = () => {
       </div>
 
       <div className="flex flex-col flex-1 items-center p-6">
-        {/* Profile Picture */}
-        <div className="mb-6">
-          <img src="/images/default-profile-pic.png" alt="Profile" className="w-20 h-20 rounded-full"/>
+      {/*  Profile Picture */}
+        <div>
+          <img src="/images/default-profile-pic.png" alt="Profile" className="profile-image" />
         </div>
 
-        {/* name field */}
-        <div className="flex flex-col items-center w-full max-w-md mb-5">
-          <input
-            className="w-full border-2 border-[#b87b45] rounded-xl py-2 px-4 text-center text-base mb-2"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
+        {/* Name Field */}
+        <TextField
+          label="Display Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          variant="outlined"
+          className="profile-field"
+          InputProps={{ style: { borderRadius: 16 } }}
+        />
 
-        {/* email field */}
-        <div className="flex flex-col items-center w-full max-w-md mb-5">
-          <input
-            className="w-full border-2 border-[#b87b45] rounded-xl py-2 px-4 text-center text-base mb-2"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+        {/* Email Field */}
+        <TextField
+          label="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          variant="outlined"
+          type="email"
+          className="profile-field"
+          InputProps={{ style: { borderRadius: 16 } }}
+        />
 
-
-        {/* password field */}
-        <div className="flex flex-col items-center w-full max-w-md mb-5">
-          <input
-            className="w-full border-2 border-[#b87b45] rounded-xl py-2 px-4 text-center text-base mb-2"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-
+        {/* Password Field */}
+        <TextField
+          label="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          variant="outlined"
+          type="password"
+          className="profile-field"
+          InputProps={{ style: { borderRadius: 16 } }}
+        />
 
         {/* food preferences */}
         <div className="flex flex-col items-center w-full max-w-md">
@@ -80,6 +109,15 @@ export const Profile = () => {
             <button onClick={handleAddPreference} className="text-[#b87b45] font-bold text-sm hover:underline">+ Add Preference</button>
           </div>
         </div>
+
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          className="save-button"
+        >
+          Save Changes
+        </Button>
+
       </div>
     </div>
   );

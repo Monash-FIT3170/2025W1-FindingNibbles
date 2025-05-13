@@ -39,7 +39,15 @@ export const Register = () => {
       return;
     }
 
-    Accounts.createUser({ username, email, password }, (err) => {
+    Accounts.createUser({
+      username,
+      email,
+      password,
+      profile: {
+        name: username, 
+        preferences: [], 
+      }
+    }, (err) => {
       if (err) {
         alert(`Registration failed: ${err}`);
       } else {
@@ -47,6 +55,7 @@ export const Register = () => {
         navigate('/');
       }
     });
+
   };
 
   return (
