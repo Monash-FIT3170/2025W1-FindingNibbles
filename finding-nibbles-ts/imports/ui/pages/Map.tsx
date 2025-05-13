@@ -1,6 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { GoogleMap, LoadScript, Marker, Circle } from "@react-google-maps/api";
 import DicePopup from "../components/popups/DicePopup";
+
+// Add debounce utility
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+};
 
 interface Location {
   lat: number;
@@ -29,19 +38,35 @@ export const Map = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
   const [isMapLoading, setIsMapLoading] = useState(true);
+  const [debouncedRadius, setDebouncedRadius] = useState(radius);
 
+  // Create debounced fetch function with useCallback
+  const debouncedFetchRestaurants = useCallback(
+    debounce(async (lat: number, lng: number, rad: number) => {
+      setIsMapLoading(true);
+      try {
+        const data = await fetchRestaurants(lat, lng, rad);
+        setRestaurants(data);
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
+      } finally {
+        setIsMapLoading(false);
+      }
+    }, 500), // 500ms delay
+    []
+  );
+
+  // Update debounced radius when radius changes
   useEffect(() => {
-    const updateMaxResults = async () => {
-      if (userLocation && map) {
-          const fetchedRestaurants = await fetchRestaurants(userLocation.lat, userLocation.lng);
-          const limitedRestaurants = fetchedRestaurants.slice(0, 20); // cap at 20
-          setRestaurants(limitedRestaurants);
-        }
-    };
+    setDebouncedRadius(radius);
+  }, [radius]);
 
-    updateMaxResults();
-  }, [userLocation, map, radius]);
-
+  // Update restaurants when debounced radius changes
+  useEffect(() => {
+    if (userLocation && map) {
+      debouncedFetchRestaurants(userLocation.lat, userLocation.lng, debouncedRadius);
+    }
+  }, [userLocation, map, debouncedRadius, debouncedFetchRestaurants]);
 
   const mapContainerStyle: google.maps.MapOptions = {
     fullscreenControl: false,
@@ -95,7 +120,7 @@ export const Map = () => {
     return type.includes("restaurant") && !genericTypes.some((genericType) => type === genericType);
   };
 
-  async function fetchRestaurants(latitude: number, longitude: number): Promise<Restaurant[]> {
+  async function fetchRestaurants(latitude: number, longitude: number, searchRadius: number = radius): Promise<Restaurant[]> {
     const API_KEY = "AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM";
     const URL = "https://places.googleapis.com/v1/places:searchNearby";
 
@@ -105,7 +130,7 @@ export const Map = () => {
       locationRestriction: {
         circle: {
           center: { latitude, longitude },
-          radius: radius,
+          radius: searchRadius,
         },
       },
     };
@@ -172,21 +197,6 @@ export const Map = () => {
   useEffect(() => {
     getUserLocation();
   }, []);
-
-  useEffect(() => {
-    if (userLocation && map) {
-      setIsMapLoading(true);
-      fetchRestaurants(userLocation.lat, userLocation.lng)
-        .then((data) => {
-          setRestaurants(data);
-          setIsMapLoading(false);
-        })
-        .catch((error) => {
-          console.error("Error fetching restaurants:", error);
-          setIsMapLoading(false);
-        });
-    }
-  }, [userLocation, map, radius]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -257,9 +267,9 @@ export const Map = () => {
             </GoogleMap>
             
             {isMapLoading && (
-              <div className="absolute top-0 left-0 flex justify-center items-center h-full w-full bg-white bg-opacity-70 z-[1001]">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-                <h6 className="ml-2 text-lg font-medium">Loading restaurants...</h6>
+              <div className="absolute top-4 right-4 flex items-center bg-white p-3 rounded-lg shadow-md z-[1001]">
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+                <span className="text-sm font-medium">Updating restaurants...</span>
               </div>
             )}
           </>
