@@ -69,6 +69,15 @@ export const Map = () => {
       debouncedFetchRestaurants(userLocation.lat, userLocation.lng, debouncedRadius);
     }
   }, [userLocation, map, debouncedRadius, debouncedFetchRestaurants]);
+  
+  useEffect(() => {
+    const sorted = [...restaurants].sort((restaurant1, restaurant2) => {
+      const rating1 = restaurant1.rating ?? 0;
+      const rating2 = restaurant2.rating ?? 0;
+      return rating2 - rating1;
+    });
+    setSortedRestaurants(sorted);
+  }, [restaurants]);
 
   const mapContainerStyle: google.maps.MapOptions = {
     fullscreenControl: false,
