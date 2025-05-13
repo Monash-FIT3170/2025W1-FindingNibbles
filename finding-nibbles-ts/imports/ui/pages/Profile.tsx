@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
+import { Link as RouterLink } from "react-router-dom";
+import {
+    ListItem,
+    ListItemButton,
+  } from "@mui/material";
+
+
 
 export const Profile = () => {
-  const [name, setName] = useState('Ubaid Irfan');
-  const [email, setEmail] = useState('ubaidirfan@gmail.com');
+  const [name, setName] = useState('John Doe');
+  const [email, setEmail] = useState('johndoe@gmail.com');
   const [password, setPassword] = useState('********');
   const [preferences, setPreferences] = useState<string[]>(['Vegetarian', 'Vegan', 'Gluten-Free']);
 
@@ -22,12 +29,63 @@ export const Profile = () => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen font-[Comic_Sans_MS]">
 
-      {/* sidebar (temp) */}
+      {/* sidebar */}
       <div className="w-full md:w-[240px] bg-[#d5a16e] flex flex-col p-5 shadow-md">
-        <h2 className="text-white font-bold text-lg p-2 rounded-lg bg-[#b87b45] text-center mb-2">Settings</h2>
-        <button className="text-white font-bold text-left text-base py-2">Meal Planner</button>
-        <button className="text-white font-bold text-left text-base py-2">Search History</button>
-      </div>
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            component={RouterLink}
+            to="/profile"
+            sx={{
+              color: 'white',
+              fontWeight: 'bold',
+              borderRadius: .5,
+              backgroundColor: '#b87b45',
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: '#a86f3c',
+              },
+            }}
+          >
+            Profile
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            component={RouterLink}
+            to="/meal-planner"
+            sx={{
+              color: 'white',
+              fontWeight: 'bold',
+              borderRadius: .5,
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: '#c68c53',
+              },
+            }}
+          >
+            Meal Planner
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
+          <ListItemButton
+            component={RouterLink}
+            to="/search-history"
+            sx={{
+              color: 'white',
+              fontWeight: 'bold',
+              borderRadius: .5,
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: '#c68c53',
+              },
+            }}
+          >
+            Search History
+          </ListItemButton>
+        </ListItem>
+</div>
 
       <div className="flex flex-col flex-1 items-center p-6">
         {/* Profile Picture */}

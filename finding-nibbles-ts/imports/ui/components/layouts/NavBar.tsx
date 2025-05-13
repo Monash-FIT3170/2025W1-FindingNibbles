@@ -110,7 +110,15 @@ export const NavBar = () => {
                     "&:hover": { color: "#FDF2E3" },
                   }}
                 >
-                  Hi, user!
+                  <img
+                    src="/images/default-profile-pic.png"
+                    alt="Profile"
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                    }}
+                  />
                 </Button>
               </>
             )}
@@ -141,7 +149,21 @@ export const NavBar = () => {
               textAlign: "center",
             }}
           >
-            Hi, user!
+            <Button
+            component={RouterLink} to="/profile"
+            variant = "text"
+          >
+            <img
+              src="/images/default-profile-pic.png"
+              alt="Profile"
+              style={{
+                width: 75,
+                height: 75,
+                borderRadius: "50%",
+                border: "2px solid #C47B4D",
+              }}
+            />
+          </Button>
           </Typography>
           <List>
             <ListItem disablePadding>
