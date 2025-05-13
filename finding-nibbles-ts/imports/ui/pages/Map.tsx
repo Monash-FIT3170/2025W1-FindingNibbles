@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, Marker, Circle } from "@react-google-maps/api";
 import { Box, Button, Slider, Typography, CircularProgress } from "@mui/material";
-import DicePopup from "../components/popups/DicePopup";
+import DicePopup from "../components/popups/DicePopup"; 
+import { TextField } from "@mui/material";
+import { GoogleMap, LoadScript, Marker, Circle, Autocomplete } from "@react-google-maps/api";
+
 
 interface Location {
   lat: number;
@@ -31,6 +34,8 @@ export const Map = () => {
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
   const [isMapLoading, setIsMapLoading] = useState(true);
   const [sortedRestaurants, setSortedRestaurants] = useState<Restaurant[]>([]);
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+
 
   useEffect(() => {
     const updateMaxResults = async () => {
@@ -52,6 +57,27 @@ export const Map = () => {
     });
     setSortedRestaurants(sorted);
   }, [restaurants]);
+
+  const onLoadAutocomplete = (autocompleteInstance: google.maps.places.Autocomplete) => {
+    setAutocomplete(autocompleteInstance);
+  };
+
+  const onPlaceChanged = () => {
+    if (autocomplete) {
+      const place = autocomplete.getPlace();
+      if (place.geometry?.location) {
+        const newLocation = {
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng(),
+        };
+        setUserLocation(newLocation);
+        if (map) {
+          map.panTo(newLocation);
+        }
+      }
+    }
+  };
+  
 
   const mapContainerStyle: google.maps.MapOptions = {
     fullscreenControl: false,
@@ -236,6 +262,32 @@ export const Map = () => {
       }
     >
       <div style={{ position: "relative", height: "100vh" }}>
+      <Box
+          sx={{
+            position: "absolute",
+            top: "70px",
+            left: "20px",
+            bgcolor: "white",
+            p: 1,
+            borderRadius: 2,
+            boxShadow: 3,
+            zIndex: 1500,
+            width: "300px",
+          }}
+        >
+          <Autocomplete
+            onLoad={onLoadAutocomplete}
+            onPlaceChanged={onPlaceChanged}
+          >
+            <TextField
+              size="small"
+              label="Search location"
+              variant="outlined"
+              fullWidth
+              placeholder="Type a location"
+            />
+          </Autocomplete>
+        </Box>
         {userLocation && (
           <>
             <GoogleMap
