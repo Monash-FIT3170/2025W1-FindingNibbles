@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { GoogleMap, LoadScript, Marker, Circle } from "@react-google-maps/api";
+import { TextField, Box} from "@mui/material";
 import DicePopup from "../components/popups/DicePopup"; 
-
+import { GoogleMap, LoadScript, Marker, Circle, Autocomplete } from "@react-google-maps/api";
 // Add debounce utility
 const debounce = (func: Function, delay: number) => {
   let timeoutId: NodeJS.Timeout;
@@ -10,15 +10,11 @@ const debounce = (func: Function, delay: number) => {
     timeoutId = setTimeout(() => func(...args), delay);
   };
 };
-import { TextField } from "@mui/material";
-import { GoogleMap, LoadScript, Marker, Circle, Autocomplete } from "@react-google-maps/api";
-
 
 interface Location {
   lat: number;
   lng: number;
 }
-
 interface Restaurant {
   displayName?: {
     text: string;
@@ -31,7 +27,6 @@ interface Restaurant {
   rating?: number;
   types?: string[];
 }
-
 export const Map = () => {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -42,10 +37,8 @@ export const Map = () => {
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
   const [isMapLoading, setIsMapLoading] = useState(true);
   const [sortedRestaurants, setSortedRestaurants] = useState<Restaurant[]>([]);
-  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
-
-
   const [debouncedRadius, setDebouncedRadius] = useState(radius);
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
   // Create debounced fetch function with useCallback
   const debouncedFetchRestaurants = useCallback(
@@ -62,19 +55,16 @@ export const Map = () => {
     }, 500), // 500ms delay
     []
   );
-
   // Update debounced radius when radius changes
   useEffect(() => {
     setDebouncedRadius(radius);
   }, [radius]);
-
   // Update restaurants when debounced radius changes
   useEffect(() => {
     if (userLocation && map) {
       debouncedFetchRestaurants(userLocation.lat, userLocation.lng, debouncedRadius);
     }
   }, [userLocation, map, debouncedRadius, debouncedFetchRestaurants]);
-  
   useEffect(() => {
     const sorted = [...restaurants].sort((restaurant1, restaurant2) => {
       const rating1 = restaurant1.rating ?? 0;
@@ -83,7 +73,29 @@ export const Map = () => {
     });
     setSortedRestaurants(sorted);
   }, [restaurants]);
-
+  const mapContainerStyle: google.maps.MapOptions = {
+    fullscreenControl: false,
+    mapTypeControl: false,
+    streetViewControl: false,
+    zoomControl: true,
+    styles: [
+      {
+        featureType: "poi",
+        elementType: "labels",
+        stylers: [{ visibility: "off" }],
+      },
+    ],
+  };
+  const containerStyle = {
+    position: "fixed" as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
+    height: "100vh",
+    zIndex: 0 // Ensure it's behind navbar and controls
+  };
   const onLoadAutocomplete = (autocompleteInstance: google.maps.places.Autocomplete) => {
     setAutocomplete(autocompleteInstance);
   };
@@ -103,39 +115,12 @@ export const Map = () => {
       }
     }
   };
-  
-
-  const mapContainerStyle: google.maps.MapOptions = {
-    fullscreenControl: false,
-    mapTypeControl: false,
-    streetViewControl: false,
-    zoomControl: true,
-    styles: [
-      {
-        featureType: "poi",
-        elementType: "labels",
-        stylers: [{ visibility: "off" }],
-      },
-    ],
-  };
-
-  const containerStyle = {
-    position: "fixed" as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: "100%",
-    height: "100vh",
-    zIndex: 0 // Ensure it's behind navbar and controls
-  };
 
   // Normalize cuisine type from Google Places API
   const normalizeCuisineType = (type: string): string => {
     const baseType = type.replace("_restaurant", "");
     return baseType.charAt(0).toUpperCase() + baseType.slice(1);
   };
-
   const isCuisineType = (type: string): boolean => {
     const genericTypes = [
       "restaurant",
@@ -153,14 +138,11 @@ export const Map = () => {
       "lunch",
       "dinner",
     ];
-
     return type.includes("restaurant") && !genericTypes.some((genericType) => type === genericType);
   };
-
   async function fetchRestaurants(latitude: number, longitude: number, searchRadius: number = radius): Promise<Restaurant[]> {
     const API_KEY = "AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM";
     const URL = "https://places.googleapis.com/v1/places:searchNearby";
-
     const payload = {
       includedTypes: ["restaurant"],
       maxResultCount: 20,
@@ -171,28 +153,23 @@ export const Map = () => {
         },
       },
     };
-
     const headers = {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": API_KEY,
       "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location,places.rating,places.types",
     };
-
     try {
       const response = await fetch(URL, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(payload),
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`HTTP error ${response.status}: ${errorText}`);
       }
-
       const data = await response.json();
       const restaurants = data.places || [];
-
       // Extract and process cuisine types
       const cuisineTypes = new Set<string>();
       restaurants.forEach((restaurant: Restaurant) => {
@@ -204,7 +181,6 @@ export const Map = () => {
           });
         }
       });
-
       setAvailableCuisines(Array.from(cuisineTypes));
       return restaurants;
     } catch (error) {
@@ -212,7 +188,6 @@ export const Map = () => {
       return [];
     }
   }
-
   const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -230,19 +205,15 @@ export const Map = () => {
       setUserLocation({ lat: 37.7749, lng: -122.4194 });
     }
   };
-
   useEffect(() => {
     getUserLocation();
   }, []);
-
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
-
   const handleRadiusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setRadius(Number(e.target.value));
   };
-
   const formatRadius = (value: number): string => {
     if (value < 1000) {
       return `${value} m`;
@@ -250,10 +221,9 @@ export const Map = () => {
       return `${(value / 1000).toFixed(1)} km`;
     }
   };
-
   return (
-    <LoadScript 
-      googleMapsApiKey="AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM" 
+    <LoadScript
+      googleMapsApiKey="AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM"
       libraries={["places"]}
       onLoad={() => console.log("Google Maps API loaded")}
       loadingElement={
@@ -306,7 +276,6 @@ export const Map = () => {
               }}
             >
               <Marker position={userLocation} />
-
               <Circle
                 center={userLocation}
                 radius={radius}
@@ -317,7 +286,6 @@ export const Map = () => {
                   strokeWeight: 2,
                 }}
               />
-
               {restaurants.map((restaurant, index) => (
                 <Marker
                   key={index}
@@ -328,7 +296,6 @@ export const Map = () => {
                 />
               ))}
             </GoogleMap>
-            
             {isMapLoading && (
               <div className="absolute top-4 right-4 flex items-center bg-white p-3 rounded-lg shadow-md z-[1001]">
                 <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mr-2"></div>
@@ -337,14 +304,12 @@ export const Map = () => {
             )}
           </>
         )}
-
         {!userLocation && (
           <div className="flex flex-col justify-center items-center h-screen w-full bg-gray-100">
             <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
             <h6 className="mt-2 text-lg font-medium">Getting your location...</h6>
           </div>
         )}
-
         <div className="absolute bottom-[70px] left-[11%] transform -translate-x-1/2 w-[300px] bg-white p-4 rounded-lg shadow-md z-[1000]">
           <p className="mb-2">Search Radius: {formatRadius(radius)}</p>
           <div className="w-full">
@@ -363,22 +328,20 @@ export const Map = () => {
             </div>
           </div>
         </div>
-
         <div className="absolute bottom-1/4 left-[7%] z-[2000] flex flex-col gap-2.5">
-          <button 
+          <button
             className="bg-[#C47B4D] hover:bg-[#A35F35] text-white py-2 px-4 rounded shadow transition-colors"
             onClick={toggleSidebar}
           >
             {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
           </button>
-          <button 
+          <button
             className="bg-[#C47B4D] hover:bg-[#A35F35] text-white py-2 px-4 rounded shadow transition-colors"
             onClick={() => setIsDicePopupOpen(true)}
           >
             Roll the Dice
           </button>
         </div>
-
         {isSidebarOpen && (
           <div className="absolute top-0 right-0 w-[300px] h-[calc(100vh-60px)] bg-white overflow-y-auto z-[999] p-5 shadow-md">
             <div className="mb-4">
@@ -386,7 +349,6 @@ export const Map = () => {
                 Showing restaurants within {formatRadius(radius)}
               </h6>
             </div>
-
             {sortedRestaurants.length > 0 ? (
               sortedRestaurants.map((restaurant, index) => (
                 <div key={index} className="mb-5 p-3 bg-gray-50 rounded-lg shadow-sm">
@@ -405,7 +367,6 @@ export const Map = () => {
             )}
           </div>
         )}
-
         <DicePopup
           open={isDicePopupOpen}
           onClose={() => setIsDicePopupOpen(false)}
@@ -415,3 +376,9 @@ export const Map = () => {
     </LoadScript>
   );
 };
+
+
+
+
+
+
