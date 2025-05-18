@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "findingnibbles-460212",
+  "private_key_id": "6d1e39b0f62b70f4a69ef624ccfda329fcfe2591",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDS0adD5nNQVne6\nGQN59X8p+9BKOePP3Mirgpf39d+QupViIhVja8AAaz7wIdjhV3NU7q7ThRwFK/Cj\nkv55sIh34xYOX7Pj2GA99oK2iWx31GiJLpaiCPol8LOEAiRKEwieFwUVJs9/QL9r\nd/tsAgcBGPXAqgD6mDTW2DqZqJU+mSP+glZ/0AowcDbW6P+Yb2mWa0R4ra0gE7XF\nbuh8OozcOyUPGhYFLNmOyGyi8hJhmpNRmVnLweMY5IzUouTtCT4I6SgnQQ9UwV1y\nD4tAQ6hjDVuFfkbrQqokvha48fWL3ebU7I61rwpoS1ElO1k7g6EFXho5To3jmHG9\nNFymmF+jAgMBAAECggEAIx+l8qnxmrgam3PxFdUr2hansG4uVo0uFmZxePD1zfr1\ndNOWj6lojvP57kUdXrHUt8OfzK2NKmQUjr7TTKVM9KMYziKYvy8SHdC1HMIO7coC\n8/QXSajIOyD8BP7cWpu1iwKX01soz/E9fc4QIqxrIVODbOrbXeTqTMSFbYteTil6\nclzeZxp7pD8hhjgYDG8cG5XDpziE/VkC48NNkq4rZGRapEC6Br6m+tuY/i0UdF2t\nv7L3fmGoxyoSorQ15Qx+jABN2roN0Zn3mGW1+F4wnEVKDeid/BBiTr7XKmgHD8K4\nUnKrB0R5xXV49iyxzZKp/GkN4rHwrHJsEnpOfMcHCQKBgQDtn4nbObSuULA4b6tV\ntD7wTfXHSQsp1LoFLZicADTd48ZwbvNxvIduLWg3l6+OgXtCjnY7YEA0UoWwOhuP\n5BfSAxaGghDKgEWEAWdiekUsrPaVkUQTmqCJRT4Ouejf0KoAoD9r8MQEy1U6xLr7\nENauLXrqalf8aQJiatfN4UaROQKBgQDjH3HhlndDqTJ1D80ZLAT6H92cHIDB/8fl\nEegcEcWuyRH4jZzEOK/p+bBtJahzP/QgMYG9w7uxB6GezVDRi5LS8xjX0d7VPYaS\nORJUG2oyhL/xM+zlAoLl1mtTq1poOuKuaaf0ciSPjL8q63bqc6y0d9ZQ4HAvMW7p\nsJTABz2juwKBgQDtQNyo+Y3wefno735XnRc2YfCjYMf3pUFyiBsWr5IZdiIdAnqp\nNf7WwBmNYDNWCuwiARIFqM2SME7xLKN2YNxzwMeN13Gibr551dj+12wX9j5iCd+5\n3yqoxGz40SC1z6bd5yJLyOI+kzJu8hxrL13aHOjcAwAEsmhCEcGU+3e06QKBgAR0\nCGKY9auw9JlQ/v+AWnShDVJTSL8FCeFW8YsjWhHsRVrvQ+ShC+n1iF0LgPsJhPrg\nnZ+f5903vhaEBhKlvvI96/3HUqwxsaLKVa6qfvGQosbS8tEmtHRXOPGCCZrDlNBA\nqBdl6YubAeCQj1tXe0pqkxww2mJCgN86JCCDw9SjAoGAAImV++AYn39awS8FDZRZ\nPIujx36+7OaxXYwVnM6p6X6QSf21I/PwwKs+y3Bz7d/iMwWCsWwl9wpaqLoEIfK3\nOum+QUK6aZHD4Qf2Dk8CgdDyfeDSikxYwYw0AkvIF64Xgy7r2g/QGrzHbzbU6UTk\nU/NAKUxII97FftCISdBvpR8=\n-----END PRIVATE KEY-----\n",
+  "client_email": "vertex-ai-api-sa@findingnibbles-460212.iam.gserviceaccount.com",
+  "client_id": "106883048375660193266",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/vertex-ai-api-sa%40findingnibbles-460212.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

@@ -5,6 +5,7 @@ import { Login } from '../pages/Login';
 import { Register } from '../pages/Register';
 import { MainUI } from '../pages/MainUI';
 import { Map } from '../pages/Map';
+import  AiSuggestion  from '../pages/AiSuggestion';
 import { RoutesConfigProps } from '../types/User';
 import { Profile } from '../pages/Profile';
 import { SearchHistory } from '../pages/SearchHistory';
@@ -27,6 +28,7 @@ export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
             {/* Protected Routes */}
             <Route path="/" element={requireAuth(<Map />)} />
             <Route path="/map" element={requireAuth(<Map />)} />
+            <Route path="/ai-suggestion" element={requireAuth(<AiSuggestion />)} />
             <Route path="/profile" element={requireAuth(<Profile />)} />
             <Route path="/search-history" element={requireAuth(<SearchHistory />)} />
             <Route path="/meal-planner" element={requireAuth(<MealPlanner />)} />
