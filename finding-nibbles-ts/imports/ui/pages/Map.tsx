@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { GoogleMap, LoadScript, Marker, Circle } from "@react-google-maps/api";
+import { GoogleMap, LoadScript, Marker, Circle ,InfoWindow } from "@react-google-maps/api";
 import { Box, Button, Slider, Typography } from "@mui/material";
 import DicePopup from "../components/popups/DicePopup";
 
@@ -29,6 +29,7 @@ export const Map = () => {
   const [isDicePopupOpen, setIsDicePopupOpen] = useState(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
+  const [hoveredMarkerIndex, setHoveredMarkerIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const updateMaxResults = async () => {
@@ -150,6 +151,29 @@ export const Map = () => {
       return [];
     }
   }
+
+const cuisineIcons: Record<string, string> = {
+  "Hamburger": "/images/burger.png",
+  "Italian": "/images/italian.png",
+  "Indian" : "/images/indfsian.png",
+};
+
+
+const getCuisineIcon = (types: string[] | undefined): string | undefined => {
+  if (!types) return;
+
+  for (let type of types) {
+    if (type.includes("restaurant")) {
+      const cuisine = normalizeCuisineType(type); 
+      if (cuisineIcons[cuisine]) {
+        return cuisineIcons[cuisine];
+      }
+    }
+  }
+
+  return undefined; 
+};
+
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
