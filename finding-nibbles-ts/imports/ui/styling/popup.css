@@ -1,0 +1,241 @@
+/*Dice pop-up*/
+.dice-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .dice-modal {
+    background: #f4e1d2;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    position: relative;
+    width: 500px;
+    max-width: 90%;
+    text-align: center;
+  }
+  
+  .close-button {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
+  .dice-modal h2 {
+    color: #333;
+    margin-bottom: 1.5rem;
+  }
+  
+  .dice-modal h3 {
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  .cuisine-selection {
+    margin: 1rem 0;
+  }
+  
+  .cuisine-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  .cuisine-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border-radius: 15px;
+    background: #fff;
+    transition: all 0.3s ease;
+  }
+  
+  .cuisine-checkbox:hover {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+  }
+  
+  .cuisine-checkbox input {
+    cursor: pointer;
+  }
+  
+  .dice-graphic {
+    perspective: 1000px;
+    width: 160px;
+    height: 160px;
+    margin: 2rem auto;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    transform-style: preserve-3d;
+    transform: rotateX(-15deg) rotateY(-15deg);
+  }
+  
+  .dice-graphic:hover {
+    transform: rotateX(-20deg) rotateY(-20deg) scale(1.05);
+  }
+  
+  .dice {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 1s ease-out;
+  }
+  
+  .dice.rolling {
+    animation: roll 1s ease-out;
+  }
+  
+  @keyframes roll {
+    0% {
+      transform: rotateX(-15deg) rotateY(-15deg);
+    }
+    25% {
+      transform: rotateX(165deg) rotateY(75deg);
+    }
+    50% {
+      transform: rotateX(345deg) rotateY(165deg);
+    }
+    75% {
+      transform: rotateX(525deg) rotateY(255deg);
+    }
+    100% {
+      transform: rotateX(-15deg) rotateY(-15deg);
+    }
+  }
+  
+  .dice-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border: 2px solid #ccc;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    backface-visibility: visible;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+    padding: 10px;
+    transition: all 0.3s ease;
+  }
+  
+  .dice-face:hover {
+    background: linear-gradient(145deg, #f0f0f0, #ffffff);
+  }
+  
+  .dice-face.front { 
+    transform: translateZ(80px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .dice-face.back { 
+    transform: rotateY(180deg) translateZ(80px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .dice-face.right { 
+    transform: rotateY(90deg) translateZ(80px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .dice-face.left { 
+    transform: rotateY(-90deg) translateZ(80px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .dice-face.top { 
+    transform: rotateX(90deg) translateZ(80px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .dice-face.bottom { 
+    transform: rotateX(-90deg) translateZ(80px);
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-color: #ddd;
+  }
+  
+  .selected-cuisines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .cuisine-tag {
+    background: #fff;
+    border: 1px solid #aaa;
+    border-radius: 20px;
+    padding: 0.4rem 0.8rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    color: #333;
+  }
+  
+  .cuisine-tag:hover {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+  }
+  
+  .tag-remove {
+    margin-left: 5px;
+    background: transparent;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s ease;
+  }
+  
+  .tag-remove:hover {
+    color: #ff4444;
+  }
+  /* Styling for the "Remove All Cuisines" button */
+.remove-all-button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.remove-all-button:hover {
+  background-color: #ff1a1a;
+  transform: translateY(-2px);
+}
+
+.remove-all-button:active {
+  background-color: #cc0000;
+  transform: translateY(0);
+}

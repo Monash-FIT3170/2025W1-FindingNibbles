@@ -1,0 +1,61 @@
+'''
+Write an algorithm (in any language you prefer) which accepts five characters, performs a Z85 decode on
+them, and prints out the four decoded bytes. Use the above description of Z85 as a guide. Note that you will
+need to use shifting and masking to assemble the decoded bytes. You do not need to include the encoding
+for 4 bytes of consecutive zero values.
+
+1) store ascii of each letter
+2) subtract 32 from those Ascii values
+3) use that value now as the index and get the corresponding hex value from the lookup table attached at the end
+4) use those values and start from left multiply each number by increasing values of 85 from 85^0 to 85^4.
+5) convert the number formed after adding those values to binary
+6) split that binary number to 4, 8 bit size values
+7) use them as ascii to decode the final string
+
+'''
+
+lookup_table = [0x00, 0x44, 0x00, 0x54, 0x53, 0x52, 0x48, 0x00, 0x4B,
+0x4C, 0x46, 0x41, 0x00, 0x3F, 0x3E, 0x45, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+0x06, 0x07, 0x08, 0x09, 0x40, 0x00, 0x49, 0x42, 0x4A, 0x47, 0x51, 0x24, 0x25,
+0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32,
+0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x4D, 0x00,
+0x4E, 0x43, 0x00, 0x00, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12,
+0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
+0x20, 0x21, 0x22, 0x23, 0x4F, 0x00, 0x50, 0x00, 0x00 ]
+
+def decode_z85(chars):
+    # Step 1: Store the ASCII values of each letter
+    ascii_values = [ord(char) for char in chars]
+    
+    # Step 2: Subtract 32 from the ASCII values
+    adjusted_values = [val - 32 for val in ascii_values]
+    
+    # Step 3: Lookup each value in the decoder table
+    hex_values = [lookup_table[val] for val in adjusted_values]
+    
+    # Step 4: Multiply each hex value by increasing powers of 85
+    result = 0
+    for i, hex_val in enumerate(hex_values):
+        result += hex_val * (85 ** (4 - i))  # Starting from 85^4 down to 85^0
+    
+    # Step 5: Convert the resulting number to binary
+    binary_result = bin(result)[2:].zfill(32)  # Ensure it's 32 bits
+    
+    # Step 6: Split the binary number into 4 bytes (8 bits each)
+    bytes_values = [
+        int(binary_result[i:i+8], 2) for i in range(0, len(binary_result), 8)
+    ]
+    
+    # Step 7: Convert these bytes to characters and return the decoded string
+    decoded_string = ''.join(chr(byte) for byte in bytes_values)
+    
+    return decoded_string
+
+# Test the function
+test_string = "mOcMh"
+decoded_result = decode_z85(test_string)
+print(f"Decoded result: {decoded_result}")
+
+
+
+
