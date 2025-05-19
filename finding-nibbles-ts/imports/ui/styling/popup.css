@@ -217,3 +217,25 @@
   .tag-remove:hover {
     color: #ff4444;
   }
+  /* Styling for the "Remove All Cuisines" button */
+.remove-all-button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.remove-all-button:hover {
+  background-color: #ff1a1a;
+  transform: translateY(-2px);
+}
+
+.remove-all-button:active {
+  background-color: #cc0000;
+  transform: translateY(0);
+}
