@@ -30,6 +30,7 @@ export const Map = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
   const [hoveredMarkerIndex, setHoveredMarkerIndex] = useState<number | null>(null);
+  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const updateMaxResults = async () => {
@@ -248,15 +249,22 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               }}
             />
 
-            {restaurants.map((restaurant, index) => (
+          {restaurants.map((restaurant, index) => {
+            const isHovered = hoveredMarkerIndex === index;
               <Marker
                 key={index}
                 position={{
                   lat: restaurant.location.latitude,
                   lng: restaurant.location.longitude,
                 }}
-              />
-            ))}
+                icon={{
+                  url: iconUrl,
+                  scaledSize: new window.google.maps.Size(
+                    isHovered ? 50 : 40,  // Grow on hover
+                    isHovered ? 50 : 40
+                  ),
+                }}
+                onMouseOver={() => setHoveredMarkerIndex(index)}
           </GoogleMap>
         )}
 
