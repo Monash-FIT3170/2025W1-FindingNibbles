@@ -32,6 +32,8 @@ export const Map = () => {
   const [hoveredMarkerIndex, setHoveredMarkerIndex] = useState<number | null>(null);
   const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
 
+
+
   useEffect(() => {
     const updateMaxResults = async () => {
       if (userLocation && map) {
@@ -151,6 +153,7 @@ export const Map = () => {
       console.error("Error fetching restaurants:", error instanceof Error ? error.message : String(error));
       return [];
     }
+
   }
 
 const cuisineIcons: Record<string, string> = {
@@ -174,6 +177,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
 
   return undefined; 
 };
+
 
 
   const getUserLocation = () => {
@@ -251,6 +255,10 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
 
           {restaurants.map((restaurant, index) => {
             const isHovered = hoveredMarkerIndex === index;
+            const isSelected = selectedMarkerIndex === index;
+            const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
+
+            return (
               <Marker
                 key={index}
                 position={{
@@ -293,6 +301,8 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
             </div>
           </InfoWindow>
         )}
+
+
           </GoogleMap>
         )}
 
