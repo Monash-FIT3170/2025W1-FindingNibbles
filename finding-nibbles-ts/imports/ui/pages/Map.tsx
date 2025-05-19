@@ -265,6 +265,34 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                   ),
                 }}
                 onMouseOver={() => setHoveredMarkerIndex(index)}
+                onMouseOut={() => setHoveredMarkerIndex(null)}
+                onClick={() => setSelectedMarkerIndex(index)}
+              />
+            );
+          })}
+
+          {selectedMarkerIndex !== null && restaurants[selectedMarkerIndex] && (
+          <InfoWindow
+            position={{
+              lat: restaurants[selectedMarkerIndex].location.latitude,
+              lng: restaurants[selectedMarkerIndex].location.longitude,
+            }}
+            onCloseClick={() => setSelectedMarkerIndex(null)}
+          >
+            <div style={{ maxWidth: "200px" }}>
+              <h3 style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].displayName?.text || "N/A"}</h3>
+              <p style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].formattedAddress || "N/A"}</p>
+              <p style={{ margin: "0" }}>Rating: {restaurants[selectedMarkerIndex].rating ?? "N/A"}</p>
+              <p style={{ margin: "0" }}>
+                Cuisine:{" "}
+                {restaurants[selectedMarkerIndex].types
+                  ?.filter((type) => type.includes("restaurant"))
+                  .map(normalizeCuisineType)
+                  .join(", ") || "N/A"}
+              </p>
+            </div>
+          </InfoWindow>
+        )}
           </GoogleMap>
         )}
 
