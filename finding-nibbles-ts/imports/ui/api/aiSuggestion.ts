@@ -1,13 +1,18 @@
+import 'dotenv/config';
 import { WebApp } from 'meteor/webapp';
 import { parse } from 'url';
 import type { IncomingMessage, ServerResponse } from 'http';
 import { VertexAI } from '@google-cloud/vertexai';
 
-// Initialize VertexAI for Gemini model
+
+
 const project = process.env.PROJECT_ID || 'findingnibbles-460212';
 const location = process.env.LOCATION || 'us-central1';
 
+console.log("PROJECT_ID:", process.env.PROJECT_ID ?? 'Not set');
+
 const vertexAI = new VertexAI({ project, location });
+
 const model = vertexAI.getGenerativeModel({
   model: 'gemini-2.0-flash-001',
 });
@@ -29,12 +34,17 @@ WebApp.rawHandlers.use((req: IncomingMessage, res: ServerResponse, next: () => v
 
   req.on('end', async () => {
     try {
-      const requestData: { cuisine?: string } = JSON.parse(body);
-      const { cuisine } = requestData;
+      const requestData: { cuisine?: string; occasion?: string } = JSON.parse(body);
+      const { occasion } = requestData;
 
-      const prompt = cuisine
-        ? `Suggest a creative and popular dish from ${cuisine} cuisine.`
-        : 'Suggest a random creative international dish.';
+      let prompt = '';
+
+      if (occasion) {
+        prompt = `Suggest a dish suitable for a special occasion like ${occasion} in three sentences.`;
+      }
+       else {
+        prompt = 'Suggest a random creative international dish in three sentences.';
+      }
 
       const result = await model.generateContent({
         contents: [
