@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import {Sidebar} from '../components/layouts/Sidebar.tsx';
+import {Sidebar} from '../components/layouts/Sidebar';
 
 export const MealPlanner = () => {
 
