@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { TextField, Box} from "@mui/material";
+import { TextField, Box, MenuItem} from "@mui/material";
 import DicePopup from "../components/popups/DicePopup"; 
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete,InfoWindow  } from "@react-google-maps/api";
 // Add debounce utility
@@ -44,6 +44,8 @@ export const Map = () => {
   const [debouncedRadius, setDebouncedRadius] = useState(radius);
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   const [selectedCusine, setSelectedCusine] = useState<string>('All');
+
+
 
   // Create debounced fetch function with useCallback
   const debouncedFetchRestaurants = useCallback(
@@ -126,6 +128,7 @@ export const Map = () => {
     const baseType = type.replace("_restaurant", "");
     return baseType.charAt(0).toUpperCase() + baseType.slice(1);
   };
+
 const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string): Restaurant[] => {
   if (cuisine === 'All') return restaurants;
 
@@ -137,6 +140,7 @@ const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string):
     )
   );
 };
+
   const isCuisineType = (type: string): boolean => {
     const genericTypes = [
       "restaurant",
@@ -290,6 +294,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               }}
             />
 
+          {/* {restaurants.map((restaurant, index) => { */}
           {filterRestaurantsByCuisine(restaurants, selectedCusine).map((restaurant, index) => {
             const isHovered = hoveredMarkerIndex === index;
             const isSelected = selectedMarkerIndex === index;
@@ -398,6 +403,8 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               ))}
             </TextField>
           </Box>
+
+
         {userLocation && (
           <>
             <GoogleMap
