@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {Sidebar} from '../components/layouts/Sidebar.tsx';
+import {Sidebar} from '../components/layouts/Sidebar';
 
 
 export const SearchHistory = () => {
