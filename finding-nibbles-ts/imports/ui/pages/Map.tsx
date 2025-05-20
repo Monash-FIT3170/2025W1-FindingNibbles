@@ -275,9 +275,20 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
   // Add this function to check if a restaurant matches the highlighted cuisine
   const isRestaurantHighlighted = (restaurant: Restaurant) => {
     if (!highlightedCuisine) return false;
-    return restaurant.types?.some(type => 
-      type.toLowerCase().includes(highlightedCuisine.toLowerCase())
-    ) ?? false;
+    
+    // Convert both the highlighted cuisine and restaurant types to lowercase for comparison
+    const normalizedHighlightedCuisine = highlightedCuisine.toLowerCase();
+    
+    return restaurant.types?.some(type => {
+      // Only check restaurant types
+      if (!type.includes('restaurant')) return false;
+      
+      // Normalize the type by removing '_restaurant' and converting to lowercase
+      const normalizedType = type.replace('_restaurant', '').toLowerCase();
+      
+      // Check if the normalized type matches the highlighted cuisine
+      return normalizedType === normalizedHighlightedCuisine;
+    }) ?? false;
   };
   return (
     <LoadScript googleMapsApiKey="AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM" libraries={["places"]}>
