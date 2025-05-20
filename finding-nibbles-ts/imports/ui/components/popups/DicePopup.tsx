@@ -5,9 +5,10 @@ interface DicePopupProps {
   open: boolean;
   onClose: () => void;
   availableCuisines: string[];
+  onRoll?: (cuisine: string) => void;
 }
 
-const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines }) => {
+const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines, onRoll }) => {
   if (!open) return null;
 
   const [rolledCuisine, setRolledCuisine] = useState<string | null>(null);
@@ -50,6 +51,10 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
       const selected = selectedCuisines[randomIndex];
       setRolledCuisine(selected);
       setIsRolling(false);
+      
+      if (onRoll) {
+        onRoll(selected);
+      }
 
       const otherCuisines = selectedCuisines.filter(c => c !== selected);
       let shuffled = [...otherCuisines].sort(() => Math.random() - 0.5);
