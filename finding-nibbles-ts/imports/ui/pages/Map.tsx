@@ -407,40 +407,6 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
 
         {userLocation && (
           <>
-            <GoogleMap
-              mapContainerStyle={containerStyle}
-              center={userLocation}
-              zoom={14}
-              options={{
-                ...mapContainerStyle,
-                scrollwheel: false,
-              }}
-              onLoad={(mapInstance) => {
-                setMap(mapInstance);
-                setIsMapLoading(false);
-              }}
-            >
-              <Marker position={userLocation} />
-              <Circle
-                center={userLocation}
-                radius={radius}
-                options={{
-                  fillColor: "rgba(100, 158, 255, 0.2)",
-                  strokeColor: "#4285F4",
-                  strokeOpacity: 0.8,
-                  strokeWeight: 2,
-                }}
-              />
-              {restaurants.map((restaurant, index) => (
-                <Marker
-                  key={index}
-                  position={{
-                    lat: restaurant.location.latitude,
-                    lng: restaurant.location.longitude,
-                  }}
-                />
-              ))}
-            </GoogleMap>
             {isMapLoading && (
               <div className="absolute top-4 right-4 flex items-center bg-white p-3 rounded-lg shadow-md z-[1001]">
                 <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mr-2"></div>
