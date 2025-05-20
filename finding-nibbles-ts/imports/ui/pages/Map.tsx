@@ -290,7 +290,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               }}
             />
 
-          {restaurants.map((restaurant, index) => {
+          {filterRestaurantsByCuisine(restaurants, selectedCusine).map((restaurant, index) => {
             const isHovered = hoveredMarkerIndex === index;
             const isSelected = selectedMarkerIndex === index;
             const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
