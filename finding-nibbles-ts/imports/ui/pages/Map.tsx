@@ -369,6 +369,35 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
             />
           </Autocomplete>
         </Box>
+        <Box
+            sx={{
+              position: "absolute",
+              top: "140px", // Position it *below* the search box
+              left: "20px",
+              bgcolor: "white",
+              p: 1,
+              borderRadius: 2,
+              boxShadow: 3,
+              zIndex: 1500,
+              width: "300px",
+            }}
+          >
+            <TextField
+              select
+              fullWidth
+              label="Filter by Cuisine"
+              size="small"
+              value={selectedCusine}
+              onChange={(e) => setSelectedCusine(e.target.value)}
+            >
+              <MenuItem value="All">All</MenuItem>
+              {availableCuisines.map((cuisine) => (
+                <MenuItem key={cuisine} value={cuisine}>
+                  {cuisine}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Box>
         {userLocation && (
           <>
             <GoogleMap
