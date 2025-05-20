@@ -70,10 +70,6 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines,
     }, 1000);
   };
 
-  const handleRemoveCuisine = (cuisine: string) => {
-    setSelectedCuisines((prev) => prev.filter((c) => c !== cuisine));
-  };
-
   return (
     <div className="dice-modal-overlay">
       <div className="dice-modal">
