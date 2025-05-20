@@ -232,8 +232,6 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
   return undefined; 
 };
 
-
-
   const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
