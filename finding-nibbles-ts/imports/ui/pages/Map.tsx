@@ -37,6 +37,7 @@ export const Map = () => {
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
   const [hoveredMarkerIndex, setHoveredMarkerIndex] = useState<number | null>(null);
   const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
+  const [highlightedCuisine, setHighlightedCuisine] = useState<string | null>(null);
 
 
   const [isMapLoading, setIsMapLoading] = useState(true);
@@ -267,6 +268,28 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
       return `${(value / 1000).toFixed(1)} km`;
     }
   };
+  const handleDiceRoll = (cuisine: string) => {
+    setHighlightedCuisine(cuisine);
+  };
+
+  // Add this function to check if a restaurant matches the highlighted cuisine
+  const isRestaurantHighlighted = (restaurant: Restaurant) => {
+    if (!highlightedCuisine) return false;
+    
+    // Convert both the highlighted cuisine and restaurant types to lowercase for comparison
+    const normalizedHighlightedCuisine = highlightedCuisine.toLowerCase();
+    
+    return restaurant.types?.some(type => {
+      // Only check restaurant types
+      if (!type.includes('restaurant')) return false;
+      
+      // Normalize the type by removing '_restaurant' and converting to lowercase
+      const normalizedType = type.replace('_restaurant', '').toLowerCase();
+      
+      // Check if the normalized type matches the highlighted cuisine
+      return normalizedType === normalizedHighlightedCuisine;
+    }) ?? false;
+  };
   return (
     <LoadScript googleMapsApiKey="AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM" libraries={["places"]}>
       <div style={{ position: "relative", height: "100vh" }}>
@@ -297,7 +320,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
           {restaurants.map((restaurant, index) => {
           // {filterRestaurantsByCuisine(restaurants, selectedCusine).map((restaurant, index) => {
             const isHovered = hoveredMarkerIndex === index;
-            const isSelected = selectedMarkerIndex === index;
+            const isHighlighted = isRestaurantHighlighted(restaurant);
             const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
 
             return (
@@ -310,10 +333,11 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                 icon={{
                   url: iconUrl,
                   scaledSize: new window.google.maps.Size(
-                    isHovered ? 50 : 40,  // Grow on hover
-                    isHovered ? 50 : 40
+                    isHovered ? 50 : (isHighlighted ? 45 : 40),  // Grow on hover or if highlighted
+                    isHovered ? 50 : (isHighlighted ? 45 : 40)
                   ),
                 }}
+                animation={isHighlighted ? google.maps.Animation.BOUNCE : undefined}
                 onMouseOver={() => setHoveredMarkerIndex(index)}
                 onMouseOut={() => setHoveredMarkerIndex(null)}
                 onClick={() => setSelectedMarkerIndex(index)}
@@ -453,6 +477,14 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
           >
             Roll the Dice
           </button>
+          {highlightedCuisine && (
+            <button
+              className="bg-[#F4E1D2] hover:bg-[#EED3BB] text-[#C47B4D] py-2 px-4 rounded shadow transition-colors"
+              onClick={() => setHighlightedCuisine(null)}
+            >
+              Clear Highlight
+            </button>
+          )}
         </div>
         {isSidebarOpen && (
           <div className="absolute top-0 right-0 w-[300px] h-[calc(100vh-60px)] bg-white overflow-y-auto z-[999] p-5 shadow-md">
@@ -460,10 +492,22 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               <h6 className="text-lg font-medium">
                 Showing restaurants within {formatRadius(radius)}
               </h6>
+              {highlightedCuisine && (
+                <p className="text-sm text-[#C47B4D] font-medium">
+                  Highlighting {highlightedCuisine} restaurants
+                </p>
+              )}
             </div>
             {sortedRestaurants.length > 0 ? (
               sortedRestaurants.map((restaurant, index) => (
-                <div key={index} className="mb-5 p-3 bg-gray-50 rounded-lg shadow-sm">
+                <div 
+                  key={index} 
+                  className={`mb-5 p-3 rounded-lg shadow-sm transition-all duration-300 ${
+                    isRestaurantHighlighted(restaurant) 
+                      ? 'bg-[#F4E1D2] border-2 border-[#C47B4D]' 
+                      : 'bg-gray-50'
+                  }`}
+                >
                   <h3 className="font-bold text-lg">{restaurant.displayName?.text || "N/A"}</h3>
                   <p className="text-gray-600 mt-1">{restaurant.formattedAddress || "N/A"}</p>
                   <p className="mt-1">Rating: {restaurant.rating || "N/A"}</p>
@@ -481,8 +525,11 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
         )}
         <DicePopup
           open={isDicePopupOpen}
-          onClose={() => setIsDicePopupOpen(false)}
+          onClose={() => {
+            setIsDicePopupOpen(false);
+          }}
           availableCuisines={availableCuisines}
+          onRoll={handleDiceRoll}
         />
       </div>
     </LoadScript>
