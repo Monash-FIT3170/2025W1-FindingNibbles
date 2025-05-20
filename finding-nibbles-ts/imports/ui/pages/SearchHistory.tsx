@@ -1,26 +1,41 @@
-import React, { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link as RouterLink} from "react-router-dom";
 import {
     ListItem,
     ListItemButton,
   } from "@mui/material";
 import { Meteor } from 'meteor/meteor';
-import { useTracker } from 'meteor/react-meteor-data';
 import { SearchHistory as SearchHistoryCollection, ISearchHistory } from '/imports/ui/api/searchHistory';
 
 
 
 export const SearchHistory = () => {
-  const { history, historyLoading } = useTracker(() => {
-    const handle = Meteor.subscribe('searchHistory');
-    const loading = !handle.ready();
+  const [history, setHistory] = useState<ISearchHistory[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  useEffect(() => {
+    // Set up the subscription
+    const subscription = Meteor.subscribe('searchHistory');
     
-    // Get the search history documents
-    const historyItems = SearchHistoryCollection.find({}, { sort: { timestamp: -1 } }).fetch();
+    // Function to update history data
+    const updateHistory = () => {
+      if (subscription.ready()) {
+        const historyItems = SearchHistoryCollection.find({}, { sort: { timestamp: -1 } }).fetch();
+        setHistory(historyItems);
+        setHistoryLoading(false);
+      }
+    };
     
-    return {
-      history: historyItems,
-      historyLoading: loading,
+    // Initial update
+    updateHistory();
+    
+    // Set up an interval to check for changes
+    const intervalId = setInterval(updateHistory, 500);
+    
+    // Clean up on unmount
+    return () => {
+      subscription.stop();
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -29,6 +44,11 @@ export const SearchHistory = () => {
     Meteor.call('searchHistory.remove', searchTerm, (error: any) => {
       if (error) {
         console.error('Error removing search history item:', error);
+      } else {
+        // Update the local state to reflect the removal
+        setHistory(prevHistory => 
+          prevHistory.filter(item => item.searchTerm !== searchTerm)
+        );
       }
     });
   };
