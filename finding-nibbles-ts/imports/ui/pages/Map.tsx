@@ -125,6 +125,17 @@ export const Map = () => {
     const baseType = type.replace("_restaurant", "");
     return baseType.charAt(0).toUpperCase() + baseType.slice(1);
   };
+const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string): Restaurant[] => {
+  if (cuisine === 'All') return restaurants;
+
+  return restaurants.filter((restaurant) =>
+    restaurant.types?.some(
+      (type) =>
+        type.includes("restaurant") &&
+        normalizeCuisineType(type) === cuisine
+    )
+  );
+};
   const isCuisineType = (type: string): boolean => {
     const genericTypes = [
       "restaurant",
