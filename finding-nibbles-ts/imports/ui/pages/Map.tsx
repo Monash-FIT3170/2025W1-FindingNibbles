@@ -43,6 +43,7 @@ export const Map = () => {
   const [sortedRestaurants, setSortedRestaurants] = useState<Restaurant[]>([]);
   const [debouncedRadius, setDebouncedRadius] = useState(radius);
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [selectedCusine, setSelectedCusine] = useState<string>('All');
 
   // Create debounced fetch function with useCallback
   const debouncedFetchRestaurants = useCallback(
