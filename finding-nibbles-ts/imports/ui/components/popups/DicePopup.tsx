@@ -5,9 +5,10 @@ interface DicePopupProps {
   open: boolean;
   onClose: () => void;
   availableCuisines: string[];
+  onRoll?: (cuisine: string) => void;
 }
 
-const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines }) => {
+const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines, onRoll }) => {
   if (!open) return null;
 
   const [rolledCuisine, setRolledCuisine] = useState<string | null>(null);
@@ -50,6 +51,10 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
       const selected = selectedCuisines[randomIndex];
       setRolledCuisine(selected);
       setIsRolling(false);
+      
+      if (onRoll) {
+        onRoll(selected);
+      }
 
       const otherCuisines = selectedCuisines.filter(c => c !== selected);
       let shuffled = [...otherCuisines].sort(() => Math.random() - 0.5);
@@ -65,10 +70,6 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
     }, 1000);
   };
 
-  const handleRemoveCuisine = (cuisine: string) => {
-    setSelectedCuisines((prev) => prev.filter((c) => c !== cuisine));
-  };
-
   return (
     <div className="dice-modal-overlay">
       <div className="dice-modal">
@@ -80,7 +81,15 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
 
         {/* Available Cuisines Section */}
         <div className="cuisine-selection">
-          <h3>Nearby Cuisines</h3>
+          <div className="cuisine-header">
+            <h3>Nearby Cuisines</h3>
+            <button
+              className="deselect-all-button"
+              onClick={() => setSelectedCuisines([])}
+            >
+              Deselect All
+            </button>
+          </div>
           <div className="cuisine-checkboxes">
             {availableCuisines.map((cuisine) => (
               <label key={cuisine} className="cuisine-checkbox">
@@ -104,37 +113,6 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines 
             <div className="dice-face left">{diceFaces[3]}</div>
             <div className="dice-face top">{diceFaces[4]}</div>
             <div className="dice-face bottom">{diceFaces[5]}</div>
-          </div>
-        </div>
-
-        {/* Selected Cuisines Section */}
-        <div className="selected-cuisines-section">
-          <h3>Selected Cuisines</h3>
-          <div className="selected-cuisines">
-            {selectedCuisines.length > 0 ? (
-              <>
-                {selectedCuisines.map((cuisine) => (
-                  <span key={cuisine} className="cuisine-tag">
-                    {cuisine}
-                    <button
-                      className="tag-remove"
-                      onClick={() => handleRemoveCuisine(cuisine)}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-                {/* Add a "Remove Cuisines" button */}
-                <button
-                  className="remove-all-button"
-                  onClick={() => setSelectedCuisines([])}
-                >
-                  Remove All Cuisines
-                </button>
-              </>
-            ) : (
-              <p>No cuisines selected</p>
-            )}
           </div>
         </div>
       </div>
