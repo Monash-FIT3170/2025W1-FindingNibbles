@@ -317,8 +317,8 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               }}
             />
 
-          {restaurants.map((restaurant, index) => {
-          // {filterRestaurantsByCuisine(restaurants, selectedCusine).map((restaurant, index) => {
+          {/* {restaurants.map((restaurant, index) => { */}
+          {filterRestaurantsByCuisine(restaurants, selectedCusine).map((restaurant, index) => {
             const isHovered = hoveredMarkerIndex === index;
             const isHighlighted = isRestaurantHighlighted(restaurant);
             const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
@@ -367,8 +367,6 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
             </div>
           </InfoWindow>
         )}
-
-
           </GoogleMap>
         )}
 
@@ -398,6 +396,8 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
             />
           </Autocomplete>
         </Box>
+
+        <div>
         <Box
             sx={{
               position: "absolute",
@@ -427,8 +427,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               ))}
             </TextField>
           </Box>
-
-
+        </div>
         {userLocation && (
           <>
 
