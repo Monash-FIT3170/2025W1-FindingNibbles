@@ -1,68 +1,76 @@
-import { useTracker } from "meteor/react-meteor-data";
-import { SavedRestaurantsCollection, SavedRestaurant } from "../types/SavedRestaurants";
-import { Meteor } from "meteor/meteor";
+import React, { useEffect, useState } from 'react';
+import { Meteor } from 'meteor/meteor';
+import { SavedRestaurantsCollection, ISavedRestaurant} from '../api/SavedRestaurants';
+import { Sidebar } from '../components/layouts/Sidebar';
 
-export const SavedRestaurants = () => {
-  // Subscribe and fetch saved restaurants for the current user
-  const savedRestaurants = useTracker(() => {
-    const handler = Meteor.subscribe("savedRestaurants.user");
-    if (!handler.ready()) {
-      return [];
-    }
-    const userId = Meteor.userId();
-    if (!userId) return [];
-    return SavedRestaurantsCollection.find({ userId }).fetch();
+export const SavedRestaurantsList = () => {
+  const [restaurants, setRestaurants] = useState<ISavedRestaurant[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const subscription = Meteor.subscribe('savedRestaurants');
+
+    const updateRestaurants = () => {
+      if (subscription.ready()) {
+        const saved = SavedRestaurantsCollection.find({}, { sort: { savedAt: -1 } }).fetch();
+        setRestaurants(saved);  
+        setLoading(false);
+      }
+    };
+
+    updateRestaurants();
+    const intervalId = setInterval(updateRestaurants, 500);
+
+    return () => {
+      subscription.stop();
+      clearInterval(intervalId);
+    };
   }, []);
 
   const handleRemove = (restaurantId: string) => {
-    Meteor.call("savedRestaurants.remove", restaurantId, (error: Meteor.Error | null) => {
+    Meteor.call('savedRestaurants.remove', restaurantId, (error: any) => {
       if (error) {
-        alert("Failed to remove restaurant: " + error.message);
+        console.error('Error removing saved restaurant:', error);
+      } else {
+        setRestaurants(prev => prev.filter(r => r.restaurantId !== restaurantId));
       }
     });
   };
 
-  if (!Meteor.userId()) {
-    return <p>Please log in to see your saved restaurants.</p>;
-  }
-
   return (
-    <div style={{ padding: "1rem" }}>
-      <h2>Your Saved Restaurants</h2>
-      {savedRestaurants.length === 0 && <p>No saved restaurants yet.</p>}
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {savedRestaurants.map((restaurant: SavedRestaurant) => (
-          <li
-            key={restaurant._id}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "0.5rem",
-              padding: "0.3rem 0.5rem",
-              borderBottom: "1px solid #ccc",
-            }}
-          >
-            <span>{restaurant.name}</span>
-            <button
-              onClick={() => restaurant._id && handleRemove(restaurant._id)}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "red",
-                fontWeight: "bold",
-                fontSize: "1.2rem",
-                cursor: "pointer",
-                lineHeight: 1,
-              }}
-              aria-label={`Remove ${restaurant.name}`}
-              title={`Remove ${restaurant.name}`}
-            >
-              ×
-            </button>
-          </li>
-        ))}
-      </ul>
+    <div className="flex flex-col md:flex-row min-h-screen font-[Comic_Sans_MS]">
+      <Sidebar />
+
+      <div className="flex flex-col flex-1 items-center p-6">
+        <h1 className="text-2xl font-bold mb-6">Saved Restaurants</h1>
+        {loading ? (
+          <div className="flex justify-center items-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#b87b45]"></div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 w-full max-w-md">
+            {restaurants.length > 0 ? (
+              restaurants.map((restaurant) => (
+                <div
+                  key={restaurant._id}
+                  className="flex justify-between items-center border-2 border-[#b87b45] rounded-full px-4 py-2 text-center text-base text-black"
+                >
+                  <span>{restaurant.name}</span>
+                  <button
+                    onClick={() => handleRemove(restaurant.restaurantId)}
+                    className="text-black font-bold hover:text-[#b87b45]"
+                    aria-label={`Remove ${restaurant.name}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500">No saved restaurants found</p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

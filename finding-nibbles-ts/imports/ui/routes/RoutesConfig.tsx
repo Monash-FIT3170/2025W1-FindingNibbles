@@ -9,6 +9,7 @@ import { RoutesConfigProps } from '../types/User';
 import { Profile } from '../pages/Profile';
 import { SearchHistory } from '../pages/SearchHistory';
 import { MealPlanner } from '../pages/MealPlanner';
+import { SavedRestaurantsList } from '../pages/SavedRestaurants';
 
 export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
     const requireAuth = (component: JSX.Element) =>
@@ -30,6 +31,7 @@ export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
             <Route path="/profile" element={requireAuth(<Profile />)} />
             <Route path="/search-history" element={requireAuth(<SearchHistory />)} />
             <Route path="/meal-planner" element={requireAuth(<MealPlanner />)} />
+            <Route path="/saved-restaurants" element={requireAuth(<SavedRestaurantsList />)} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

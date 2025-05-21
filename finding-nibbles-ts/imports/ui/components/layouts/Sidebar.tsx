@@ -6,6 +6,7 @@ const navItems = [
   { label: 'Profile', path: '/profile' },
   { label: 'Meal Planner', path: '/meal-planner' },
   { label: 'Search History', path: '/search-history' },
+  { label: 'Saved Restaurants', path: '/saved-restaurants' },
 ];
 
 export const Sidebar = () => {
