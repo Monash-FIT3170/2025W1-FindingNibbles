@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { TextField, Box, MenuItem} from "@mui/material";
+import { Meteor } from 'meteor/meteor';
 import DicePopup from "../components/popups/DicePopup"; 
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete,InfoWindow  } from "@react-google-maps/api";
 // Add debounce utility
@@ -44,9 +45,10 @@ export const Map = () => {
   const [sortedRestaurants, setSortedRestaurants] = useState<Restaurant[]>([]);
   const [debouncedRadius, setDebouncedRadius] = useState(radius);
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [searchSaved, setSearchSaved] = useState(false);
   const [selectedCusine, setSelectedCusine] = useState<string>('All');
-
-
 
   // Create debounced fetch function with useCallback
   const debouncedFetchRestaurants = useCallback(
@@ -81,6 +83,7 @@ export const Map = () => {
     });
     setSortedRestaurants(sorted);
   }, [restaurants]);
+
   const mapContainerStyle: google.maps.MapOptions = {
     fullscreenControl: false,
     mapTypeControl: false,
@@ -108,6 +111,22 @@ export const Map = () => {
     setAutocomplete(autocompleteInstance);
   };
 
+  // Function to save search term to database
+  const saveSearchTerm = (term: string) => {
+    if (term && term.trim() !== '') {
+      setSearchSaved(true);
+      Meteor.call('searchHistory.save', term, (error: any, result: any) => {
+        if (error) {
+          console.error('Error saving search term:', error);
+        } else {
+          console.log('Search term saved successfully:', term, result);
+          Meteor.subscribe('searchHistory');
+        }
+        setTimeout(() => setSearchSaved(false), 500);
+      });
+    }
+  };
+
   const onPlaceChanged = () => {
     if (autocomplete) {
       const place = autocomplete.getPlace();
@@ -120,7 +139,27 @@ export const Map = () => {
         if (map) {
           map.panTo(newLocation);
         }
+
+        // Save the search term to the database
+        const searchTerm = place.name || place.formatted_address;
+        if (searchTerm) {
+          setSearchValue(searchTerm);
+          saveSearchTerm(searchTerm);
+        }
       }
+    }
+  };
+
+  // Handle when user types in the search input
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+  };
+
+  // Handle if user presses Enter
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchValue && searchValue.trim() !== '') {
+      saveSearchTerm(searchValue);
     }
   };
 
@@ -381,18 +420,25 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
             width: "300px",
           }}
         >
-          <Autocomplete
-            onLoad={onLoadAutocomplete}
-            onPlaceChanged={onPlaceChanged}
-          >
-            <TextField
-              size="small"
-              label="Search location"
-              variant="outlined"
-              fullWidth
-              placeholder="Type a location"
-            />
-          </Autocomplete>
+          <form onSubmit={handleSearchSubmit}>
+            <Autocomplete
+              onLoad={onLoadAutocomplete}
+              onPlaceChanged={onPlaceChanged}
+            >
+              <TextField
+                size="small"
+                label="Search location"
+                variant="outlined"
+                fullWidth
+                placeholder="Type a location"
+                value={searchValue}
+                onChange={handleSearchInputChange}
+              />
+            </Autocomplete>
+          </form>
+          {searchSaved && (
+            <div className="mt-1 text-xs text-green-600">Search saved!</div>
+          )}
         </Box>
 
         <div>
