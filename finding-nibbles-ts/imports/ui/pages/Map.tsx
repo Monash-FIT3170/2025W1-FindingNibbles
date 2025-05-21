@@ -401,7 +401,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
         <Box
             sx={{
               position: "absolute",
-              top: "140px", // Position it *below* the search box
+              top: "140px", 
               left: "20px",
               bgcolor: "white",
               p: 1,
