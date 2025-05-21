@@ -4,11 +4,9 @@ import { check } from 'meteor/check';
 
 // Define the interface for saved restaurant documents
 export interface ISavedRestaurant {
-  _id?: string;
   userId: string;
-  restaurantId: string; // could be a place_id or internal id
   name: string;
-  savedAt: Date;
+  location: string;
 }
 
 export const SavedRestaurantsCollection = new Mongo.Collection<ISavedRestaurant>('savedRestaurants');
@@ -17,7 +15,7 @@ export const SavedRestaurantsCollection = new Mongo.Collection<ISavedRestaurant>
 if (Meteor.isServer) {
   Meteor.startup(() => {
     SavedRestaurantsCollection.rawCollection().createIndex(
-      { userId: 1, restaurantId: 1 },
+      { userId: 1, name: 1 }, // Use `name` instead of missing `restaurantId`
       { unique: true }
     ).then(() => console.log('Saved restaurants index created'))
      .catch(err => console.error('Error creating saved restaurant index:', err));
@@ -26,47 +24,49 @@ if (Meteor.isServer) {
 
 // Define methods for saving/removing restaurants
 Meteor.methods({
-  async 'savedRestaurants.save'(restaurantId: string, name: string) {
-    check(restaurantId, String);
-    check(name, String);
+  async 'savedRestaurants.save'(restaurant: { userId: string, name: string; location: string }) {
+    check(restaurant, {
+      userId: String,
+      name: String,
+      location: String,
+    });
 
-    if (!this.userId) {
+    const userId = Meteor.userId();
+    if (!userId) {
       throw new Meteor.Error('not-authorized', 'You must be logged in to save restaurants');
     }
 
     try {
-      const result = await SavedRestaurantsCollection.upsertAsync(
-        { userId: this.userId, restaurantId },
-        {
-          $set: {
-            userId: this.userId,
-            restaurantId,
-            name,
-            savedAt: new Date()
-          }
-        }
-      );
-
+      const result = await SavedRestaurantsCollection.insertAsync({
+        userId,
+        name: restaurant.name,
+        location: restaurant.location,
+      });
       return result;
-    } catch (error) {
+    } catch (error: any) {
+      if (error.code === 11000) {
+        throw new Meteor.Error('duplicate-entry', 'You already saved this restaurant');
+      }
       console.error('Error saving restaurant:', error);
       throw new Meteor.Error('db-error', 'Failed to save restaurant');
     }
   },
 
-  async 'savedRestaurants.remove'(restaurantId: string) {
-    check(restaurantId, String);
+  async 'savedRestaurants.remove'(name: string) {
+    check(name, String);
 
-    if (!this.userId) {
-      throw new Meteor.Error('not-authorized', 'You must be logged in to remove saved restaurants');
+    const userId = Meteor.userId();
+    if (!userId) {
+      throw new Meteor.Error('not-authorized');
     }
 
-    try {
-      await SavedRestaurantsCollection.removeAsync({ userId: this.userId, restaurantId });
-    } catch (error) {
-      console.error('Error removing saved restaurant:', error);
-      throw new Meteor.Error('db-error', 'Failed to remove saved restaurant');
+    const removed = await SavedRestaurantsCollection.removeAsync({ userId, name });
+
+    if (removed === 0) {
+      throw new Meteor.Error('not-found', 'Restaurant not found');
     }
+
+    return removed;
   }
 });
 
@@ -77,9 +77,6 @@ if (Meteor.isServer) {
       return this.ready();
     }
 
-    return SavedRestaurantsCollection.find(
-      { userId: this.userId },
-      { sort: { savedAt: -1 } }
-    );
+    return SavedRestaurantsCollection.find({ userId: this.userId });
   });
 }

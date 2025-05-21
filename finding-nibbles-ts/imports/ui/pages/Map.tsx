@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { TextField, Box, MenuItem} from "@mui/material";
 import { Meteor } from 'meteor/meteor';
 import DicePopup from "../components/popups/DicePopup"; 
-import { GoogleMap, LoadScript, Marker, Circle, Autocomplete,InfoWindow  } from "@react-google-maps/api";
+import { GoogleMap, LoadScript, Marker, Circle, Autocomplete, InfoWindow } from "@react-google-maps/api";
+import { ISavedRestaurant } from "../api/SavedRestaurants";
 // Add debounce utility
 const debounce = (func: Function, delay: number) => {
   let timeoutId: NodeJS.Timeout;
@@ -69,6 +70,10 @@ export const Map = () => {
   useEffect(() => {
     setDebouncedRadius(radius);
   }, [radius]);
+
+  useEffect(() => {
+    Meteor.subscribe('savedRestaurants');
+  }, []);
   // Update restaurants when debounced radius changes
   useEffect(() => {
     if (userLocation && map) {
@@ -97,6 +102,32 @@ export const Map = () => {
       },
     ],
   };
+
+  const saveRestaurant = (restaurant: Restaurant) => {
+    const userId = Meteor.userId();
+    if (!userId) {
+      alert("You must be logged in to save restaurants");
+      return;
+    }
+
+    const savedRestaurant: ISavedRestaurant = {
+      userId: userId,
+      name: restaurant.displayName?.text ?? "Unknown Name",
+      location: restaurant.formattedAddress ?? "Unknown Location",
+    };
+    
+
+    Meteor.call('savedRestaurants.save', savedRestaurant, (error: Meteor.Error | null) => {
+      if (error) {
+        alert(`Failed to save: ${error.reason || error.message || error}`);
+        console.error('Error saving restaurant:', error);
+      } else {
+        alert('Restaurant saved successfully');
+      }
+    });
+  };
+  
+  
   const containerStyle = {
     position: "fixed" as const,
     top: 0,
@@ -384,25 +415,40 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
 
           {selectedMarkerIndex !== null && restaurants[selectedMarkerIndex] && (
           <InfoWindow
-            position={{
-              lat: restaurants[selectedMarkerIndex].location.latitude,
-              lng: restaurants[selectedMarkerIndex].location.longitude,
-            }}
-            onCloseClick={() => setSelectedMarkerIndex(null)}
-          >
-            <div style={{ maxWidth: "200px" }}>
-              <h3 style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].displayName?.text || "N/A"}</h3>
-              <p style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].formattedAddress || "N/A"}</p>
-              <p style={{ margin: "0" }}>Rating: {restaurants[selectedMarkerIndex].rating ?? "N/A"}</p>
-              <p style={{ margin: "0" }}>
-                Cuisine:{" "}
-                {restaurants[selectedMarkerIndex].types
-                  ?.filter((type) => type.includes("restaurant"))
-                  .map(normalizeCuisineType)
-                  .join(", ") || "N/A"}
-              </p>
-            </div>
-          </InfoWindow>
+          position={{
+            lat: restaurants[selectedMarkerIndex].location.latitude,
+            lng: restaurants[selectedMarkerIndex].location.longitude,
+          }}
+          onCloseClick={() => setSelectedMarkerIndex(null)}
+        >
+          <div style={{ maxWidth: "200px" }}>
+            <h3 style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].displayName?.text || "N/A"}</h3>
+            <p style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].formattedAddress || "N/A"}</p>
+            <p style={{ margin: "0" }}>Rating: {restaurants[selectedMarkerIndex].rating ?? "N/A"}</p>
+            <p style={{ margin: "0" }}>
+              Cuisine:{" "}
+              {restaurants[selectedMarkerIndex].types
+                ?.filter((type) => type.includes("restaurant"))
+                .map(normalizeCuisineType)
+                .join(", ") || "N/A"}
+            </p>
+            <button
+              onClick={() => saveRestaurant(restaurants[selectedMarkerIndex])}
+              style={{
+                marginTop: "8px",
+                padding: "6px 12px",
+                backgroundColor: "#6200ea",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer"
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </InfoWindow>
+        
         )}
           </GoogleMap>
         )}
