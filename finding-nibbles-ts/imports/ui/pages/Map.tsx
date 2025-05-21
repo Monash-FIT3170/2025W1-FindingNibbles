@@ -315,33 +315,33 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               }}
             />
 
-          {restaurants.map((restaurant, index) => {
-          // {filterRestaurantsByCuisine(restaurants, selectedCusine).map((restaurant, index) => {
-            const isHovered = hoveredMarkerIndex === index;
-            const isHighlighted = isRestaurantHighlighted(restaurant);
-            const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
+            {/* Restore cuisine filtering for map markers */}
+            {filterRestaurantsByCuisine(restaurants, selectedCusine).map((restaurant, index) => {
+              const isHovered = hoveredMarkerIndex === index;
+              const isHighlighted = isRestaurantHighlighted(restaurant);
+              const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
 
-            return (
-              <Marker
-                key={index}
-                position={{
-                  lat: restaurant.location.latitude,
-                  lng: restaurant.location.longitude,
-                }}
-                icon={{
-                  url: iconUrl,
-                  scaledSize: new window.google.maps.Size(
-                    isHovered ? 50 : (isHighlighted ? 45 : 40),  // Grow on hover or if highlighted
-                    isHovered ? 50 : (isHighlighted ? 45 : 40)
-                  ),
-                }}
-                animation={isHighlighted ? google.maps.Animation.BOUNCE : undefined}
-                onMouseOver={() => setHoveredMarkerIndex(index)}
-                onMouseOut={() => setHoveredMarkerIndex(null)}
-                onClick={() => setSelectedMarkerIndex(index)}
-              />
-            );
-          })}
+              return (
+                <Marker
+                  key={index}
+                  position={{
+                    lat: restaurant.location.latitude,
+                    lng: restaurant.location.longitude,
+                  }}
+                  icon={{
+                    url: iconUrl,
+                    scaledSize: new window.google.maps.Size(
+                      isHovered ? 50 : (isHighlighted ? 45 : 40),
+                      isHovered ? 50 : (isHighlighted ? 45 : 40)
+                    ),
+                  }}
+                  animation={isHighlighted ? google.maps.Animation.BOUNCE : undefined}
+                  onMouseOver={() => setHoveredMarkerIndex(index)}
+                  onMouseOut={() => setHoveredMarkerIndex(null)}
+                  onClick={() => setSelectedMarkerIndex(index)}
+                />
+              );
+            })}
 
           {selectedMarkerIndex !== null && restaurants[selectedMarkerIndex] && (
           <InfoWindow
@@ -365,8 +365,6 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
             </div>
           </InfoWindow>
         )}
-
-
           </GoogleMap>
         )}
 
@@ -396,6 +394,8 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
             />
           </Autocomplete>
         </Box>
+
+        <div>
         <Box
             sx={{
               position: "absolute",
@@ -406,7 +406,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               borderRadius: 2,
               boxShadow: 3,
               zIndex: 1500,
-              width: "300px",
+              width: "200px",
             }}
           >
             <TextField
@@ -416,6 +416,16 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               size="small"
               value={selectedCusine}
               onChange={(e) => setSelectedCusine(e.target.value)}
+              SelectProps={{
+                MenuProps: {
+                  PaperProps: {
+                    style: {
+                      maxHeight: 200,
+                      overflowY: 'auto',
+                    },
+                  },
+                },
+              }}
             >
               <MenuItem value="All">All</MenuItem>
               {availableCuisines.map((cuisine) => (
@@ -425,8 +435,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               ))}
             </TextField>
           </Box>
-
-
+        </div>
         {userLocation && (
           <>
 
