@@ -6,7 +6,7 @@ import {
   } from "@mui/material";
 import { Meteor } from 'meteor/meteor';
 import { SearchHistory as SearchHistoryCollection, ISearchHistory } from '/imports/ui/api/searchHistory';
-
+import {Sidebar} from '../components/layouts/Sidebar';
 
 
 export const SearchHistory = () => {
@@ -56,65 +56,7 @@ export const SearchHistory = () => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen font-[Comic_Sans_MS]">
       {/* Sidebar */}
-      <div className="w-full md:w-[240px] bg-[#d5a16e] flex flex-col p-5 shadow-md">
-        {/* profile button to link to profile page */}
-        <ListItem disablePadding sx={{ mb: 0.5 }}>
-          <ListItemButton
-            component={RouterLink}
-            to="/profile"
-            sx={{
-              color: 'white',
-              fontWeight: 'bold',
-              borderRadius: .5,
-              textTransform: 'none',
-              '&:hover': {
-                backgroundColor: '#c68c53',
-              },
-            }}
-          >
-            Profile
-          </ListItemButton>
-        </ListItem>
-
-        {/* meal planner button to link to meal planner page */}
-        <ListItem disablePadding sx={{ mb: 0.5 }}>
-          <ListItemButton
-            component={RouterLink}
-            to="/meal-planner"
-            sx={{
-              color: 'white',
-              fontWeight: 'bold',
-              borderRadius: .5,
-              textTransform: 'none',
-              '&:hover': {
-                backgroundColor: '#c68c53',
-              },
-            }}
-          >
-            Meal Planner
-          </ListItemButton>
-        </ListItem>
-
-        {/* search history button to link to search history page */}
-        <ListItem disablePadding>
-          <ListItemButton
-            component={RouterLink}
-            to="/search-history"
-            sx={{
-              color: 'white',
-              fontWeight: 'bold',
-              borderRadius: .5,
-              backgroundColor: '#b87b45',
-              textTransform: 'none',
-              '&:hover': {
-                backgroundColor: '#a86f3c',
-              },
-            }}
-          >
-            Search History
-          </ListItemButton>
-        </ListItem>
-      </div>
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex flex-col flex-1 items-center p-6">

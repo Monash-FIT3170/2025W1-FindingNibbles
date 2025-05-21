@@ -1,11 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Link as RouterLink} from "react-router-dom";
-import {
-    ListItem,
-    ListItemButton
-  } from "@mui/material";
-
+import {Sidebar} from '../components/layouts/Sidebar';
 
 export const MealPlanner = () => {
 
@@ -51,62 +46,7 @@ export const MealPlanner = () => {
     <div className="flex flex-col md:flex-row min-h-screen">
       
       {/* Sidebar */}
-      <div className="w-full md:w-[240px] bg-[#d5a16e] flex flex-col p-5 shadow-md">
-        <ListItem disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton
-            component={RouterLink}
-            to="/profile"
-            sx={{
-                color: 'white',
-                fontWeight: 'bold',
-                borderRadius: .5,
-                textTransform: 'none',
-                '&:hover': {
-                backgroundColor: '#c68c53',
-                },
-            }}
-            >
-            Profile
-            </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton
-            component={RouterLink}
-            to="/meal-planner"
-            sx={{
-                color: 'white',
-                fontWeight: 'bold',
-                borderRadius: .5,
-                backgroundColor: '#b87b45',
-                textTransform: 'none',
-                '&:hover': {
-                backgroundColor: '#a86f3c',
-                },
-            }}
-            >
-            Meal Planner
-            </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-            <ListItemButton
-            component={RouterLink}
-            to="/search-history"
-            sx={{
-                color: 'white',
-                fontWeight: 'bold',
-                borderRadius: .5,
-                textTransform: 'none',
-                '&:hover': {
-                backgroundColor: '#c68c53',
-                },
-            }}
-            >
-            Search History
-            </ListItemButton>
-        </ListItem>
-</div>
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex flex-col flex-1 items-center p-6 w-full">

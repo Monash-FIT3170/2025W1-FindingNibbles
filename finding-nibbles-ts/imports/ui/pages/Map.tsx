@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { TextField, Box} from "@mui/material";
+import { TextField, Box, MenuItem} from "@mui/material";
 import { Meteor } from 'meteor/meteor';
 import DicePopup from "../components/popups/DicePopup"; 
-import { GoogleMap, LoadScript, Marker, Circle, Autocomplete } from "@react-google-maps/api";
+import { GoogleMap, LoadScript, Marker, Circle, Autocomplete,InfoWindow  } from "@react-google-maps/api";
 // Add debounce utility
 const debounce = (func: Function, delay: number) => {
   let timeoutId: NodeJS.Timeout;
@@ -36,12 +36,19 @@ export const Map = () => {
   const [isDicePopupOpen, setIsDicePopupOpen] = useState(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
+  const [hoveredMarkerIndex, setHoveredMarkerIndex] = useState<number | null>(null);
+  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
+  const [highlightedCuisine, setHighlightedCuisine] = useState<string | null>(null);
+
+
   const [isMapLoading, setIsMapLoading] = useState(true);
   const [sortedRestaurants, setSortedRestaurants] = useState<Restaurant[]>([]);
   const [debouncedRadius, setDebouncedRadius] = useState(radius);
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+
   const [searchValue, setSearchValue] = useState<string>('');
   const [searchSaved, setSearchSaved] = useState(false);
+  const [selectedCusine, setSelectedCusine] = useState<string>('All');
 
   // Create debounced fetch function with useCallback
   const debouncedFetchRestaurants = useCallback(
@@ -161,6 +168,19 @@ export const Map = () => {
     const baseType = type.replace("_restaurant", "");
     return baseType.charAt(0).toUpperCase() + baseType.slice(1);
   };
+
+const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string): Restaurant[] => {
+  if (cuisine === 'All') return restaurants;
+
+  return restaurants.filter((restaurant) =>
+    restaurant.types?.some(
+      (type) =>
+        type.includes("restaurant") &&
+        normalizeCuisineType(type) === cuisine
+    )
+  );
+};
+
   const isCuisineType = (type: string): boolean => {
     const genericTypes = [
       "restaurant",
@@ -227,7 +247,31 @@ export const Map = () => {
       console.error("Error fetching restaurants:", error instanceof Error ? error.message : String(error));
       return [];
     }
+
   }
+
+const cuisineIcons: Record<string, string> = {
+  "Hamburger": "/images/burger.png",
+  "Italian": "/images/italian.png",
+  "Indian" : "/images/indfsian.png",
+};
+
+
+const getCuisineIcon = (types: string[] | undefined): string | undefined => {
+  if (!types) return;
+
+  for (let type of types) {
+    if (type.includes("restaurant")) {
+      const cuisine = normalizeCuisineType(type); 
+      if (cuisineIcons[cuisine]) {
+        return cuisineIcons[cuisine];
+      }
+    }
+  }
+
+  return undefined; 
+};
+
   const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -261,20 +305,109 @@ export const Map = () => {
       return `${(value / 1000).toFixed(1)} km`;
     }
   };
+  const handleDiceRoll = (cuisine: string) => {
+    setHighlightedCuisine(cuisine);
+  };
+
+  // Add this function to check if a restaurant matches the highlighted cuisine
+  const isRestaurantHighlighted = (restaurant: Restaurant) => {
+    if (!highlightedCuisine) return false;
+    
+    // Convert both the highlighted cuisine and restaurant types to lowercase for comparison
+    const normalizedHighlightedCuisine = highlightedCuisine.toLowerCase();
+    
+    return restaurant.types?.some(type => {
+      // Only check restaurant types
+      if (!type.includes('restaurant')) return false;
+      
+      // Normalize the type by removing '_restaurant' and converting to lowercase
+      const normalizedType = type.replace('_restaurant', '').toLowerCase();
+      
+      // Check if the normalized type matches the highlighted cuisine
+      return normalizedType === normalizedHighlightedCuisine;
+    }) ?? false;
+  };
   return (
-    <LoadScript
-      googleMapsApiKey="AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM"
-      libraries={["places"]}
-      onLoad={() => console.log("Google Maps API loaded")}
-      loadingElement={
-        <div className="flex justify-center items-center h-screen w-full bg-white bg-opacity-80">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-          <h6 className="ml-2 text-lg font-medium">Loading Maps...</h6>
-        </div>
-      }
-    >
-      <div className="relative h-screen">
-      <Box
+    <LoadScript googleMapsApiKey="AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM" libraries={["places"]}>
+      <div style={{ position: "relative", height: "100vh" }}>
+        {userLocation && (
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={userLocation}
+            zoom={14}
+            options={{
+              ...mapContainerStyle,
+              scrollwheel: false,
+            }}
+            onLoad={(mapInstance) => setMap(mapInstance)}
+          >
+            <Marker position={userLocation} />
+
+            <Circle
+              center={userLocation}
+              radius={radius}
+              options={{
+                fillColor: "rgba(100, 158, 255, 0.2)",
+                strokeColor: "#4285F4",
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+              }}
+            />
+
+            {/* Restore cuisine filtering for map markers */}
+            {filterRestaurantsByCuisine(restaurants, selectedCusine).map((restaurant, index) => {
+              const isHovered = hoveredMarkerIndex === index;
+              const isHighlighted = isRestaurantHighlighted(restaurant);
+              const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
+
+              return (
+                <Marker
+                  key={index}
+                  position={{
+                    lat: restaurant.location.latitude,
+                    lng: restaurant.location.longitude,
+                  }}
+                  icon={{
+                    url: iconUrl,
+                    scaledSize: new window.google.maps.Size(
+                      isHovered ? 50 : (isHighlighted ? 45 : 40),
+                      isHovered ? 50 : (isHighlighted ? 45 : 40)
+                    ),
+                  }}
+                  animation={isHighlighted ? google.maps.Animation.BOUNCE : undefined}
+                  onMouseOver={() => setHoveredMarkerIndex(index)}
+                  onMouseOut={() => setHoveredMarkerIndex(null)}
+                  onClick={() => setSelectedMarkerIndex(index)}
+                />
+              );
+            })}
+
+          {selectedMarkerIndex !== null && restaurants[selectedMarkerIndex] && (
+          <InfoWindow
+            position={{
+              lat: restaurants[selectedMarkerIndex].location.latitude,
+              lng: restaurants[selectedMarkerIndex].location.longitude,
+            }}
+            onCloseClick={() => setSelectedMarkerIndex(null)}
+          >
+            <div style={{ maxWidth: "200px" }}>
+              <h3 style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].displayName?.text || "N/A"}</h3>
+              <p style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].formattedAddress || "N/A"}</p>
+              <p style={{ margin: "0" }}>Rating: {restaurants[selectedMarkerIndex].rating ?? "N/A"}</p>
+              <p style={{ margin: "0" }}>
+                Cuisine:{" "}
+                {restaurants[selectedMarkerIndex].types
+                  ?.filter((type) => type.includes("restaurant"))
+                  .map(normalizeCuisineType)
+                  .join(", ") || "N/A"}
+              </p>
+            </div>
+          </InfoWindow>
+        )}
+          </GoogleMap>
+        )}
+
+        <Box
           sx={{
             position: "absolute",
             top: "70px",
@@ -307,42 +440,51 @@ export const Map = () => {
             <div className="mt-1 text-xs text-green-600">Search saved!</div>
           )}
         </Box>
-        {userLocation && (
-          <>
-            <GoogleMap
-              mapContainerStyle={containerStyle}
-              center={userLocation}
-              zoom={14}
-              options={{
-                ...mapContainerStyle,
-                scrollwheel: false,
-              }}
-              onLoad={(mapInstance) => {
-                setMap(mapInstance);
-                setIsMapLoading(false);
+
+        <div>
+        <Box
+            sx={{
+              position: "absolute",
+              top: "140px", 
+              left: "20px",
+              bgcolor: "white",
+              p: 1,
+              borderRadius: 2,
+              boxShadow: 3,
+              zIndex: 300,
+              width: "200px",
+            }}
+          >
+            <TextField
+              select
+              fullWidth
+              label="Filter by Cuisine"
+              size="small"
+              value={selectedCusine}
+              onChange={(e) => setSelectedCusine(e.target.value)}
+              SelectProps={{
+                MenuProps: {
+                  PaperProps: {
+                    style: {
+                      maxHeight: 200,
+                      overflowY: 'auto',
+                    },
+                  },
+                },
               }}
             >
-              <Marker position={userLocation} />
-              <Circle
-                center={userLocation}
-                radius={radius}
-                options={{
-                  fillColor: "rgba(100, 158, 255, 0.2)",
-                  strokeColor: "#4285F4",
-                  strokeOpacity: 0.8,
-                  strokeWeight: 2,
-                }}
-              />
-              {restaurants.map((restaurant, index) => (
-                <Marker
-                  key={index}
-                  position={{
-                    lat: restaurant.location.latitude,
-                    lng: restaurant.location.longitude,
-                  }}
-                />
+              <MenuItem value="All">All</MenuItem>
+              {availableCuisines.map((cuisine) => (
+                <MenuItem key={cuisine} value={cuisine}>
+                  {cuisine}
+                </MenuItem>
               ))}
-            </GoogleMap>
+            </TextField>
+          </Box>
+        </div>
+        {userLocation && (
+          <>
+
             {isMapLoading && (
               <div className="absolute top-4 right-4 flex items-center bg-white p-3 rounded-lg shadow-md z-[1001]">
                 <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mr-2"></div>
@@ -388,6 +530,14 @@ export const Map = () => {
           >
             Roll the Dice
           </button>
+          {highlightedCuisine && (
+            <button
+              className="bg-[#F4E1D2] hover:bg-[#EED3BB] text-[#C47B4D] py-2 px-4 rounded shadow transition-colors"
+              onClick={() => setHighlightedCuisine(null)}
+            >
+              Clear Highlight
+            </button>
+          )}
         </div>
         {isSidebarOpen && (
           <div className="absolute top-0 right-0 w-[300px] h-[calc(100vh-60px)] bg-white overflow-y-auto z-[999] p-5 shadow-md">
@@ -395,10 +545,22 @@ export const Map = () => {
               <h6 className="text-lg font-medium">
                 Showing restaurants within {formatRadius(radius)}
               </h6>
+              {highlightedCuisine && (
+                <p className="text-sm text-[#C47B4D] font-medium">
+                  Highlighting {highlightedCuisine} restaurants
+                </p>
+              )}
             </div>
             {sortedRestaurants.length > 0 ? (
               sortedRestaurants.map((restaurant, index) => (
-                <div key={index} className="mb-5 p-3 bg-gray-50 rounded-lg shadow-sm">
+                <div 
+                  key={index} 
+                  className={`mb-5 p-3 rounded-lg shadow-sm transition-all duration-300 ${
+                    isRestaurantHighlighted(restaurant) 
+                      ? 'bg-[#F4E1D2] border-2 border-[#C47B4D]' 
+                      : 'bg-gray-50'
+                  }`}
+                >
                   <h3 className="font-bold text-lg">{restaurant.displayName?.text || "N/A"}</h3>
                   <p className="text-gray-600 mt-1">{restaurant.formattedAddress || "N/A"}</p>
                   <p className="mt-1">Rating: {restaurant.rating || "N/A"}</p>
@@ -416,8 +578,11 @@ export const Map = () => {
         )}
         <DicePopup
           open={isDicePopupOpen}
-          onClose={() => setIsDicePopupOpen(false)}
+          onClose={() => {
+            setIsDicePopupOpen(false);
+          }}
           availableCuisines={availableCuisines}
+          onRoll={handleDiceRoll}
         />
       </div>
     </LoadScript>
