@@ -405,7 +405,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               p: 1,
               borderRadius: 2,
               boxShadow: 3,
-              zIndex: 1500,
+              zIndex: 300,
               width: "200px",
             }}
           >
