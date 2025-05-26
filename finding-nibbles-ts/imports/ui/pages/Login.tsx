@@ -12,31 +12,34 @@ import {
 export const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    if (username && password) {
-      try {
-        console.log('Attempting login...');
+    if (!username || !password) {
+      setError('Please enter both username and password');
+      return;
+    }
 
-        await new Promise<void>((resolve, reject) => {
-          Meteor.loginWithPassword(username, password, (error) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve();
-            }
-          });
+    try {
+      console.log('Attempting login...');
+      setError(''); // clear old errors
+
+      await new Promise<void>((resolve, reject) => {
+        Meteor.loginWithPassword(username, password, (error) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
         });
+      });
 
-        console.log('Login successful');
-        navigate('/');
-      } catch (error: any) {
-        console.error('Login failed:', error.reason || error.message);
-        alert(`Login failed: ${error.reason || 'Unknown error'}`);
-      }
-    } else {
-      alert('Please enter both username and password'); //implement error popup later
+      console.log('Login successful');
+      navigate('/');
+    } catch (error: any) {
+      console.error('Login failed:', error.reason || error.message);
+      setError(error.reason || 'Unknown error');
     }
   };
 
@@ -80,6 +83,11 @@ export const Login = () => {
           >
             Login
           </Button>
+          {error && (
+            <Typography variant="body2" color="error" align="center">
+              {error}
+            </Typography>
+          )}
           <Typography variant="body2" align="center" className="text-white">
             Don't have an account? <a href="Register" className="text-blue-400 hover:underline">Register</a>
           </Typography>
