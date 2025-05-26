@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Meteor } from 'meteor/meteor';
+import type { CustomUser } from "../types/User";
 
 const AiSuggestion: React.FC = () => {
   const [suggestion, setSuggestion] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [selectedOccasion, setSelectedOccasion] = useState<string>("birthday");
+  const [preferences, setPreferences] = useState<string[]>([]);
 
   const fetchSuggestion = async (params: Record<string, string> = {}): Promise<void> => {
     setLoading(true);
@@ -31,6 +34,14 @@ const AiSuggestion: React.FC = () => {
       setLoading(false);
     }
   };
+
+    useEffect(() => {
+      const user = Meteor.user() as CustomUser | null;
+      if (user?.profile?.preferences) {
+        setPreferences(user.profile.preferences);
+      }
+    }, []);
+
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-8 lg:px-20 bg-gradient-to-br from-orange-100 to-orange-200 min-h-screen">
@@ -111,10 +122,10 @@ const AiSuggestion: React.FC = () => {
         {/* Suggest Dish from Preferences */}
         <button
           className="w-full bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105"
-          onClick={() => fetchSuggestion()} // Associate with user preferences
+          onClick={() => fetchSuggestion({ preferences: preferences.join(',') })} // Associate with user preferences
           disabled={loading}
         >
-          Suggest Dish from My Preference
+          Can't decide what to eat? 
         </button>
       </div>
     </div>

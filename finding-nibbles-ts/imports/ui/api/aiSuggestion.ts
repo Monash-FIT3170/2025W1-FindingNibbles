@@ -34,16 +34,34 @@ WebApp.rawHandlers.use((req: IncomingMessage, res: ServerResponse, next: () => v
 
   req.on('end', async () => {
     try {
-      const requestData: { cuisine?: string; occasion?: string } = JSON.parse(body);
-      const { occasion } = requestData;
+      const requestData: { occasion?: string; preferences?: string } = JSON.parse(body);
+      const { occasion, preferences } = requestData;
+
+      let parsedPreferences: string[] = [];
+      if (preferences) {
+        if (Array.isArray(preferences)) {
+          parsedPreferences = preferences;
+        } else if (typeof preferences === "string") {
+          try {
+            parsedPreferences = JSON.parse(preferences);
+            if (!Array.isArray(parsedPreferences)) {
+              parsedPreferences = [preferences];
+            }
+          } catch {
+            parsedPreferences = [preferences];
+          }
+        }
+      }
+
 
       let prompt = '';
 
       if (occasion) {
         prompt = `Suggest a dish suitable for a special occasion like ${occasion} in three sentences.`;
-      }
-       else {
-        prompt = 'Suggest a random creative international dish in three sentences.';
+      } else if (parsedPreferences.length > 0) {
+        prompt = `Suggest a dish that suits someone withone of the following dietary preferences: ${parsedPreferences.join(', ')} in a three sentences with mentioning which preference is used.`;
+      } else {
+        prompt = 'Suggest a dish to eat in three sentences.';
       }
 
       const result = await model.generateContent({
