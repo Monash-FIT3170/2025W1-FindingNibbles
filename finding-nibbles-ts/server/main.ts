@@ -1,9 +1,12 @@
 import { Meteor } from 'meteor/meteor';
 import { Accounts } from 'meteor/accounts-base';
 import { MOCK_DATA } from './config';
+import 'dotenv/config';
 import '../imports/ui/api/user.methods.ts';
+import '../imports/ui/api/aiSuggestion.ts';
 import '../imports/ui/api/searchHistory.ts';
 import '../imports/ui/api/SavedRestaurants'
+
 
 Meteor.startup(async () => {
   if (!(await Accounts.findUserByUsername(MOCK_DATA.SEED_USERNAME))) {
