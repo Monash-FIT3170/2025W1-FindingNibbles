@@ -33,34 +33,61 @@ const AiSuggestion: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-6 text-center">
-      <h1 className="text-3xl font-bold mb-6">AI Dish Suggestions</h1>
+    <div className="max-w-6xl mx-auto py-12 px-8 lg:px-20 bg-gradient-to-br from-orange-100 to-orange-200 min-h-screen">
+      <h1 className="text-4xl font-bold text-center mb-8 text-gray-800 drop-shadow-md">
+        AI Dish Suggestions
+      </h1>
 
-      {loading ? (
-        <div className="flex justify-center items-center space-x-2">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800" />
-          <p className="text-lg">Generating dish...</p>
-        </div>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
-      ) : suggestion ? (
-        <p className="text-xl text-gray-700 font-medium mb-6">{suggestion}</p>
-      ) : null}
+      {/* Loading, Error, or Suggestion Display */}
+      <div className="mb-8">
+        {loading ? (
+          <div className="flex justify-center items-center space-x-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800" />
+            <p className="text-lg text-gray-700">Generating dish...</p>
+          </div>
+        ) : error ? (
+          <p className="text-red-500 text-center text-lg">{error}</p>
+        ) : suggestion ? (
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 p-6 rounded-lg shadow-md animate-fade-in">
+            <p className="text-2xl text-gray-800 font-medium text-center">
+              <span className="font-bold text-yellow-700">Recommended Dish:</span>{" "}
+              {suggestion}
+            </p>
+          </div>
+        ) : null}
+      </div>
 
-      <div className="space-y-4 mt-4">
+      {/* Buttons and Inputs */}
+      <div className="space-y-8">
+        {/* New Dish Recommendation Button */}
         <button
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow transition"
+          className="w-full bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center"
           onClick={() => fetchSuggestion()}
           disabled={loading}
         >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
           New Dish Recommendation
         </button>
 
-        <div className="bg-white shadow p-4 rounded-lg">
-          <label htmlFor="occasion" className="block text-left mb-2 font-semibold">Select Occasion:</label>
+        {/* Occasion Selector */}
+        <div className="bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition-shadow">
+          <label
+            htmlFor="occasion"
+            className="block text-left mb-3 font-semibold text-gray-700"
+          >
+            Select Occasion:
+          </label>
           <select
             id="occasion"
-            className="w-full px-4 py-2 border rounded-md mb-2"
+            className="w-full px-4 py-3 border border-gray-300 rounded-md mb-4 focus:ring-2 focus:ring-orange-500 focus:outline-none"
             value={selectedOccasion}
             onChange={(e) => setSelectedOccasion(e.target.value)}
             disabled={loading}
@@ -73,7 +100,7 @@ const AiSuggestion: React.FC = () => {
           </select>
 
           <button
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg shadow transition"
+            className="w-full bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 text-white py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105"
             onClick={() => fetchSuggestion({ occasion: selectedOccasion })}
             disabled={loading}
           >
@@ -81,9 +108,10 @@ const AiSuggestion: React.FC = () => {
           </button>
         </div>
 
+        {/* Suggest Dish from Preferences */}
         <button
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg shadow transition"
-          onClick={() => fetchSuggestion()} //associate with user preferences
+          className="w-full bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105"
+          onClick={() => fetchSuggestion()} // Associate with user preferences
           disabled={loading}
         >
           Suggest Dish from My Preference
