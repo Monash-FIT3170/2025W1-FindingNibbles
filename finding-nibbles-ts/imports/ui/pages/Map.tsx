@@ -4,6 +4,7 @@ import { Meteor } from 'meteor/meteor';
 import DicePopup from "../components/popups/DicePopup"; 
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete, InfoWindow } from "@react-google-maps/api";
 import { ISavedRestaurant } from "../api/SavedRestaurants";
+import { RadarChart } from "recharts";
 // Add debounce utility
 const debounce = (func: Function, delay: number) => {
   let timeoutId: NodeJS.Timeout;
@@ -51,13 +52,30 @@ export const Map = () => {
   const [searchSaved, setSearchSaved] = useState(false);
   const [selectedCusine, setSelectedCusine] = useState<string>('All');
 
+
+
+
+
+
   // Create debounced fetch function with useCallback
   const debouncedFetchRestaurants = useCallback(
     debounce(async (lat: number, lng: number, rad: number) => {
       setIsMapLoading(true);
       try {
-        const data = await fetchRestaurants(lat, lng, rad);
-        setRestaurants(data);
+        
+        const data = await fetchRestaurants(lat, lng, 2000);
+        const data2 = await fetchRestaurants(lat + 0.009, lng, 2000);
+        const data3 = await fetchRestaurants(lat - 0.009,lng,2000);
+        console.log("THIS IS THE DATA", JSON.stringify(data,null,2));
+        console.log("THIS IS DATA2", JSON.stringify(data2, null, 2));
+
+        // setRestaurants(data);
+        
+        // setRestaurants(data2);
+        // setRestaurants(prev => [...prev, ...data2]);
+
+        const combined = [...data,...data2,...data3];
+        setRestaurants(combined);
       } catch (error) {
         console.error("Error fetching restaurants:", error);
       } finally {
@@ -66,6 +84,9 @@ export const Map = () => {
     }, 500), // 500ms delay
     []
   );
+
+  console.log("This is the restaurants " ,  JSON.stringify(restaurants,null,2));
+
   // Update debounced radius when radius changes
   useEffect(() => {
     setDebouncedRadius(radius);
@@ -80,6 +101,8 @@ export const Map = () => {
       debouncedFetchRestaurants(userLocation.lat, userLocation.lng, debouncedRadius);
     }
   }, [userLocation, map, debouncedRadius, debouncedFetchRestaurants]);
+
+
   useEffect(() => {
     const sorted = [...restaurants].sort((restaurant1, restaurant2) => {
       const rating1 = restaurant1.rating ?? 0;
@@ -280,6 +303,15 @@ const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string):
     }
 
   }
+console.log("THIS IS THE RESTAURANTS" + restaurants);
+
+// somewhere inside your component…
+
+
+console.log("THIS IS THE SECOND !! RESTAURANTS" + restaurants);
+
+
+  
 
 const cuisineIcons: Record<string, string> = {
   "Hamburger": "/images/burger.png",
