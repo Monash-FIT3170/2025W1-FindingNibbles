@@ -64,8 +64,8 @@ export const Map = () => {
       try {
         
         const data = await fetchRestaurants(lat, lng, 2000);
-        const data2 = await fetchRestaurants(lat + 0.009, lng, 2000);
-        const data3 = await fetchRestaurants(lat - 0.009,lng,2000);
+        const data2 = await fetchRestaurants(lat + 0.036, lng, 2000);
+        const data3 = await fetchRestaurants(lat - 0.036,lng,2000);
         console.log("THIS IS THE DATA", JSON.stringify(data,null,2));
         console.log("THIS IS DATA2", JSON.stringify(data2, null, 2));
 
@@ -270,7 +270,7 @@ const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string):
     const headers = {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": API_KEY,
-      "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location,places.rating,places.types",
+      "X-Goog-FieldMask": "places.id, places.displayName,places.formattedAddress,places.location,places.rating,places.types",
     };
     try {
       const response = await fetch(URL, {
