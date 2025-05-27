@@ -11,6 +11,7 @@ import { Profile } from '../pages/Profile';
 import { SearchHistory } from '../pages/SearchHistory';
 import { MealPlanner } from '../pages/MealPlanner';
 import { SavedRestaurantsList } from '../pages/SavedRestaurants';
+import { SavedPlans } from '../pages/SavedPlans';
 
 export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
     const requireAuth = (component: JSX.Element) =>
@@ -34,6 +35,7 @@ export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
             <Route path="/search-history" element={requireAuth(<SearchHistory />)} />
             <Route path="/meal-planner" element={requireAuth(<MealPlanner />)} />
             <Route path="/saved-restaurants" element={requireAuth(<SavedRestaurantsList />)} />
+            <Route path="/plans" element={<SavedPlans />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
