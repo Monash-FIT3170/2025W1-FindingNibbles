@@ -57,11 +57,11 @@ WebApp.rawHandlers.use((req: IncomingMessage, res: ServerResponse, next: () => v
       let prompt = '';
 
       if (occasion) {
-        prompt = `Suggest a dish suitable for a special occasion like ${occasion} in three sentences.`;
+        prompt = `Suggest a dish suitable for a special occasion like ${occasion} in three sentences and bold the dish.`;
       } else if (parsedPreferences.length > 0) {
         prompt = `Suggest a dish that suits someone withone of the following dietary preferences: ${parsedPreferences.join(', ')} in a three sentences with mentioning which preference is used.`;
       } else {
-        prompt = 'Suggest a dish to eat in three sentences.';
+        prompt = 'Suggest a dish to eat in three sentences and bold the dish.';
       }
 
       const result = await model.generateContent({

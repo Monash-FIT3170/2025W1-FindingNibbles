@@ -12,11 +12,10 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Collapse,
 } from "@mui/material";
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
+import type { CustomUser } from "../../types/User";
 
 const bunnyIcon = "./images/bunnyIcon.png";
 
@@ -25,6 +24,8 @@ export const NavBar = () => {
   const isLoggedIn = useTracker(() => !!Meteor.userId(), []);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showTravelPlanSub, setShowTravelPlanSub] = useState(false);
+  const user = useTracker(() => Meteor.user() as CustomUser | null, []);
+  const userName = user?.profile?.name || "User";
 
   const handleLogout = () => {
     Meteor.logout(() => {
@@ -143,91 +144,65 @@ export const NavBar = () => {
       {/* Sidebar Drawer */}
       <Drawer anchor="right" open={isDrawerOpen} onClose={toggleDrawer(false)}>
         <Box
-          sx={{
-            width: 250,
-            backgroundColor: "#F4C7A1",
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            padding: 2,
-          }}
+          className="w-64 h-full bg-[#d5a16e] flex flex-col p-4"
           role="presentation"
           onKeyDown={toggleDrawer(false)}
         >
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: "bold",
-              marginBottom: 2,
-              textAlign: "center",
-            }}
-          >
+          {/* Profile Section */}
+          <div className="flex flex-col items-center mb-4">
             <Button
               component={RouterLink}
               to="/profile"
               variant="text"
+              className="p-0 min-w-0"
             >
               <img
                 src="/images/default-profile-pic.png"
                 alt="Profile"
-                style={{
-                  width: 75,
-                  height: 75,
-                  borderRadius: "50%",
-                  border: "2px solid #C47B4D",
-                }}
+                className="w-[75px] h-[75px] rounded-full border-2 border-[#C47B4D]"
               />
             </Button>
-          </Typography>
-          <List>
-            <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/map" onClick={handleNavClick("map")}>
-                <ListItemText primary="Map" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/ai-suggestion" onClick={handleNavClick("ai-suggestion")}>
-                <ListItemText primary="AI suggestion" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton onClick={handleNavClick("travel-plan")}>
-                <ListItemText primary="Travel Plan" />
-                {showTravelPlanSub ? <ExpandLess /> : <ExpandMore />}
-              </ListItemButton>
-            </ListItem>
-            <Collapse in={showTravelPlanSub} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                <ListItem disablePadding>
-                  <ListItemButton component={RouterLink} to="/travel-plan/view-saved" sx={{ pl: 4 }}>
-                    <ListItemText primary="View Saved" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton component={RouterLink} to="/travel-plan/create-new" sx={{ pl: 4 }}>
-                    <ListItemText primary="Create New" />
-                  </ListItemButton>
-                </ListItem>
-              </List>
-            </Collapse>
-            <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/meal-plan" onClick={handleNavClick("meal-plan")}>
-                <ListItemText primary="Meal Plan" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/profile" onClick={handleNavClick("profile")}>
-                <ListItemText primary="Profile" />
-              </ListItemButton>
-            </ListItem>
+            <span className="mt-2 text-white text-base font-bold font-[Comic_Sans_MS,cursive,sans-serif]">
+              {userName}
+            </span>
+          </div>
+
+          {/* Navigation List */}
+          <List className="space-y-1">
+            {[
+              { label: "Map", path: "/map" },
+              { label: "AI Suggestion", path: "/ai-suggestion" },
+              { label: "Travel Plan", path: "/travel-plan" },
+              { label: "Meal Plan", path: "/meal-planner" },
+              { label: "Profile", path: "/profile" },
+            ].map((item) => (
+              <ListItem key={item.path} disablePadding>
+                <ListItemButton component={RouterLink} to={item.path}>
+                  <ListItemText
+                    primary={
+                      <span className="text-white font-bold text-base hover:text-[#a95f30] transition-colors">
+                        {item.label}
+                      </span>
+                    }
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
             <ListItem disablePadding>
               <ListItemButton onClick={handleLogout}>
-                <ListItemText primary="Logout" />
+                <ListItemText
+                  primary={
+                    <span className="text-white font-bold text-base hover:text-[#a95f30] transition-colors">
+                      Logout
+                    </span>
+                  }
+                />
               </ListItemButton>
             </ListItem>
           </List>
         </Box>
       </Drawer>
-    </>
+
+      </>
   );
 };

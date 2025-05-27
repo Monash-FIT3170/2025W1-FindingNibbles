@@ -8,6 +8,8 @@ import { Modal, Box as MuiBox, Typography } from "@mui/material";
 import { useTracker } from 'meteor/react-meteor-data';
 import { Plans, PlanType } from '../api/Plans';
 
+import { RadarChart } from "recharts";
+import { GenerateContentResponseHandler } from "@google-cloud/vertexai";
 // Add debounce utility
 const debounce = (func: Function, delay: number) => {
   let timeoutId: NodeJS.Timeout;
@@ -22,6 +24,7 @@ interface Location {
   lng: number;
 }
 interface Restaurant {
+  id?: string;
   displayName?: {
     text: string;
   };
@@ -42,7 +45,7 @@ export const Map = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
   const [hoveredMarkerIndex, setHoveredMarkerIndex] = useState<number | null>(null);
-  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [highlightedCuisine, setHighlightedCuisine] = useState<string | null>(null);
 
 
@@ -89,13 +92,13 @@ export const Map = () => {
 
   const handleAddToPlan = (planIdx: number) => {
     if (
-      typeof selectedMarkerIndex === "number" &&
+      selectedRestaurant &&
       userPlans[planIdx] &&
       !userPlans[planIdx].restaurants.some(
-        (r) => r.displayName?.text === restaurants[selectedMarkerIndex].displayName?.text
+        (r) => r.displayName?.text === selectedRestaurant.displayName?.text
       )
     ) {
-      Meteor.callAsync('plans.addRestaurant', userPlans[planIdx]._id, restaurants[selectedMarkerIndex])
+      Meteor.callAsync('plans.addRestaurant', userPlans[planIdx]._id, selectedRestaurant)
         .then(() => {
           setAddingToPlanId(planIdx);
           setTimeout(() => setAddingToPlanId(null), 1000);
@@ -111,8 +114,23 @@ export const Map = () => {
     debounce(async (lat: number, lng: number, rad: number) => {
       setIsMapLoading(true);
       try {
-        const data = await fetchRestaurants(lat, lng, rad);
-        setRestaurants(data);
+
+
+        const central_points = findCoordinates(lat,lng,2000);      
+        const new_radius = Math.ceil((1/3)*2000);
+
+
+        const innerPoints = central_points.flatMap(({lat,lng}) =>
+          findCoordinates(lat,lng,new_radius)
+        );
+
+        const full_restaurant_search: Restaurant[][] = await Promise.all(
+          innerPoints.map(({lat,lng,radius}) =>
+          fetchRestaurants(lat,lng,radius)
+          )
+        );
+      setRestaurants(full_restaurant_search.flat());
+
       } catch (error) {
         console.error("Error fetching restaurants:", error);
       } finally {
@@ -121,6 +139,101 @@ export const Map = () => {
     }, 500), // 500ms delay
     []
   );
+
+// ############### CALCULATING RADIUS
+
+const EARTH_RADIUS  = 6378137
+
+const deltaLat = (meters: number) => {
+  // Takes in d and finds the distance change based on the Earth Radius
+  const latRaw = meters/EARTH_RADIUS * (180/Math.PI);
+  // Rounding the value to 4 decimal places
+  return Math.round(latRaw *10000)/10000;
+}
+
+const deltaLng = (new_lattitude: number, meters: number) => {
+  const lngRaw = (meters/(EARTH_RADIUS * Math.cos(new_lattitude * Math.PI/180))) * (180/Math.PI);
+  return Math.round(lngRaw * 10000)/10000
+}
+
+const horizontalLngDist = (a: number, b:number) =>{
+
+  return Math.sqrt(a**2 - b**2);
+}
+
+const findCoordinates = (central_lat: number, central_lng: number, search_radius: number) => {
+  // Diameter of the circle used to calculate North and South distances
+  const diameter = 2*search_radius;
+  // Change in lat value 
+  const lat_change = deltaLat(diameter);
+  // Distance to move horizontally for diagonal points (m)
+  const lng_distance = Math.ceil(horizontalLngDist(diameter, search_radius));
+  console.log("THIS IS THE LNG DISTANCE", lng_distance);
+  // Lattitude change for diagonal points (moving up 1/2 the lat change)
+  // const diag_lat_change = lat_change/2;
+
+  const output = [];
+  // Central point
+  output.push({lat: central_lat, lng: central_lng, radius: search_radius });
+
+  // North and South points
+  output.push({lat:central_lat + lat_change, lng: central_lng, radius: search_radius});
+  output.push({lat:central_lat - lat_change, lng: central_lng, radius: search_radius});
+  
+  // NE
+  {
+    const lat_NE = central_lat + lat_change/2;
+    const lng_NE = central_lng + deltaLng(lat_NE, lng_distance);
+    output.push({lat:lat_NE , lng: lng_NE, radius:search_radius });
+  }
+
+  // //SE
+  {
+    const lat_SE = central_lat - lat_change/2;
+    const lng_SE = central_lng + deltaLng(lat_SE, lng_distance);
+    output.push({lat: lat_SE, lng: lng_SE , radius: search_radius});
+  }
+  // //NW
+  {
+    const lat_NW = central_lat + lat_change/2;
+    const lng_NW = central_lng - deltaLng(lat_NW, lng_distance);
+    output.push({lat:lat_NW , lng: lng_NW , radius: search_radius});
+  }
+  // //SW
+  {
+    const lat_SW = central_lat - lat_change/2;
+    const lng_SW = central_lng - deltaLng(lat_SW, lng_distance);
+    output.push({lat: lat_SW, lng: lng_SW, radius: search_radius});
+  }
+
+  return output;
+}
+
+
+
+//####################################
+
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (value: number) => (value * Math.PI) / 180;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  // Distance in m
+  return EARTH_RADIUS * c; 
+}
+
+
+//##########################
+
+
+  // console.log("This is the restaurants " ,  JSON.stringify(restaurants,null,2));
+
   // Update debounced radius when radius changes
   useEffect(() => {
     setDebouncedRadius(radius);
@@ -135,6 +248,8 @@ export const Map = () => {
       debouncedFetchRestaurants(userLocation.lat, userLocation.lng, debouncedRadius);
     }
   }, [userLocation, map, debouncedRadius, debouncedFetchRestaurants]);
+
+
   useEffect(() => {
     const sorted = [...restaurants].sort((restaurant1, restaurant2) => {
       const rating1 = restaurant1.rating ?? 0;
@@ -158,7 +273,7 @@ export const Map = () => {
     ],
   };
 
-  const saveRestaurant = (restaurant: Restaurant, index: number) => {
+  const saveRestaurant = (restaurant: Restaurant) => {
     const userId = Meteor.userId();
     if (!userId) {
       alert("You must be logged in to save restaurants");
@@ -169,8 +284,6 @@ export const Map = () => {
       userId: userId,
       name: restaurant.displayName?.text ?? "Unknown Name",
       location: restaurant.formattedAddress ?? "Unknown Location",
-
-
     };
     
 
@@ -179,14 +292,14 @@ export const Map = () => {
         alert(`Failed to save: ${error.reason || error.message || error}`);
         console.error('Error saving restaurant:', error);
       } else {
+        alert('Restaurant saved successfully!');
         console.log('Restaurant saved successfully');
       }
     });
-    setSavedIndexes((prev) => [...prev, index]);
   };
 
   
-  const isSaved = selectedMarkerIndex != null && savedIndexes.includes(selectedMarkerIndex);
+  // const isSaved = selectedRestaurant != null && savedIndexes.includes(selectedRestaurant);
 
   
   
@@ -309,7 +422,7 @@ const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string):
     const headers = {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": API_KEY,
-      "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location,places.rating,places.types",
+      "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.types",
     };
     try {
       const response = await fetch(URL, {
@@ -448,7 +561,14 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
             />
 
             {/* Restore cuisine filtering for map markers */}
-            {filterRestaurantsByCuisine(restaurants, selectedCusine).map((restaurant, index) => {
+            {filterRestaurantsByCuisine(restaurants, selectedCusine).filter((restaurant) =>
+            haversineDistance(
+              userLocation.lat,
+              userLocation.lng,
+              restaurant.location.latitude,
+              restaurant.location.longitude
+            )<= radius
+          ).map((restaurant, index) => {
               const isHovered = hoveredMarkerIndex === index;
               const isHighlighted = isRestaurantHighlighted(restaurant);
               const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
@@ -470,63 +590,63 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                   animation={isHighlighted ? google.maps.Animation.BOUNCE : undefined}
                   onMouseOver={() => setHoveredMarkerIndex(index)}
                   onMouseOut={() => setHoveredMarkerIndex(null)}
-                  onClick={() => setSelectedMarkerIndex(index)}
+                  onClick={() => setSelectedRestaurant(restaurant)}
                 />
               );
+
             })}
 
-          {selectedMarkerIndex !== null && restaurants[selectedMarkerIndex] && (
-          <InfoWindow
-          position={{
-            lat: restaurants[selectedMarkerIndex].location.latitude,
-            lng: restaurants[selectedMarkerIndex].location.longitude,
-          }}
-          onCloseClick={() => setSelectedMarkerIndex(null)}
-        >
-          <div style={{ maxWidth: "200px" }}>
-            <h3 style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].displayName?.text || "N/A"}</h3>
-            <p style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].formattedAddress || "N/A"}</p>
-            <p style={{ margin: "0" }}>Rating: {restaurants[selectedMarkerIndex].rating ?? "N/A"}</p>
-            <p style={{ margin: "0" }}>
-              Cuisine:{" "}
-              {restaurants[selectedMarkerIndex].types
-                ?.filter((type) => type.includes("restaurant"))
-                .map(normalizeCuisineType)
-                .join(", ") || "N/A"}
-            </p>
-            <button
-              onClick={() => saveRestaurant(restaurants[selectedMarkerIndex], selectedMarkerIndex)}
-              disabled={isSaved}
-              style={{
-                marginTop: "8px",
-                padding: "6px 12px",
-                backgroundColor: isSaved ? "#aaa" : "#6200ea",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: isSaved ? "default" : "pointer"
-              }}
-            >
-              {isSaved ? "Saved" : "Save"}
-            </button>
-            <button
-              onClick={() => setIsAddToPlanOpen(true)}
-              style={{
-                marginTop: "8px",
-                padding: "6px 12px",
-                backgroundColor: "#C47B4D",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer"
-              }}
-            >
-              Add to Plan
-            </button>
-          </div>
-        </InfoWindow>
-        
-        )}
+            {selectedRestaurant && (
+              <InfoWindow
+                position={{
+                  lat: selectedRestaurant.location.latitude,
+                  lng: selectedRestaurant.location.longitude,
+                }}
+                onCloseClick={() => setSelectedRestaurant(null)}
+              >
+                <div style={{ maxWidth: "200px" }}>
+                  <h3 style={{ margin: "0" }}>{selectedRestaurant.displayName?.text || "N/A"}</h3>
+                  <p style={{ margin: "0" }}>{selectedRestaurant.formattedAddress || "N/A"}</p>
+                  <p style={{ margin: "0" }}>Rating: {selectedRestaurant.rating ?? "N/A"}</p>
+                  <p style={{ margin: "0" }}>
+                    Cuisine:{" "}
+                    {selectedRestaurant.types
+                      ?.filter((type) => type.includes("restaurant"))
+                      .map(normalizeCuisineType)
+                      .join(", ") || "N/A"}
+                  </p>
+                  <button
+                    onClick={() => saveRestaurant(selectedRestaurant)}
+                    style={{
+                      marginTop: "8px",
+                      padding: "6px 12px",
+                      backgroundColor: "#6200ea",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer"
+                    }}
+                  >
+                     Save
+                  </button>
+                  <button
+                    onClick={() => setIsAddToPlanOpen(true)}
+                    style={{
+                      marginTop: "8px",
+                      padding: "6px 12px",
+                      backgroundColor: "#C47B4D",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Add to Plan
+                  </button>
+                </div>
+              </InfoWindow>
+            )}
+            
           </GoogleMap>
         )}
 
@@ -630,13 +750,13 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               value={radius}
               onChange={handleRadiusChange}
               min="500"
-              max="5000"
+              max="6000"
               step="100"
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
             <div className="flex justify-between text-xs text-gray-500 px-1">
               <span>500m</span>
-              <span>5km</span>
+              <span>6km</span>
             </div>
           </div>
         </div>
@@ -821,9 +941,9 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                           handleAddToPlan(idx);
                         }}
                         disabled={
-                          selectedMarkerIndex === null ||
+                          selectedRestaurant === null ||
                           plan.restaurants.some(
-                            (r) => selectedMarkerIndex !== null && r.displayName?.text === restaurants[selectedMarkerIndex]?.displayName?.text
+                            (r) => selectedRestaurant !== null && r.displayName?.text === selectedRestaurant.displayName?.text
                           )
                         }
                         style={{
@@ -837,7 +957,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                         }}
                       >
                         {plan.restaurants.some(
-                          (r) => selectedMarkerIndex !== null && r.displayName?.text === restaurants[selectedMarkerIndex]?.displayName?.text
+                          (r) => selectedRestaurant !== null && r.displayName?.text === selectedRestaurant.displayName?.text
                         )
                           ? "Added"
                           : addingToPlanId === idx
