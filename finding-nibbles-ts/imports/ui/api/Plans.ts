@@ -41,6 +41,15 @@ Meteor.methods({
     if (!plan) throw new Meteor.Error('Plan not found or not authorized');
     return await Plans.removeAsync({ _id: planId, userId: this.userId });
   },
+  async 'plans.updatePlan'(planId: string, title: string, newRestaurants: any[]) {
+    if (!this.userId) throw new Meteor.Error('Not authorized');
+    const plan = await Plans.findOneAsync({ _id: planId, userId: this.userId });
+    if (!plan) throw new Meteor.Error('Plan not found or not authorized');
+    return await Plans.updateAsync(
+      { _id: planId, userId: this.userId },
+      { $set: { title, restaurants: newRestaurants } }
+    );
+  },
   // Add more methods as needed (remove, update, etc.)
 });
 
