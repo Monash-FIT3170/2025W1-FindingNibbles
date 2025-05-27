@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import {Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button} from '@mui/material';
 import {Sidebar} from '../components/layouts/Sidebar';
+
 
 export const MealPlanner = () => {
 
@@ -74,16 +75,15 @@ export const MealPlanner = () => {
       {/* Main Content */}
       <div className="flex flex-col flex-1 items-center p-6 w-full">
         {/* calorie goal input */}
-        <h2 className="text-[28px] font-bold mb-4">Enter your Diet Goals</h2>
+        <h2 className="text-[28px] font-bold mb-4">Enter your daily Calorie Goals</h2>
         <div className="flex gap-4 mb-6">
           <input
             type="number"
             value={calorieGoal}
-            onChange={(e) => setCalorieGoal(e.target.value)}
+            onChange={e => setCalorieGoal(e.target.value)}
             className="border-2 border-[#b87b45] rounded-xl py-2 px-4 text-center w-40"
             placeholder="Calorie Goal"
           />
-          <button className="bg-[#b87b45] text-white px-6 py-2 rounded-xl font-semibold">Apply</button>
         </div>
 
         <h2 className="text-[24px] font-bold mb-4">Your Progress</h2>
@@ -133,6 +133,16 @@ export const MealPlanner = () => {
               <YAxis />
               {/* tooltip to show exact date/calorie values on hover */}
               <Tooltip />
+              {/* Calorie goal line */}
+                {calorieGoal && !isNaN(Number(calorieGoal)) && (
+                  <ReferenceLine
+                    y={Number(calorieGoal)}
+                    label="Goal"
+                    stroke="#e57373"
+                    strokeDasharray="3 3"
+                    ifOverflow="extendDomain"
+                  />
+                )}
               <Line type="monotone" dataKey="calories" stroke="#b87b45" strokeWidth={3} />
             </LineChart>
           </ResponsiveContainer>
