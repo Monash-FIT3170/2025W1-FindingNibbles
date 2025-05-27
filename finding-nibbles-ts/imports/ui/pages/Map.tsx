@@ -4,6 +4,7 @@ import { Meteor } from 'meteor/meteor';
 import DicePopup from "../components/popups/DicePopup"; 
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete, InfoWindow } from "@react-google-maps/api";
 import { ISavedRestaurant } from "../api/SavedRestaurants";
+import { Modal, Box as MuiBox, Typography } from "@mui/material";
 // Add debounce utility
 const debounce = (func: Function, delay: number) => {
   let timeoutId: NodeJS.Timeout;
@@ -51,6 +52,8 @@ export const Map = () => {
   const [searchSaved, setSearchSaved] = useState(false);
   const [selectedCusine, setSelectedCusine] = useState<string>('All');
   const [savedIndexes, setSavedIndexes] = useState<number[]>([]);
+
+  const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false);
 
   // Create debounced fetch function with useCallback
   const debouncedFetchRestaurants = useCallback(
@@ -456,7 +459,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               {isSaved ? "Saved" : "Save"}
             </button>
             <button
-              onClick={() => {/* Add your Add to Plan logic here */}}
+              onClick={() => setIsAddToPlanOpen(true)}
               style={{
                 marginTop: "8px",
                 padding: "6px 12px",
@@ -653,8 +656,39 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
           availableCuisines={availableCuisines}
           onRoll={handleDiceRoll}
         />
+        {/* Add to Plan Modal */}
+        <Modal
+          open={isAddToPlanOpen}
+          onClose={() => setIsAddToPlanOpen(false)}
+          aria-labelledby="add-to-plan-modal-title"
+          aria-describedby="add-to-plan-modal-description"
+        >
+          <MuiBox
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 400,
+              bgcolor: 'background.paper',
+              border: '2px solid #C47B4D',
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+            }}
+          >
+            <Typography id="add-to-plan-modal-title" variant="h6" component="h2">
+              Add to Plan
+            </Typography>
+            <Typography id="add-to-plan-modal-description" sx={{ mt: 2 }}>
+              {/* You can add your content here later */}
+              Modal content goes here.
+            </Typography>
+          </MuiBox>
+        </Modal>
       </div>
     </LoadScript>
+    
   );
 };
 
