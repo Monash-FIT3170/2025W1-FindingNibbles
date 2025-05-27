@@ -74,54 +74,12 @@ export const Map = () => {
           findCoordinates(lat,lng,new_radius)
         );
 
-        // console.log("THIS IS THE INNER POINTS", innerPoints);
-
-
         const full_restaurant_search: Restaurant[][] = await Promise.all(
           innerPoints.map(({lat,lng,radius}) =>
           fetchRestaurants(lat,lng,radius)
           )
         );
-      
-        // console.log("THIS IS ALL THHE RESTAURANTS", full_restaurant_search);
-      // console.log("THHIS IS ALL THE points", all_points);
-
       setRestaurants(full_restaurant_search.flat());
-
-
-
-        // console.log("THIS IS THE LNG OUTPUT" + deltaLng(lat + latChange, 1000));
-
-        // // Center circle
-        // const data1 = await fetchRestaurants(lat, lng, 2000);
-        // // North Circle
-        // const data2 = await fetchRestaurants(lat + latChange, lng, 2000);
-        // // South Circle
-        // const data3 = await fetchRestaurants(lat - latChange,lng,2000);
-        // // NE
-        // const data4 = await fetchRestaurants(lat + latChange/2, lng + deltaLng(lat + latChange/2, lng_meter) , 2000);
-        // // console.log("THIS IS THE NEW LAT" +lng + lngOffSet(2000, lat + latChange/2) );
-        // // SE circle
-        // const data5 = await fetchRestaurants(lat - latChange/2, lng + deltaLng(lat - latChange/2,lng_meter) , 2000);
-
-        // // NW Circle
-        // const data6 = await fetchRestaurants(lat + latChange/2, lng - deltaLng(lat + latChange/2,lng_meter) , 2000);
-        // // SW Circle
-        // const data7 = await fetchRestaurants(lat - latChange/2, lng - deltaLng(lat - latChange/2,lng_meter) , 2000);
-        // // const data6
-        // // const data7
-        // // console.log("THIS IS THE DATA", JSON.stringify(data1,null,2));
-        // // console.log("THIS IS DATA2", JSON.stringify(data2, null, 2));
-
-
-        // // setRestaurants(data);
-        
-        // // setRestaurants(data2);
-        // // setRestaurants(prev => [...prev, ...data2]);
-
-        // const combined = [...data1,...data2,...data3, ...data4, ...data5, ...data6, ...data7];
-        // setRestaurants(combined);
-
 
       } catch (error) {
         console.error("Error fetching restaurants:", error);
@@ -206,7 +164,7 @@ const findCoordinates = (central_lat: number, central_lng: number, search_radius
 
 
 
-// console.log("THIS IS LAT OFFSET" + latOffset(1000))
+
 
 //##########################
 
