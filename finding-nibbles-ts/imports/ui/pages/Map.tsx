@@ -111,14 +111,15 @@ export const Map = () => {
 
 const EARTH_RADIUS  = 6378137
 
-const latOffset = (meters: number) => {
+const deltaLat = (meters: number) => {
+  // Takes in d and finds the distance change based on the Earth Radius
   const latRaw = meters/EARTH_RADIUS * (180/Math.PI);
-
+  // Rounding the value to 4 decimal places
   return Math.round(latRaw *10000)/10000;
 }
 
-const lngOffSet = (meters: number, latitude: number) => {
-  const lngRaw = (meters/(EARTH_RADIUS * Math.cos(latitude * Math.PI/180))) * (180/Math.PI);
+const deltaLng = (new_lattitude: number, meters: number) => {
+  const lngRaw = (meters/(EARTH_RADIUS * Math.cos(new_lattitude * Math.PI/180))) * (180/Math.PI);
   return Math.round(lngRaw * 10000)/10000
 }
 
