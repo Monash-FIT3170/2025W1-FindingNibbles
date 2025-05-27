@@ -181,7 +181,7 @@ const moveMiddleDown = (indexInOrder: number) => {
             >
               {restaurants.map((r, idx) => (
                 <MenuItem key={idx} value={idx}>
-                  {r.displayName?.text || r.name || "Unnamed Restaurant"}
+                  {r?.displayName?.text || r?.name || "Unnamed Restaurant"}
                 </MenuItem>
               ))}
             </Select>

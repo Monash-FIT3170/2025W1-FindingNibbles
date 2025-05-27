@@ -37,8 +37,8 @@ export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
             <Route path="/search-history" element={requireAuth(<SearchHistory />)} />
             <Route path="/meal-planner" element={requireAuth(<MealPlanner />)} />
             <Route path="/saved-restaurants" element={requireAuth(<SavedRestaurantsList />)} />
-            <Route path="/plans" element={requireAuth(<SavedPlans />)} />
-            <Route path="/plans/:planId" element={requireAuth(<PlanDetails />)} />
+            <Route path="/travel-plans" element={requireAuth(<SavedPlans />)} />
+            <Route path="/travel-plans/:planId" element={requireAuth(<PlanDetails />)} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

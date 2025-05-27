@@ -98,7 +98,7 @@ export const SavedPlans = () => {
                 <td style={{ textAlign: "center", padding: "16px 12px", whiteSpace: "nowrap" }}>
                   <Button
                     component={RouterLink}
-                    to={`/plans/${plan._id}`}
+                    to={`/travel-plans/${plan._id}`}
                     variant="outlined"
                     style={{
                       borderColor: "#c17030",

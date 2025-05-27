@@ -969,7 +969,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                     {plan.restaurants.length > 0 ? (
                       <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 16 }}>
                         {plan.restaurants.map((r, ridx) => (
-                          <li key={ridx}>{r.displayName?.text || "N/A"}</li>
+                          <li key={ridx}>{r?.displayName?.text || "N/A"}</li>
                         ))}
                       </ul>
                     ) : (
