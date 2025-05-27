@@ -5,6 +5,7 @@ import DicePopup from "../components/popups/DicePopup";
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete, InfoWindow } from "@react-google-maps/api";
 import { ISavedRestaurant } from "../api/SavedRestaurants";
 import { RadarChart } from "recharts";
+import { GenerateContentResponseHandler } from "@google-cloud/vertexai";
 // Add debounce utility
 const debounce = (func: Function, delay: number) => {
   let timeoutId: NodeJS.Timeout;
@@ -63,41 +64,65 @@ export const Map = () => {
     debounce(async (lat: number, lng: number, rad: number) => {
       setIsMapLoading(true);
       try {
-        const meters = 4000;
-        const radius = 2000;
-        const lng_meter = Math.sqrt(12);
-        const latChange = latOffset(meters);
-
-        // Center circle
-        const data1 = await fetchRestaurants(lat, lng, radius);
-        // North Circle
-        const data2 = await fetchRestaurants(lat + latChange, lng, 2000);
-        // South Circle
-        const data3 = await fetchRestaurants(lat - latChange,lng,2000);
-        // NE
-        const data4 = await fetchRestaurants(lat + latChange/2, lng + lngOffSet(lng_meter, lat + latChange/2) , 2000);
-        // console.log("THIS IS THE NEW LAT" +lng + lngOffSet(2000, lat + latChange/2) );
-        // SE circle
-        const data5 = await fetchRestaurants(lat - latChange/2, lng + lngOffSet(lng_meter, lat + latChange/2) , 2000);
-
-        // NW Circle
-        const data6 = await fetchRestaurants(lat + latChange/2, lng - lngOffSet(lng_meter, lat + latChange/2) , 2000);
-        // SW Circle
-        const data7 = await fetchRestaurants(lat - latChange/2, lng - lngOffSet(lng_meter, lat + latChange/2) , 2000);
-        // const data6
-        // const data7
-        // console.log("THIS IS THE DATA", JSON.stringify(data1,null,2));
-        // console.log("THIS IS DATA2", JSON.stringify(data2, null, 2));
 
 
-        // setRestaurants(data);
+        const central_points = findCoordinates(lat,lng,2000);      
+        const new_radius = Math.ceil((1/3)*2000);
+
+
+        const innerPoints = central_points.flatMap(({lat,lng}) =>
+          findCoordinates(lat,lng,new_radius)
+        );
+
+        // console.log("THIS IS THE INNER POINTS", innerPoints);
+
+
+        const full_restaurant_search: Restaurant[][] = await Promise.all(
+          innerPoints.map(({lat,lng,radius}) =>
+          fetchRestaurants(lat,lng,radius)
+          )
+        );
+      
+        // console.log("THIS IS ALL THHE RESTAURANTS", full_restaurant_search);
+      // console.log("THHIS IS ALL THE points", all_points);
+
+      setRestaurants(full_restaurant_search.flat());
+
+
+
+        // console.log("THIS IS THE LNG OUTPUT" + deltaLng(lat + latChange, 1000));
+
+        // // Center circle
+        // const data1 = await fetchRestaurants(lat, lng, 2000);
+        // // North Circle
+        // const data2 = await fetchRestaurants(lat + latChange, lng, 2000);
+        // // South Circle
+        // const data3 = await fetchRestaurants(lat - latChange,lng,2000);
+        // // NE
+        // const data4 = await fetchRestaurants(lat + latChange/2, lng + deltaLng(lat + latChange/2, lng_meter) , 2000);
+        // // console.log("THIS IS THE NEW LAT" +lng + lngOffSet(2000, lat + latChange/2) );
+        // // SE circle
+        // const data5 = await fetchRestaurants(lat - latChange/2, lng + deltaLng(lat - latChange/2,lng_meter) , 2000);
+
+        // // NW Circle
+        // const data6 = await fetchRestaurants(lat + latChange/2, lng - deltaLng(lat + latChange/2,lng_meter) , 2000);
+        // // SW Circle
+        // const data7 = await fetchRestaurants(lat - latChange/2, lng - deltaLng(lat - latChange/2,lng_meter) , 2000);
+        // // const data6
+        // // const data7
+        // // console.log("THIS IS THE DATA", JSON.stringify(data1,null,2));
+        // // console.log("THIS IS DATA2", JSON.stringify(data2, null, 2));
+
+
+        // // setRestaurants(data);
         
-        // setRestaurants(data2);
-        // setRestaurants(prev => [...prev, ...data2]);
+        // // setRestaurants(data2);
+        // // setRestaurants(prev => [...prev, ...data2]);
 
-        const combined = [...data1,...data2,...data3, ...data4, ...data5, ...data6, ...data7];
+        // const combined = [...data1,...data2,...data3, ...data4, ...data5, ...data6, ...data7];
+        // setRestaurants(combined);
 
-        setRestaurants(combined);
+
       } catch (error) {
         console.error("Error fetching restaurants:", error);
       } finally {
@@ -179,10 +204,14 @@ const findCoordinates = (central_lat: number, central_lng: number, search_radius
   return output;
 }
 
+
+
+// console.log("THIS IS LAT OFFSET" + latOffset(1000))
+
 //##########################
 
 
-  console.log("This is the restaurants " ,  JSON.stringify(restaurants,null,2));
+  // console.log("This is the restaurants " ,  JSON.stringify(restaurants,null,2));
 
   // Update debounced radius when radius changes
   useEffect(() => {
@@ -400,12 +429,7 @@ const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string):
     }
 
   }
-console.log("THIS IS THE RESTAURANTS" + restaurants);
 
-// somewhere inside your component…
-
-
-console.log("THIS IS THE SECOND !! RESTAURANTS" + restaurants);
 
 
   
