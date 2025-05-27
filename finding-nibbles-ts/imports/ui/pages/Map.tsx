@@ -41,7 +41,7 @@ export const Map = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
   const [hoveredMarkerIndex, setHoveredMarkerIndex] = useState<number | null>(null);
-  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
+  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<Restaurant | null>(null);
   const [highlightedCuisine, setHighlightedCuisine] = useState<string | null>(null);
 
 
@@ -164,6 +164,22 @@ const findCoordinates = (central_lat: number, central_lng: number, search_radius
 
 
 
+//####################################
+
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (value: number) => (value * Math.PI) / 180;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  // Distance in m
+  return EARTH_RADIUS * c; 
+}
 
 
 //##########################
@@ -497,7 +513,14 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
             />
 
             {/* Restore cuisine filtering for map markers */}
-            {filterRestaurantsByCuisine(restaurants, selectedCusine).map((restaurant, index) => {
+            {filterRestaurantsByCuisine(restaurants, selectedCusine).filter((restaurant) =>
+            haversineDistance(
+              userLocation.lat,
+              userLocation.lng,
+              restaurant.location.latitude,
+              restaurant.location.longitude
+            )<= radius
+          ).map((restaurant, index) => {
               const isHovered = hoveredMarkerIndex === index;
               const isHighlighted = isRestaurantHighlighted(restaurant);
               const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
@@ -664,13 +687,13 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               value={radius}
               onChange={handleRadiusChange}
               min="500"
-              max="5000"
+              max="6000"
               step="100"
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
             <div className="flex justify-between text-xs text-gray-500 px-1">
               <span>500m</span>
-              <span>5km</span>
+              <span>6km</span>
             </div>
           </div>
         </div>
