@@ -105,12 +105,9 @@ export const AddToPlanModal: React.FC<AddToPlanModalProps> = ({
 
                 {isCreatingPlan ? (
                     <CreatePlanModalForm
-                        newPlanTitle={newPlanTitle}
-                        handlePlanTitleChange={handlePlanTitleChange}
-                        handlePlanTitleSubmit={handlePlanTitleSubmit}
                         setIsCreatingPlan={setIsCreatingPlan}
-                    />
-                ) : (
+                        selectedRestaurant={selectedRestaurant}
+                    />) : (
                     <button
                         style={{
                             marginBottom: "16px",
@@ -124,7 +121,7 @@ export const AddToPlanModal: React.FC<AddToPlanModalProps> = ({
                         }}
                         onClick={handleCreatePlan}
                     >
-                        Create New Plan
+                        Create + Add to New Plan
                     </button>
                 )}
 
