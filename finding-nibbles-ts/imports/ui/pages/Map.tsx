@@ -544,8 +544,46 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                   onClick={() => setSelectedRestaurant(restaurant)}
                 />
               );
+
             })}
 
+            {selectedRestaurant && (
+              <InfoWindow
+                position={{
+                  lat: selectedRestaurant.location.latitude,
+                  lng: selectedRestaurant.location.longitude,
+                }}
+                onCloseClick={() => setSelectedRestaurant(null)}
+              >
+                <div style={{ maxWidth: "200px" }}>
+                  <h3 style={{ margin: "0" }}>{selectedRestaurant.displayName?.text || "N/A"}</h3>
+                  <p style={{ margin: "0" }}>{selectedRestaurant.formattedAddress || "N/A"}</p>
+                  <p style={{ margin: "0" }}>Rating: {selectedRestaurant.rating ?? "N/A"}</p>
+                  <p style={{ margin: "0" }}>
+                    Cuisine:{" "}
+                    {selectedRestaurant.types
+                      ?.filter((type) => type.includes("restaurant"))
+                      .map(normalizeCuisineType)
+                      .join(", ") || "N/A"}
+                  </p>
+                  <button
+                    onClick={() => saveRestaurant(selectedRestaurant, restaurants.indexOf(selectedRestaurant))}
+                    style={{
+                      marginTop: "8px",
+                      padding: "6px 12px",
+                      backgroundColor: "#6200ea",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Save
+                  </button>
+                </div>
+              </InfoWindow>
+            )}
+            
           </GoogleMap>
         )}
 
