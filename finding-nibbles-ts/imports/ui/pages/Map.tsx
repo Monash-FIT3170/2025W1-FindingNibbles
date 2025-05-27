@@ -408,7 +408,7 @@ export const Map = () => {
     return type.includes("restaurant") && !genericTypes.some((genericType) => type === genericType);
   };
   async function fetchRestaurants(latitude: number, longitude: number, searchRadius: number = radius): Promise<Restaurant[]> {
-    const API_KEY = "AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM";
+    const API_KEY = "AIzaSyCA1yCyhdJfWaPncGA1ucy5GFjMuqj5PUA";
     const URL = "https://places.googleapis.com/v1/places:searchNearby";
     const payload = {
       includedTypes: ["restaurant"],
@@ -535,7 +535,7 @@ export const Map = () => {
     }) ?? false;
   };
   return (
-    <LoadScript googleMapsApiKey="AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM" libraries={["places"]}>
+    <LoadScript googleMapsApiKey="AIzaSyCA1yCyhdJfWaPncGA1ucy5GFjMuqj5PUA" libraries={["places"]}>
       <div style={{ position: "relative", height: "100vh" }}>
         {userLocation && (
           <GoogleMap
