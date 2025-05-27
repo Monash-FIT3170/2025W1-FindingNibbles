@@ -233,8 +233,6 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
       userId: userId,
       name: restaurant.displayName?.text ?? "Unknown Name",
       location: restaurant.formattedAddress ?? "Unknown Location",
-
-
     };
     
 
