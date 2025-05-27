@@ -53,8 +53,6 @@ export const Map = () => {
   const [searchValue, setSearchValue] = useState<string>('');
   const [searchSaved, setSearchSaved] = useState(false);
   const [selectedCusine, setSelectedCusine] = useState<string>('All');
-  const [savedIndexes, setSavedIndexes] = useState<number[]>([]);
-
   // Create debounced fetch function with useCallback
   const debouncedFetchRestaurants = useCallback(
     debounce(async (lat: number, lng: number, rad: number) => {
@@ -106,9 +104,6 @@ const horizontalLngDist = (a: number, b:number) =>{
 
   return Math.sqrt(a**2 - b**2);
 }
-
-
-
 
 const findCoordinates = (central_lat: number, central_lng: number, search_radius: number) => {
   // Diameter of the circle used to calculate North and South distances
@@ -222,7 +217,7 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
     ],
   };
 
-  const saveRestaurant = (restaurant: Restaurant, index: number) => {
+  const saveRestaurant = (restaurant: Restaurant) => {
     const userId = Meteor.userId();
     if (!userId) {
       alert("You must be logged in to save restaurants");
@@ -233,8 +228,6 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
       userId: userId,
       name: restaurant.displayName?.text ?? "Unknown Name",
       location: restaurant.formattedAddress ?? "Unknown Location",
-
-
     };
     
 
@@ -243,10 +236,10 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
         alert(`Failed to save: ${error.reason || error.message || error}`);
         console.error('Error saving restaurant:', error);
       } else {
+        alert('Restaurant saved successfully!');
         console.log('Restaurant saved successfully');
       }
     });
-    setSavedIndexes((prev) => [...prev, index]);
   };
 
   
@@ -567,7 +560,7 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                       .join(", ") || "N/A"}
                   </p>
                   <button
-                    onClick={() => saveRestaurant(selectedRestaurant, restaurants.indexOf(selectedRestaurant))}
+                    onClick={() => saveRestaurant(selectedRestaurant)}
                     style={{
                       marginTop: "8px",
                       padding: "6px 12px",
