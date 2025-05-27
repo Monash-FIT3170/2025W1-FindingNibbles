@@ -123,8 +123,11 @@ const deltaLng = (new_lattitude: number, meters: number) => {
   return Math.round(lngRaw * 10000)/10000
 }
 
+const horizontalLngDist = (a: number, b:number) =>{
 
-console.log("THIS IS LAT OFFSET" + latOffset(1000))
+  return Math.sqrt(a**2 - b**2);
+}
+
 
 //##########################
 
