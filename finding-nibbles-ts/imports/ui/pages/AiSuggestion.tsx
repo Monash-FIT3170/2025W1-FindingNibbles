@@ -9,6 +9,15 @@ const AiSuggestion: React.FC = () => {
   const [selectedOccasion, setSelectedOccasion] = useState<string>("birthday");
   const [preferences, setPreferences] = useState<string[]>([]);
 
+  function formatBold(text: string) {
+    return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+      part.startsWith("**") && part.endsWith("**") ? (
+        <strong key={i}>{part.slice(2, -2)}</strong>
+      ) : (
+        part
+      )
+    );
+  }
   const fetchSuggestion = async (params: Record<string, string> = {}): Promise<void> => {
     setLoading(true);
     setSuggestion("");
@@ -61,8 +70,8 @@ const AiSuggestion: React.FC = () => {
         ) : suggestion ? (
           <div className="bg-yellow-100 border-l-4 border-yellow-500 p-6 rounded-lg shadow-md animate-fade-in">
             <p className="text-2xl text-gray-800 font-medium text-center">
-              <span className="font-bold text-yellow-700">Recommended Dish:</span>{" "}
-              {suggestion}
+              <span className="font-bold text-yellow-700">Recommended Dish:</span>
+              {formatBold(suggestion)}
             </p>
           </div>
         ) : null}

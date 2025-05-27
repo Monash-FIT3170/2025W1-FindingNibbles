@@ -43,7 +43,7 @@ export const Profile = () => {
         if (err) {
           alert(`Failed to save profile: ${err.reason}`);
         } else {
-          alert('Profile updated successfully!');
+          console.log('Profile updated successfully!');
         }
       }
     );
