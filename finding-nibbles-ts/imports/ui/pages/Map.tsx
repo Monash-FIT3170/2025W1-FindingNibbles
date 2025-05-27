@@ -455,6 +455,20 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
             >
               {isSaved ? "Saved" : "Save"}
             </button>
+            <button
+              onClick={() => {/* Add your Add to Plan logic here */}}
+              style={{
+                marginTop: "8px",
+                padding: "6px 12px",
+                backgroundColor: "#C47B4D",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer"
+              }}
+            >
+              Add to Plan
+            </button>
           </div>
         </InfoWindow>
         

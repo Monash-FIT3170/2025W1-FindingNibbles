@@ -12,7 +12,9 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  Collapse,
 } from "@mui/material";
+import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 
@@ -22,6 +24,7 @@ export const NavBar = () => {
   const navigate = useNavigate();
   const isLoggedIn = useTracker(() => !!Meteor.userId(), []);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [showTravelPlanSub, setShowTravelPlanSub] = useState(false);
 
   const handleLogout = () => {
     Meteor.logout(() => {
@@ -31,6 +34,17 @@ export const NavBar = () => {
 
   const toggleDrawer = (open: boolean) => () => {
     setIsDrawerOpen(open);
+    if (!open) setShowTravelPlanSub(false);
+  };
+
+  // Handle main nav button clicks
+  const handleNavClick = (button: string) => () => {
+    if (button === "travel-plan") {
+      setShowTravelPlanSub((prev) => !prev);
+    } else {
+      setShowTravelPlanSub(false);
+      setIsDrawerOpen(false);
+    }
   };
 
   return (
@@ -138,7 +152,6 @@ export const NavBar = () => {
             padding: 2,
           }}
           role="presentation"
-          onClick={toggleDrawer(false)}
           onKeyDown={toggleDrawer(false)}
         >
           <Typography
@@ -150,44 +163,60 @@ export const NavBar = () => {
             }}
           >
             <Button
-            component={RouterLink} to="/profile"
-            variant = "text"
-          >
-            <img
-              src="/images/default-profile-pic.png"
-              alt="Profile"
-              style={{
-                width: 75,
-                height: 75,
-                borderRadius: "50%",
-                border: "2px solid #C47B4D",
-              }}
-            />
-          </Button>
+              component={RouterLink}
+              to="/profile"
+              variant="text"
+            >
+              <img
+                src="/images/default-profile-pic.png"
+                alt="Profile"
+                style={{
+                  width: 75,
+                  height: 75,
+                  borderRadius: "50%",
+                  border: "2px solid #C47B4D",
+                }}
+              />
+            </Button>
           </Typography>
           <List>
             <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/map">
+              <ListItemButton component={RouterLink} to="/map" onClick={handleNavClick("map")}>
                 <ListItemText primary="Map" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/ai-suggestion">
+              <ListItemButton component={RouterLink} to="/ai-suggestion" onClick={handleNavClick("ai-suggestion")}>
                 <ListItemText primary="AI suggestion" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/travel-plan">
+              <ListItemButton onClick={handleNavClick("travel-plan")}>
                 <ListItemText primary="Travel Plan" />
+                {showTravelPlanSub ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
             </ListItem>
+            <Collapse in={showTravelPlanSub} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem disablePadding>
+                  <ListItemButton component={RouterLink} to="/travel-plan/view-saved" sx={{ pl: 4 }}>
+                    <ListItemText primary="View Saved" />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton component={RouterLink} to="/travel-plan/create-new" sx={{ pl: 4 }}>
+                    <ListItemText primary="Create New" />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+            </Collapse>
             <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/meal-plan">
+              <ListItemButton component={RouterLink} to="/meal-plan" onClick={handleNavClick("meal-plan")}>
                 <ListItemText primary="Meal Plan" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/profile">
+              <ListItemButton component={RouterLink} to="/profile" onClick={handleNavClick("profile")}>
                 <ListItemText primary="Profile" />
               </ListItemButton>
             </ListItem>
@@ -199,6 +228,6 @@ export const NavBar = () => {
           </List>
         </Box>
       </Drawer>
-      </>
+    </>
   );
 };
