@@ -675,15 +675,32 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               boxShadow: 24,
               p: 4,
               borderRadius: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
             }}
           >
             <Typography id="add-to-plan-modal-title" variant="h6" component="h2">
-              Add to Plan
+              Travel Plans
             </Typography>
-            <Typography id="add-to-plan-modal-description" sx={{ mt: 2 }}>
+            <Typography id="add-to-plan-modal-description" sx={{ mt: 2, mb: 4 }}>
               {/* You can add your content here later */}
               Modal content goes here.
             </Typography>
+            <button
+              style={{
+                marginTop: "auto",
+                padding: "10px 24px",
+                backgroundColor: "#C47B4D",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "16px"
+              }}
+            >
+              Create New Plan
+            </button>
           </MuiBox>
         </Modal>
       </div>
