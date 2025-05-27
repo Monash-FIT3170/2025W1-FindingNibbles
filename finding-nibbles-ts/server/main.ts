@@ -5,7 +5,8 @@ import 'dotenv/config';
 import '../imports/ui/api/user.methods.ts';
 import '../imports/ui/api/aiSuggestion.ts';
 import '../imports/ui/api/searchHistory.ts';
-import '../imports/ui/api/SavedRestaurants'
+import '../imports/ui/api/SavedRestaurants';
+import '../imports/ui/api/Plans';
 
 
 Meteor.startup(async () => {

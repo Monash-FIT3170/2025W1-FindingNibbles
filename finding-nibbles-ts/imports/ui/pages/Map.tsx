@@ -5,16 +5,8 @@ import DicePopup from "../components/popups/DicePopup";
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete, InfoWindow } from "@react-google-maps/api";
 import { ISavedRestaurant } from "../api/SavedRestaurants";
 import { Modal, Box as MuiBox, Typography } from "@mui/material";
-
-class Plan {
-  title: string;
-  restaurants: any[];
-  constructor(title: string) {
-    this.title = title;
-    this.restaurants = [];
-  }
-}
-const initialPlans: Plan[] = [];
+import { useTracker } from 'meteor/react-meteor-data';
+import { Plans, PlanType } from '../api/Plans';
 
 // Add debounce utility
 const debounce = (func: Function, delay: number) => {
@@ -65,10 +57,14 @@ export const Map = () => {
   const [savedIndexes, setSavedIndexes] = useState<number[]>([]);
 
   const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false);
-  const [plans, setPlans] = useState(initialPlans);
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [newPlanTitle, setNewPlanTitle] = useState("");
   const [addingToPlanId, setAddingToPlanId] = useState<number | null>(null); // plan index being added to
+
+  const userPlans = useTracker(() => {
+    Meteor.subscribe('plans');
+    return Plans.find({}).fetch();
+  }, []);
 
   const handleCreatePlan = () => {
     setIsCreatingPlan(true);
@@ -82,23 +78,31 @@ export const Map = () => {
   const handlePlanTitleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newPlanTitle.trim()) {
-      setPlans([...plans, new Plan(newPlanTitle.trim())]);
-      setIsCreatingPlan(false);
+      Meteor.callAsync('plans.insert', newPlanTitle.trim())
+        .then(() => setIsCreatingPlan(false))
+        .catch((err: any) => {
+          // Optionally handle error
+          alert(err.reason || err.message || err);
+        });
     }
   };
 
   const handleAddToPlan = (planIdx: number) => {
     if (
-      selectedMarkerIndex !== null &&
-      !plans[planIdx].restaurants.some(
+      typeof selectedMarkerIndex === "number" &&
+      userPlans[planIdx] &&
+      !userPlans[planIdx].restaurants.some(
         (r) => r.displayName?.text === restaurants[selectedMarkerIndex].displayName?.text
       )
     ) {
-      const updatedPlans = [...plans];
-      updatedPlans[planIdx].restaurants.push(restaurants[selectedMarkerIndex]);
-      setPlans(updatedPlans);
-      setAddingToPlanId(planIdx);
-      setTimeout(() => setAddingToPlanId(null), 1000); // Reset after 1s
+      Meteor.callAsync('plans.addRestaurant', userPlans[planIdx]._id, restaurants[selectedMarkerIndex])
+        .then(() => {
+          setAddingToPlanId(planIdx);
+          setTimeout(() => setAddingToPlanId(null), 1000);
+        })
+        .catch((err: any) => {
+          alert(err.reason || err.message || err);
+        });
     }
   };
 
@@ -803,10 +807,10 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
 
             {/* List of Plans */}
             <div style={{ width: "100%" }}>
-              {plans.length === 0 && (
+              {userPlans.length === 0 && (
                 <Typography sx={{ color: "#888", mb: 2 }}>No plans yet.</Typography>
               )}
-              {plans.map((plan, idx) => (
+              {userPlans.map((plan, idx) => (
                 <MuiBox key={idx} sx={{ mb: 2, border: "1px solid #eee", borderRadius: 1, p: 1 }}>
                   <details>
                     <summary style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
