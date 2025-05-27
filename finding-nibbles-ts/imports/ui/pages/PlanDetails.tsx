@@ -30,16 +30,30 @@ export const PlanDetails = () => {
   const [restaurants, setRestaurants] = useState(plan?.restaurants || []);
   const [startIdx, setStartIdx] = useState(0);
   const [endIdx, setEndIdx] = useState(restaurants.length > 0 ? restaurants.length - 1 : 0);
+  const [middleOrder, setMiddleOrder] = useState<number[]>([]);
 
   // Update local state when plan changes (on first load)
+  // React.useEffect(() => {
+  //   if (plan) {
+  //     setTitle(plan.title);
+  //     setRestaurants(plan.restaurants);
+  //     setStartIdx(0);
+  //     setEndIdx(plan.restaurants.length > 0 ? plan.restaurants.length - 1 : 0);
+  //   }
+  // }, [plan]);
   React.useEffect(() => {
     if (plan) {
       setTitle(plan.title);
       setRestaurants(plan.restaurants);
       setStartIdx(0);
-      setEndIdx(plan.restaurants.length > 0 ? plan.restaurants.length - 1 : 0);
+      setEndIdx(plan.restaurants.length - 1);
+      const middle = plan.restaurants
+        .map((_, idx) => idx)
+        .filter(idx => idx !== 0 && idx !== plan.restaurants.length - 1);
+      setMiddleOrder(middle);
     }
   }, [plan]);
+
 
   if (!isReady) return <div>Loading...</div>;
   if (!plan) return <div>Plan not found.</div>;
@@ -49,32 +63,42 @@ export const PlanDetails = () => {
 
     // Save handler (implement Meteor method as needed)
 const handleSave = () => {
-  if (!planId) return;
+  // if (!planId) return;
 
-  // Get the selected start and end restaurants
-  const start = restaurants[startIdx];
-  const end = restaurants[endIdx];
+  // // Get the selected start and end restaurants
+  // const start = restaurants[startIdx];
+  // const end = restaurants[endIdx];
 
-  // Get the middle restaurants (excluding start and end)
-  const middle = restaurants.filter(
-    (r, idx) => idx !== startIdx && idx !== endIdx
-  );
+  // // Get the middle restaurants (excluding start and end)
+  // const middle = restaurants.filter(
+  //   (r, idx) => idx !== startIdx && idx !== endIdx
+  // );
 
-  // Build the new order: start, ...middle, end
-  let reordered;
-  if (startIdx === endIdx) {
-    reordered = [start];
-  } else {
-    reordered = [start, ...middle, end];
-  }
+  // // Build the new order: start, ...middle, end
+  // let reordered;
+  // if (startIdx === endIdx) {
+  //   reordered = [start];
+  // } else {
+  //   reordered = [start, ...middle, end];
+  // }
 
-  Meteor.call("plans.updatePlan", planId, title, reordered, (err) => {
-    if (err) {
-      alert("Failed to save: " + err.reason);
-    } else {
-      setIsEditing(false);
-    }
-  });
+  // Meteor.call("plans.updatePlan", planId, title, reordered, (err) => {
+  //   if (err) {
+  //     alert("Failed to save: " + err.reason);
+  //   } else {
+  //     setIsEditing(false);
+  //   }
+  // });
+    const reordered = [
+      restaurants[startIdx],
+      ...middleOrder.map(idx => restaurants[idx]),
+      ...(startIdx !== endIdx ? [restaurants[endIdx]] : [])
+    ];
+
+    Meteor.call("plans.updatePlan", planId, title, reordered, (err) => {
+      if (err) alert("Failed to save: " + err.reason);
+      else setIsEditing(false);
+    });
 };
 
   // Cancel handler
@@ -83,6 +107,26 @@ const handleSave = () => {
     setRestaurants(plan.restaurants);
     setIsEditing(false);
   };
+
+
+const moveMiddleUp = (indexInOrder: number) => {
+  if (indexInOrder === 0) return;
+  setMiddleOrder(prev => {
+    const newOrder = [...prev];
+    [newOrder[indexInOrder - 1], newOrder[indexInOrder]] = [newOrder[indexInOrder], newOrder[indexInOrder - 1]];
+    return newOrder;
+  });
+};
+
+const moveMiddleDown = (indexInOrder: number) => {
+  setMiddleOrder(prev => {
+    if (indexInOrder === prev.length - 1) return prev;
+    const newOrder = [...prev];
+    [newOrder[indexInOrder], newOrder[indexInOrder + 1]] = [newOrder[indexInOrder + 1], newOrder[indexInOrder]];
+    return newOrder;
+  });
+};
+
 
   return (
     <div
@@ -158,14 +202,38 @@ const handleSave = () => {
               ))}
             </Select>
           </FormControl>
-          <TextField
-            label="Restaurants"
-            value={restaurants.map(r => r.displayName?.text || r.name || "Unnamed Restaurant").join(", ")}
-            fullWidth
-            InputProps={{ readOnly: true }}
-            style={{ margin: 0 }}
-          />
-          {/* Add Save/Cancel buttons here if isEditing */}
+          <div>
+            <div style={{ fontWeight: "bold", marginBottom: 4 }}>Restaurants</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {/* Start */}
+              <div>{restaurants[startIdx]?.name} (Start)</div>
+
+              {/* Middle */}
+              {middleOrder.map((idx, i) => {
+                const r = restaurants[idx];
+                return (
+                  <div key={`${i}-${idx}`} style={{ display: "flex", alignItems: "center", gap: 8, padding: 8, background: "#f7f7f7", borderRadius: 6 }}>
+                    <span style={{ flex: 1 }}>
+                      {r?.displayName?.text || r?.name || "Unnamed Restaurant"}
+                    </span>
+                    {isEditing && (
+                      <>
+                        <Button size="small" onClick={() => moveMiddleUp(i)} disabled={i === 0}>↑</Button>
+                        <Button size="small" onClick={() => moveMiddleDown(i)} disabled={i === middleOrder.length - 1}>↓</Button>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* End */}
+              {startIdx !== endIdx && (
+                <div>{restaurants[endIdx]?.name} (End)</div>
+              )}
+
+            </div>
+          </div>
+
         </div>
       </form>
     </div>
