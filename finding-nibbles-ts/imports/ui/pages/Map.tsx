@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { TextField, Box, MenuItem} from "@mui/material";
+import { TextField, Box, MenuItem } from "@mui/material";
 import { Meteor } from 'meteor/meteor';
-import DicePopup from "../components/popups/DicePopup"; 
+import DicePopup from "../components/popups/DicePopup";
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete, InfoWindow } from "@react-google-maps/api";
 import { ISavedRestaurant } from "../api/SavedRestaurants";
 import { Modal, Box as MuiBox, Typography } from "@mui/material";
 import { useTracker } from 'meteor/react-meteor-data';
 import { Plans, PlanType } from '../api/Plans';
+import { AddToPlanModal } from "../components/plans/AddToPlanModal";
 
 import { RadarChart } from "recharts";
 import { GenerateContentResponseHandler } from "@google-cloud/vertexai";
@@ -116,20 +117,20 @@ export const Map = () => {
       try {
 
 
-        const central_points = findCoordinates(lat,lng,2000);      
-        const new_radius = Math.ceil((1/3)*2000);
+        const central_points = findCoordinates(lat, lng, 2000);
+        const new_radius = Math.ceil((1 / 3) * 2000);
 
 
-        const innerPoints = central_points.flatMap(({lat,lng}) =>
-          findCoordinates(lat,lng,new_radius)
+        const innerPoints = central_points.flatMap(({ lat, lng }) =>
+          findCoordinates(lat, lng, new_radius)
         );
 
         const full_restaurant_search: Restaurant[][] = await Promise.all(
-          innerPoints.map(({lat,lng,radius}) =>
-          fetchRestaurants(lat,lng,radius)
+          innerPoints.map(({ lat, lng, radius }) =>
+            fetchRestaurants(lat, lng, radius)
           )
         );
-      setRestaurants(full_restaurant_search.flat());
+        setRestaurants(full_restaurant_search.flat());
 
       } catch (error) {
         console.error("Error fetching restaurants:", error);
@@ -140,96 +141,96 @@ export const Map = () => {
     []
   );
 
-// ############### CALCULATING RADIUS
+  // ############### CALCULATING RADIUS
 
-const EARTH_RADIUS  = 6378137
+  const EARTH_RADIUS = 6378137
 
-const deltaLat = (meters: number) => {
-  // Takes in d and finds the distance change based on the Earth Radius
-  const latRaw = meters/EARTH_RADIUS * (180/Math.PI);
-  // Rounding the value to 4 decimal places
-  return Math.round(latRaw *10000)/10000;
-}
-
-const deltaLng = (new_lattitude: number, meters: number) => {
-  const lngRaw = (meters/(EARTH_RADIUS * Math.cos(new_lattitude * Math.PI/180))) * (180/Math.PI);
-  return Math.round(lngRaw * 10000)/10000
-}
-
-const horizontalLngDist = (a: number, b:number) =>{
-
-  return Math.sqrt(a**2 - b**2);
-}
-
-const findCoordinates = (central_lat: number, central_lng: number, search_radius: number) => {
-  // Diameter of the circle used to calculate North and South distances
-  const diameter = 2*search_radius;
-  // Change in lat value 
-  const lat_change = deltaLat(diameter);
-  // Distance to move horizontally for diagonal points (m)
-  const lng_distance = Math.ceil(horizontalLngDist(diameter, search_radius));
-  console.log("THIS IS THE LNG DISTANCE", lng_distance);
-  // Lattitude change for diagonal points (moving up 1/2 the lat change)
-  // const diag_lat_change = lat_change/2;
-
-  const output = [];
-  // Central point
-  output.push({lat: central_lat, lng: central_lng, radius: search_radius });
-
-  // North and South points
-  output.push({lat:central_lat + lat_change, lng: central_lng, radius: search_radius});
-  output.push({lat:central_lat - lat_change, lng: central_lng, radius: search_radius});
-  
-  // NE
-  {
-    const lat_NE = central_lat + lat_change/2;
-    const lng_NE = central_lng + deltaLng(lat_NE, lng_distance);
-    output.push({lat:lat_NE , lng: lng_NE, radius:search_radius });
+  const deltaLat = (meters: number) => {
+    // Takes in d and finds the distance change based on the Earth Radius
+    const latRaw = meters / EARTH_RADIUS * (180 / Math.PI);
+    // Rounding the value to 4 decimal places
+    return Math.round(latRaw * 10000) / 10000;
   }
 
-  // //SE
-  {
-    const lat_SE = central_lat - lat_change/2;
-    const lng_SE = central_lng + deltaLng(lat_SE, lng_distance);
-    output.push({lat: lat_SE, lng: lng_SE , radius: search_radius});
-  }
-  // //NW
-  {
-    const lat_NW = central_lat + lat_change/2;
-    const lng_NW = central_lng - deltaLng(lat_NW, lng_distance);
-    output.push({lat:lat_NW , lng: lng_NW , radius: search_radius});
-  }
-  // //SW
-  {
-    const lat_SW = central_lat - lat_change/2;
-    const lng_SW = central_lng - deltaLng(lat_SW, lng_distance);
-    output.push({lat: lat_SW, lng: lng_SW, radius: search_radius});
+  const deltaLng = (new_lattitude: number, meters: number) => {
+    const lngRaw = (meters / (EARTH_RADIUS * Math.cos(new_lattitude * Math.PI / 180))) * (180 / Math.PI);
+    return Math.round(lngRaw * 10000) / 10000
   }
 
-  return output;
-}
+  const horizontalLngDist = (a: number, b: number) => {
+
+    return Math.sqrt(a ** 2 - b ** 2);
+  }
+
+  const findCoordinates = (central_lat: number, central_lng: number, search_radius: number) => {
+    // Diameter of the circle used to calculate North and South distances
+    const diameter = 2 * search_radius;
+    // Change in lat value 
+    const lat_change = deltaLat(diameter);
+    // Distance to move horizontally for diagonal points (m)
+    const lng_distance = Math.ceil(horizontalLngDist(diameter, search_radius));
+    console.log("THIS IS THE LNG DISTANCE", lng_distance);
+    // Lattitude change for diagonal points (moving up 1/2 the lat change)
+    // const diag_lat_change = lat_change/2;
+
+    const output = [];
+    // Central point
+    output.push({ lat: central_lat, lng: central_lng, radius: search_radius });
+
+    // North and South points
+    output.push({ lat: central_lat + lat_change, lng: central_lng, radius: search_radius });
+    output.push({ lat: central_lat - lat_change, lng: central_lng, radius: search_radius });
+
+    // NE
+    {
+      const lat_NE = central_lat + lat_change / 2;
+      const lng_NE = central_lng + deltaLng(lat_NE, lng_distance);
+      output.push({ lat: lat_NE, lng: lng_NE, radius: search_radius });
+    }
+
+    // //SE
+    {
+      const lat_SE = central_lat - lat_change / 2;
+      const lng_SE = central_lng + deltaLng(lat_SE, lng_distance);
+      output.push({ lat: lat_SE, lng: lng_SE, radius: search_radius });
+    }
+    // //NW
+    {
+      const lat_NW = central_lat + lat_change / 2;
+      const lng_NW = central_lng - deltaLng(lat_NW, lng_distance);
+      output.push({ lat: lat_NW, lng: lng_NW, radius: search_radius });
+    }
+    // //SW
+    {
+      const lat_SW = central_lat - lat_change / 2;
+      const lng_SW = central_lng - deltaLng(lat_SW, lng_distance);
+      output.push({ lat: lat_SW, lng: lng_SW, radius: search_radius });
+    }
+
+    return output;
+  }
 
 
 
-//####################################
+  //####################################
 
-function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const toRad = (value: number) => (value * Math.PI) / 180;
+  function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const toRad = (value: number) => (value * Math.PI) / 180;
 
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  // Distance in m
-  return EARTH_RADIUS * c; 
-}
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    // Distance in m
+    return EARTH_RADIUS * c;
+  }
 
 
-//##########################
+  //##########################
 
 
   // console.log("This is the restaurants " ,  JSON.stringify(restaurants,null,2));
@@ -285,7 +286,7 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
       name: restaurant.displayName?.text ?? "Unknown Name",
       location: restaurant.formattedAddress ?? "Unknown Location",
     };
-    
+
 
     Meteor.call('savedRestaurants.save', savedRestaurant, (error: Meteor.Error | null) => {
       if (error) {
@@ -298,17 +299,17 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
     });
   };
 
-  
+
   // const isSaved = selectedRestaurant != null && savedIndexes.includes(selectedRestaurant);
 
-  
-  
+
+
   const containerStyle = {
     position: "fixed" as const,
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0, 
+    bottom: 0,
     width: "100%",
     height: "100vh",
     zIndex: 0 // Ensure it's behind navbar and controls
@@ -375,17 +376,17 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
     return baseType.charAt(0).toUpperCase() + baseType.slice(1);
   };
 
-const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string): Restaurant[] => {
-  if (cuisine === 'All') return restaurants;
+  const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string): Restaurant[] => {
+    if (cuisine === 'All') return restaurants;
 
-  return restaurants.filter((restaurant) =>
-    restaurant.types?.some(
-      (type) =>
-        type.includes("restaurant") &&
-        normalizeCuisineType(type) === cuisine
-    )
-  );
-};
+    return restaurants.filter((restaurant) =>
+      restaurant.types?.some(
+        (type) =>
+          type.includes("restaurant") &&
+          normalizeCuisineType(type) === cuisine
+      )
+    );
+  };
 
   const isCuisineType = (type: string): boolean => {
     const genericTypes = [
@@ -456,27 +457,27 @@ const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string):
 
   }
 
-const cuisineIcons: Record<string, string> = {
-  "Hamburger": "/images/burger.png",
-  "Italian": "/images/italian.png",
-  "Indian" : "/images/indfsian.png",
-};
+  const cuisineIcons: Record<string, string> = {
+    "Hamburger": "/images/burger.png",
+    "Italian": "/images/italian.png",
+    "Indian": "/images/indfsian.png",
+  };
 
 
-const getCuisineIcon = (types: string[] | undefined): string | undefined => {
-  if (!types) return;
+  const getCuisineIcon = (types: string[] | undefined): string | undefined => {
+    if (!types) return;
 
-  for (let type of types) {
-    if (type.includes("restaurant")) {
-      const cuisine = normalizeCuisineType(type); 
-      if (cuisineIcons[cuisine]) {
-        return cuisineIcons[cuisine];
+    for (let type of types) {
+      if (type.includes("restaurant")) {
+        const cuisine = normalizeCuisineType(type);
+        if (cuisineIcons[cuisine]) {
+          return cuisineIcons[cuisine];
+        }
       }
     }
-  }
 
-  return undefined; 
-};
+    return undefined;
+  };
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
@@ -518,17 +519,17 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
   // Add this function to check if a restaurant matches the highlighted cuisine
   const isRestaurantHighlighted = (restaurant: Restaurant) => {
     if (!highlightedCuisine) return false;
-    
+
     // Convert both the highlighted cuisine and restaurant types to lowercase for comparison
     const normalizedHighlightedCuisine = highlightedCuisine.toLowerCase();
-    
+
     return restaurant.types?.some(type => {
       // Only check restaurant types
       if (!type.includes('restaurant')) return false;
-      
+
       // Normalize the type by removing '_restaurant' and converting to lowercase
       const normalizedType = type.replace('_restaurant', '').toLowerCase();
-      
+
       // Check if the normalized type matches the highlighted cuisine
       return normalizedType === normalizedHighlightedCuisine;
     }) ?? false;
@@ -562,13 +563,13 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
 
             {/* Restore cuisine filtering for map markers */}
             {filterRestaurantsByCuisine(restaurants, selectedCusine).filter((restaurant) =>
-            haversineDistance(
-              userLocation.lat,
-              userLocation.lng,
-              restaurant.location.latitude,
-              restaurant.location.longitude
-            )<= radius
-          ).map((restaurant, index) => {
+              haversineDistance(
+                userLocation.lat,
+                userLocation.lng,
+                restaurant.location.latitude,
+                restaurant.location.longitude
+              ) <= radius
+            ).map((restaurant, index) => {
               const isHovered = hoveredMarkerIndex === index;
               const isHighlighted = isRestaurantHighlighted(restaurant);
               const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
@@ -615,38 +616,38 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                       .map(normalizeCuisineType)
                       .join(", ") || "N/A"}
                   </p>
-                  <button
-                    onClick={() => saveRestaurant(selectedRestaurant)}
-                    style={{
-                      marginTop: "8px",
-                      padding: "6px 12px",
-                      backgroundColor: "#6200ea",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer"
-                    }}
-                  >
-                     Save
-                  </button>
-                  <button
-                    onClick={() => setIsAddToPlanOpen(true)}
-                    style={{
-                      marginTop: "8px",
-                      padding: "6px 12px",
-                      backgroundColor: "#C47B4D",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer"
-                    }}
-                  >
-                    Add to Plan
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "8px" }}>
+                    <button
+                      onClick={() => saveRestaurant(selectedRestaurant)}
+                      style={{
+                        padding: "6px 12px",
+                        backgroundColor: "#6200ea",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setIsAddToPlanOpen(true)}
+                      style={{
+                        padding: "6px 12px",
+                        backgroundColor: "#C47B4D",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Add to Plan
+                    </button>
+                  </div>
                 </div>
               </InfoWindow>
             )}
-            
+
           </GoogleMap>
         )}
 
@@ -685,10 +686,10 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
         </Box>
 
         <div>
-        <Box
+          <Box
             sx={{
               position: "absolute",
-              top: "140px", 
+              top: "140px",
               left: "20px",
               bgcolor: "white",
               p: 1,
@@ -796,13 +797,12 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
             </div>
             {sortedRestaurants.length > 0 ? (
               sortedRestaurants.map((restaurant, index) => (
-                <div 
-                  key={index} 
-                  className={`mb-5 p-3 rounded-lg shadow-sm transition-all duration-300 ${
-                    isRestaurantHighlighted(restaurant) 
-                      ? 'bg-[#F4E1D2] border-2 border-[#C47B4D]' 
-                      : 'bg-gray-50'
-                  }`}
+                <div
+                  key={index}
+                  className={`mb-5 p-3 rounded-lg shadow-sm transition-all duration-300 ${isRestaurantHighlighted(restaurant)
+                    ? 'bg-[#F4E1D2] border-2 border-[#C47B4D]'
+                    : 'bg-gray-50'
+                    }`}
                 >
                   <h3 className="font-bold text-lg">{restaurant.displayName?.text || "N/A"}</h3>
                   <p className="text-gray-600 mt-1">{restaurant.formattedAddress || "N/A"}</p>
@@ -827,163 +827,28 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
           availableCuisines={availableCuisines}
           onRoll={handleDiceRoll}
         />
+
         {/* Add to Plan Modal */}
-        <Modal
+        <AddToPlanModal
           open={isAddToPlanOpen}
           onClose={() => {
             setIsAddToPlanOpen(false);
             setIsCreatingPlan(false);
           }}
-          aria-labelledby="add-to-plan-modal-title"
-          aria-describedby="add-to-plan-modal-description"
-        >
-          <MuiBox
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 400,
-              bgcolor: 'background.paper',
-              border: '2px solid #C47B4D',
-              boxShadow: 24,
-              p: 4,
-              borderRadius: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              maxHeight: 500,
-              overflowY: 'auto'
-            }}
-          >
-            <Typography id="add-to-plan-modal-title" variant="h6" component="h2" sx={{ mb: 2 }}>
-              Travel Plans
-            </Typography>
-
-            {/* Create Plan Form */}
-            {isCreatingPlan ? (
-              <form onSubmit={handlePlanTitleSubmit} style={{ width: "100%" }}>
-                <input
-                  autoFocus
-                  type="text"
-                  value={newPlanTitle}
-                  onChange={handlePlanTitleChange}
-                  placeholder="Enter plan title"
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    marginBottom: "12px",
-                    borderRadius: "4px",
-                    border: "1px solid #ccc"
-                  }}
-                />
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button
-                    type="submit"
-                    style={{
-                      backgroundColor: "#C47B4D",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      padding: "8px 16px",
-                      cursor: "pointer"
-                    }}
-                  >
-                    Create
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsCreatingPlan(false)}
-                    style={{
-                      backgroundColor: "#aaa",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      padding: "8px 16px",
-                      cursor: "pointer"
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <button
-                style={{
-                  marginBottom: "16px",
-                  padding: "10px 24px",
-                  backgroundColor: "#C47B4D",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  fontSize: "16px"
-                }}
-                onClick={handleCreatePlan}
-              >
-                Create New Plan
-              </button>
-            )}
-
-            {/* List of Plans */}
-            <div style={{ width: "100%" }}>
-              {userPlans.length === 0 && (
-                <Typography sx={{ color: "#888", mb: 2 }}>No plans yet.</Typography>
-              )}
-              {userPlans.map((plan, idx) => (
-                <MuiBox key={idx} sx={{ mb: 2, border: "1px solid #eee", borderRadius: 1, p: 1 }}>
-                  <details>
-                    <summary style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span>{plan.title}</span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToPlan(idx);
-                        }}
-                        disabled={
-                          selectedRestaurant === null ||
-                          plan.restaurants.some(
-                            (r) => selectedRestaurant !== null && r.displayName?.text === selectedRestaurant.displayName?.text
-                          )
-                        }
-                        style={{
-                          marginLeft: "8px",
-                          backgroundColor: addingToPlanId === idx ? "#aaa" : "#C47B4D",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          padding: "4px 12px",
-                          cursor: addingToPlanId === idx ? "default" : "pointer"
-                        }}
-                      >
-                        {plan.restaurants.some(
-                          (r) => selectedRestaurant !== null && r.displayName?.text === selectedRestaurant.displayName?.text
-                        )
-                          ? "Added"
-                          : addingToPlanId === idx
-                          ? "Added"
-                          : "Add"}
-                      </button>
-                    </summary>
-                    {/* List restaurants in plan */}
-                    {plan.restaurants.length > 0 ? (
-                      <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 16 }}>
-                        {plan.restaurants.map((r, ridx) => (
-                          <li key={ridx}>{r?.displayName?.text || "N/A"}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <Typography sx={{ color: "#aaa", fontSize: 13, mt: 1 }}>No restaurants in this plan.</Typography>
-                    )}
-                  </details>
-                </MuiBox>
-              ))}
-            </div>
-          </MuiBox>
-        </Modal>
+          isCreatingPlan={isCreatingPlan}
+          setIsCreatingPlan={setIsCreatingPlan}
+          newPlanTitle={newPlanTitle}
+          setNewPlanTitle={setNewPlanTitle}
+          handlePlanTitleSubmit={handlePlanTitleSubmit}
+          handlePlanTitleChange={handlePlanTitleChange}
+          handleCreatePlan={handleCreatePlan}
+          userPlans={userPlans}
+          selectedRestaurant={selectedRestaurant}
+          handleAddToPlan={handleAddToPlan}
+          addingToPlanId={addingToPlanId}
+        />
       </div>
     </LoadScript>
-    
   );
 };
 
