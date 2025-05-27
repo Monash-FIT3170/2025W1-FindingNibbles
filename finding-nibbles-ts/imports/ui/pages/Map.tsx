@@ -831,21 +831,9 @@ export const Map = () => {
         {/* Add to Plan Modal */}
         <AddToPlanModal
           open={isAddToPlanOpen}
-          onClose={() => {
-            setIsAddToPlanOpen(false);
-            setIsCreatingPlan(false);
-          }}
-          isCreatingPlan={isCreatingPlan}
-          setIsCreatingPlan={setIsCreatingPlan}
-          newPlanTitle={newPlanTitle}
-          setNewPlanTitle={setNewPlanTitle}
-          handlePlanTitleSubmit={handlePlanTitleSubmit}
-          handlePlanTitleChange={handlePlanTitleChange}
-          handleCreatePlan={handleCreatePlan}
+          onClose={() => setIsAddToPlanOpen(false)}
           userPlans={userPlans}
           selectedRestaurant={selectedRestaurant}
-          handleAddToPlan={handleAddToPlan}
-          addingToPlanId={addingToPlanId}
         />
       </div>
     </LoadScript>
