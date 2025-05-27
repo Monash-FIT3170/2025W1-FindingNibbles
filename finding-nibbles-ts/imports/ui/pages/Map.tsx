@@ -19,6 +19,7 @@ interface Location {
   lng: number;
 }
 interface Restaurant {
+  id?: string;
   displayName?: {
     text: string;
   };
@@ -62,19 +63,40 @@ export const Map = () => {
     debounce(async (lat: number, lng: number, rad: number) => {
       setIsMapLoading(true);
       try {
-        
-        const data = await fetchRestaurants(lat, lng, 2000);
-        const data2 = await fetchRestaurants(lat + 0.036, lng, 2000);
-        const data3 = await fetchRestaurants(lat - 0.036,lng,2000);
-        console.log("THIS IS THE DATA", JSON.stringify(data,null,2));
-        console.log("THIS IS DATA2", JSON.stringify(data2, null, 2));
+        const meters = 4000;
+        const radius = 2000;
+        const lng_meter = Math.sqrt(12);
+        const latChange = latOffset(meters);
+
+        // Center circle
+        const data1 = await fetchRestaurants(lat, lng, radius);
+        // North Circle
+        const data2 = await fetchRestaurants(lat + latChange, lng, 2000);
+        // South Circle
+        const data3 = await fetchRestaurants(lat - latChange,lng,2000);
+        // NE
+        const data4 = await fetchRestaurants(lat + latChange/2, lng + lngOffSet(lng_meter, lat + latChange/2) , 2000);
+        // console.log("THIS IS THE NEW LAT" +lng + lngOffSet(2000, lat + latChange/2) );
+        // SE circle
+        const data5 = await fetchRestaurants(lat - latChange/2, lng + lngOffSet(lng_meter, lat + latChange/2) , 2000);
+
+        // NW Circle
+        const data6 = await fetchRestaurants(lat + latChange/2, lng - lngOffSet(lng_meter, lat + latChange/2) , 2000);
+        // SW Circle
+        const data7 = await fetchRestaurants(lat - latChange/2, lng - lngOffSet(lng_meter, lat + latChange/2) , 2000);
+        // const data6
+        // const data7
+        // console.log("THIS IS THE DATA", JSON.stringify(data1,null,2));
+        // console.log("THIS IS DATA2", JSON.stringify(data2, null, 2));
+
 
         // setRestaurants(data);
         
         // setRestaurants(data2);
         // setRestaurants(prev => [...prev, ...data2]);
 
-        const combined = [...data,...data2,...data3];
+        const combined = [...data1,...data2,...data3, ...data4, ...data5, ...data6, ...data7];
+
         setRestaurants(combined);
       } catch (error) {
         console.error("Error fetching restaurants:", error);
@@ -84,6 +106,27 @@ export const Map = () => {
     }, 500), // 500ms delay
     []
   );
+
+// ############### CALCULATING RADIUS
+
+const EARTH_RADIUS  = 6378137
+
+const latOffset = (meters: number) => {
+  const latRaw = meters/EARTH_RADIUS * (180/Math.PI);
+
+  return Math.round(latRaw *10000)/10000;
+}
+
+const lngOffSet = (meters: number, latitude: number) => {
+  const lngRaw = (meters/(EARTH_RADIUS * Math.cos(latitude * Math.PI/180))) * (180/Math.PI);
+  return Math.round(lngRaw * 10000)/10000
+}
+
+
+console.log("THIS IS LAT OFFSET" + latOffset(1000))
+
+//##########################
+
 
   console.log("This is the restaurants " ,  JSON.stringify(restaurants,null,2));
 
@@ -270,7 +313,7 @@ const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string):
     const headers = {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": API_KEY,
-      "X-Goog-FieldMask": "places.id, places.displayName,places.formattedAddress,places.location,places.rating,places.types",
+      "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.types",
     };
     try {
       const response = await fetch(URL, {
