@@ -129,6 +129,56 @@ const horizontalLngDist = (a: number, b:number) =>{
 }
 
 
+
+
+const findCoordinates = (central_lat: number, central_lng: number, search_radius: number) => {
+  // Diameter of the circle used to calculate North and South distances
+  const diameter = 2*search_radius;
+  // Change in lat value 
+  const lat_change = deltaLat(diameter);
+  // Distance to move horizontally for diagonal points (m)
+  const lng_distance = Math.ceil(horizontalLngDist(diameter, search_radius));
+  console.log("THIS IS THE LNG DISTANCE", lng_distance);
+  // Lattitude change for diagonal points (moving up 1/2 the lat change)
+  // const diag_lat_change = lat_change/2;
+
+  const output = [];
+  // Central point
+  output.push({lat: central_lat, lng: central_lng, radius: search_radius });
+
+  // North and South points
+  output.push({lat:central_lat + lat_change, lng: central_lng, radius: search_radius});
+  output.push({lat:central_lat - lat_change, lng: central_lng, radius: search_radius});
+  
+  // NE
+  {
+    const lat_NE = central_lat + lat_change/2;
+    const lng_NE = central_lng + deltaLng(lat_NE, lng_distance);
+    output.push({lat:lat_NE , lng: lng_NE, radius:search_radius });
+  }
+
+  // //SE
+  {
+    const lat_SE = central_lat - lat_change/2;
+    const lng_SE = central_lng + deltaLng(lat_SE, lng_distance);
+    output.push({lat: lat_SE, lng: lng_SE , radius: search_radius});
+  }
+  // //NW
+  {
+    const lat_NW = central_lat + lat_change/2;
+    const lng_NW = central_lng - deltaLng(lat_NW, lng_distance);
+    output.push({lat:lat_NW , lng: lng_NW , radius: search_radius});
+  }
+  // //SW
+  {
+    const lat_SW = central_lat - lat_change/2;
+    const lng_SW = central_lng - deltaLng(lat_SW, lng_distance);
+    output.push({lat: lat_SW, lng: lng_SW, radius: search_radius});
+  }
+
+  return output;
+}
+
 //##########################
 
 
