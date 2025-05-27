@@ -404,10 +404,6 @@ const filterRestaurantsByCuisine = (restaurants: Restaurant[], cuisine: string):
 
   }
 
-
-
-  
-
 const cuisineIcons: Record<string, string> = {
   "Hamburger": "/images/burger.png",
   "Italian": "/images/italian.png",
@@ -546,7 +542,6 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                 />
               );
             })}
-
 
           {selectedRestaurant && (
             <InfoWindow
