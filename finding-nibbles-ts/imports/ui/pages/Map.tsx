@@ -4,6 +4,10 @@ import { Meteor } from 'meteor/meteor';
 import DicePopup from "../components/popups/DicePopup"; 
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete, InfoWindow } from "@react-google-maps/api";
 import { ISavedRestaurant } from "../api/SavedRestaurants";
+import { Modal, Box as MuiBox, Typography } from "@mui/material";
+import { useTracker } from 'meteor/react-meteor-data';
+import { Plans, PlanType } from '../api/Plans';
+
 import { RadarChart } from "recharts";
 import { GenerateContentResponseHandler } from "@google-cloud/vertexai";
 // Add debounce utility
@@ -53,6 +57,58 @@ export const Map = () => {
   const [searchValue, setSearchValue] = useState<string>('');
   const [searchSaved, setSearchSaved] = useState(false);
   const [selectedCusine, setSelectedCusine] = useState<string>('All');
+  const [savedIndexes, setSavedIndexes] = useState<number[]>([]);
+
+  const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false);
+  const [isCreatingPlan, setIsCreatingPlan] = useState(false);
+  const [newPlanTitle, setNewPlanTitle] = useState("");
+  const [addingToPlanId, setAddingToPlanId] = useState<number | null>(null); // plan index being added to
+
+  const userPlans = useTracker(() => {
+    Meteor.subscribe('plans');
+    return Plans.find({}).fetch();
+  }, []);
+
+  const handleCreatePlan = () => {
+    setIsCreatingPlan(true);
+    setNewPlanTitle("");
+  };
+
+  const handlePlanTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewPlanTitle(e.target.value);
+  };
+
+  const handlePlanTitleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (newPlanTitle.trim()) {
+      Meteor.callAsync('plans.insert', newPlanTitle.trim())
+        .then(() => setIsCreatingPlan(false))
+        .catch((err: any) => {
+          // Optionally handle error
+          alert(err.reason || err.message || err);
+        });
+    }
+  };
+
+  const handleAddToPlan = (planIdx: number) => {
+    if (
+      selectedRestaurant &&
+      userPlans[planIdx] &&
+      !userPlans[planIdx].restaurants.some(
+        (r) => r.displayName?.text === selectedRestaurant.displayName?.text
+      )
+    ) {
+      Meteor.callAsync('plans.addRestaurant', userPlans[planIdx]._id, selectedRestaurant)
+        .then(() => {
+          setAddingToPlanId(planIdx);
+          setTimeout(() => setAddingToPlanId(null), 1000);
+        })
+        .catch((err: any) => {
+          alert(err.reason || err.message || err);
+        });
+    }
+  };
+
   // Create debounced fetch function with useCallback
   const debouncedFetchRestaurants = useCallback(
     debounce(async (lat: number, lng: number, rad: number) => {
@@ -571,7 +627,21 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                       cursor: "pointer"
                     }}
                   >
-                    Save
+                     Save
+                  </button>
+                  <button
+                    onClick={() => setIsAddToPlanOpen(true)}
+                    style={{
+                      marginTop: "8px",
+                      padding: "6px 12px",
+                      backgroundColor: "#C47B4D",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Add to Plan
                   </button>
                 </div>
               </InfoWindow>
@@ -757,8 +827,163 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
           availableCuisines={availableCuisines}
           onRoll={handleDiceRoll}
         />
+        {/* Add to Plan Modal */}
+        <Modal
+          open={isAddToPlanOpen}
+          onClose={() => {
+            setIsAddToPlanOpen(false);
+            setIsCreatingPlan(false);
+          }}
+          aria-labelledby="add-to-plan-modal-title"
+          aria-describedby="add-to-plan-modal-description"
+        >
+          <MuiBox
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 400,
+              bgcolor: 'background.paper',
+              border: '2px solid #C47B4D',
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              maxHeight: 500,
+              overflowY: 'auto'
+            }}
+          >
+            <Typography id="add-to-plan-modal-title" variant="h6" component="h2" sx={{ mb: 2 }}>
+              Travel Plans
+            </Typography>
+
+            {/* Create Plan Form */}
+            {isCreatingPlan ? (
+              <form onSubmit={handlePlanTitleSubmit} style={{ width: "100%" }}>
+                <input
+                  autoFocus
+                  type="text"
+                  value={newPlanTitle}
+                  onChange={handlePlanTitleChange}
+                  placeholder="Enter plan title"
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    marginBottom: "12px",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc"
+                  }}
+                />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="submit"
+                    style={{
+                      backgroundColor: "#C47B4D",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      padding: "8px 16px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Create
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCreatingPlan(false)}
+                    style={{
+                      backgroundColor: "#aaa",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      padding: "8px 16px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                style={{
+                  marginBottom: "16px",
+                  padding: "10px 24px",
+                  backgroundColor: "#C47B4D",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "16px"
+                }}
+                onClick={handleCreatePlan}
+              >
+                Create New Plan
+              </button>
+            )}
+
+            {/* List of Plans */}
+            <div style={{ width: "100%" }}>
+              {userPlans.length === 0 && (
+                <Typography sx={{ color: "#888", mb: 2 }}>No plans yet.</Typography>
+              )}
+              {userPlans.map((plan, idx) => (
+                <MuiBox key={idx} sx={{ mb: 2, border: "1px solid #eee", borderRadius: 1, p: 1 }}>
+                  <details>
+                    <summary style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span>{plan.title}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToPlan(idx);
+                        }}
+                        disabled={
+                          selectedRestaurant === null ||
+                          plan.restaurants.some(
+                            (r) => selectedRestaurant !== null && r.displayName?.text === selectedRestaurant.displayName?.text
+                          )
+                        }
+                        style={{
+                          marginLeft: "8px",
+                          backgroundColor: addingToPlanId === idx ? "#aaa" : "#C47B4D",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          padding: "4px 12px",
+                          cursor: addingToPlanId === idx ? "default" : "pointer"
+                        }}
+                      >
+                        {plan.restaurants.some(
+                          (r) => selectedRestaurant !== null && r.displayName?.text === selectedRestaurant.displayName?.text
+                        )
+                          ? "Added"
+                          : addingToPlanId === idx
+                          ? "Added"
+                          : "Add"}
+                      </button>
+                    </summary>
+                    {/* List restaurants in plan */}
+                    {plan.restaurants.length > 0 ? (
+                      <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 16 }}>
+                        {plan.restaurants.map((r, ridx) => (
+                          <li key={ridx}>{r.displayName?.text || "N/A"}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <Typography sx={{ color: "#aaa", fontSize: 13, mt: 1 }}>No restaurants in this plan.</Typography>
+                    )}
+                  </details>
+                </MuiBox>
+              ))}
+            </div>
+          </MuiBox>
+        </Modal>
       </div>
     </LoadScript>
+    
   );
 };
 

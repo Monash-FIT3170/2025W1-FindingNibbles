@@ -23,6 +23,7 @@ export const NavBar = () => {
   const navigate = useNavigate();
   const isLoggedIn = useTracker(() => !!Meteor.userId(), []);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [showTravelPlanSub, setShowTravelPlanSub] = useState(false);
   const user = useTracker(() => Meteor.user() as CustomUser | null, []);
   const userName = user?.profile?.name || "User";
 
@@ -34,6 +35,17 @@ export const NavBar = () => {
 
   const toggleDrawer = (open: boolean) => () => {
     setIsDrawerOpen(open);
+    if (!open) setShowTravelPlanSub(false);
+  };
+
+  // Handle main nav button clicks
+  const handleNavClick = (button: string) => () => {
+    if (button === "travel-plan") {
+      setShowTravelPlanSub((prev) => !prev);
+    } else {
+      setShowTravelPlanSub(false);
+      setIsDrawerOpen(false);
+    }
   };
 
   return (
@@ -134,7 +146,6 @@ export const NavBar = () => {
         <Box
           className="w-64 h-full bg-[#d5a16e] flex flex-col p-4"
           role="presentation"
-          onClick={toggleDrawer(false)}
           onKeyDown={toggleDrawer(false)}
         >
           {/* Profile Section */}
