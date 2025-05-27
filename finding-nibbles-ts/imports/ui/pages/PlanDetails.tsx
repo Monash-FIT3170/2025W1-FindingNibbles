@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useTracker } from "meteor/react-meteor-data";
 import { Plans } from "../api/Plans";
@@ -6,236 +6,267 @@ import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import { Meteor } from "meteor/meteor";
-import { TextField, Button, IconButton, Select, MenuItem , FormControl, InputLabel } from "@mui/material";
-
+import { TextField, Button, IconButton } from "@mui/material";
+import { LoadScript, Autocomplete } from "@react-google-maps/api";
 
 export const PlanDetails = () => {
   const { planId } = useParams();
 
-  // Subscribe to plans
   const isReady = useTracker(() => {
     const handle = Meteor.subscribe("plans");
     return handle.ready();
   }, []);
 
-    // Only fetch the plan when the subscription is ready
   const plan = useTracker(() => {
     if (!isReady) return null;
     return Plans.findOne(planId);
   }, [isReady, planId]);
 
-  // State for edit mode and fields
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(plan?.title || "");
   const [restaurants, setRestaurants] = useState(plan?.restaurants || []);
-  const [startIdx, setStartIdx] = useState(0);
-  const [endIdx, setEndIdx] = useState(restaurants.length > 0 ? restaurants.length - 1 : 0);
-  const [middleOrder, setMiddleOrder] = useState<number[]>([]);
+  const [startSearchValue, setStartSearchValue] = useState(plan?.startingPoint || "");
+  const [destSearchValue, setDestSearchValue] = useState(plan?.destination || "");
+  const [tripStartDate, setTripStartDate] = useState<string>(
+    plan?.tripStartDate ? new Date(plan.tripStartDate).toISOString().split("T")[0] : ""
+  );
+  const startAutocompleteRef = useRef<any>(null);
+  const destAutocompleteRef = useRef<any>(null);
 
-  // Update local state when plan changes (on first load)
-  // React.useEffect(() => {
-  //   if (plan) {
-  //     setTitle(plan.title);
-  //     setRestaurants(plan.restaurants);
-  //     setStartIdx(0);
-  //     setEndIdx(plan.restaurants.length > 0 ? plan.restaurants.length - 1 : 0);
-  //   }
-  // }, [plan]);
   React.useEffect(() => {
     if (plan) {
       setTitle(plan.title);
       setRestaurants(plan.restaurants);
-      setStartIdx(0);
-      setEndIdx(plan.restaurants.length - 1);
-      const middle = plan.restaurants
-        .map((_, idx) => idx)
-        .filter(idx => idx !== 0 && idx !== plan.restaurants.length - 1);
-      setMiddleOrder(middle);
+      setStartSearchValue(plan.startingPoint || "");
+      setDestSearchValue(plan.destination || "");
+      setTripStartDate(plan.tripStartDate ? new Date(plan.tripStartDate).toISOString().split("T")[0] : "");
     }
   }, [plan]);
-
 
   if (!isReady) return <div>Loading...</div>;
   if (!plan) return <div>Plan not found.</div>;
 
-  const first = restaurants[startIdx];
-  const last = restaurants[endIdx]
+  const handleSave = () => {
+    Meteor.call(
+      "plans.updatePlan",
+      planId,
+      title,
+      restaurants,
+      startSearchValue,
+      destSearchValue,
+      tripStartDate ? new Date(tripStartDate) : undefined,
+      (err: any) => {
+        if (err) alert("Failed to save: " + err.reason);
+        else setIsEditing(false);
+      }
+    );
+  };
 
-    // Save handler (implement Meteor method as needed)
-const handleSave = () => {
-  // if (!planId) return;
-
-  // // Get the selected start and end restaurants
-  // const start = restaurants[startIdx];
-  // const end = restaurants[endIdx];
-
-  // // Get the middle restaurants (excluding start and end)
-  // const middle = restaurants.filter(
-  //   (r, idx) => idx !== startIdx && idx !== endIdx
-  // );
-
-  // // Build the new order: start, ...middle, end
-  // let reordered;
-  // if (startIdx === endIdx) {
-  //   reordered = [start];
-  // } else {
-  //   reordered = [start, ...middle, end];
-  // }
-
-  // Meteor.call("plans.updatePlan", planId, title, reordered, (err) => {
-  //   if (err) {
-  //     alert("Failed to save: " + err.reason);
-  //   } else {
-  //     setIsEditing(false);
-  //   }
-  // });
-    const reordered = [
-      restaurants[startIdx],
-      ...middleOrder.map(idx => restaurants[idx]),
-      ...(startIdx !== endIdx ? [restaurants[endIdx]] : [])
-    ];
-
-    Meteor.call("plans.updatePlan", planId, title, reordered, (err) => {
-      if (err) alert("Failed to save: " + err.reason);
-      else setIsEditing(false);
-    });
-};
-
-  // Cancel handler
   const handleCancel = () => {
     setTitle(plan.title);
     setRestaurants(plan.restaurants);
+    setStartSearchValue(plan.startingPoint || "");
+    setDestSearchValue(plan.destination || "");
+    setTripStartDate(plan.tripStartDate ? new Date(plan.tripStartDate).toISOString().split("T")[0] : "");
     setIsEditing(false);
   };
 
+  const moveUp = (idx: number) => {
+    if (idx === 0) return;
+    setRestaurants(prev => {
+      const newArr = [...prev];
+      [newArr[idx - 1], newArr[idx]] = [newArr[idx], newArr[idx - 1]];
+      return newArr;
+    });
+  };
 
-const moveMiddleUp = (indexInOrder: number) => {
-  if (indexInOrder === 0) return;
-  setMiddleOrder(prev => {
-    const newOrder = [...prev];
-    [newOrder[indexInOrder - 1], newOrder[indexInOrder]] = [newOrder[indexInOrder], newOrder[indexInOrder - 1]];
-    return newOrder;
-  });
-};
+  const moveDown = (idx: number) => {
+    if (idx === restaurants.length - 1) return;
+    setRestaurants(prev => {
+      const newArr = [...prev];
+      [newArr[idx], newArr[idx + 1]] = [newArr[idx + 1], newArr[idx]];
+      return newArr;
+    });
+  };
 
-const moveMiddleDown = (indexInOrder: number) => {
-  setMiddleOrder(prev => {
-    if (indexInOrder === prev.length - 1) return prev;
-    const newOrder = [...prev];
-    [newOrder[indexInOrder], newOrder[indexInOrder + 1]] = [newOrder[indexInOrder + 1], newOrder[indexInOrder]];
-    return newOrder;
-  });
-};
+  const onLoadStartAutocomplete = (autocomplete: any) => {
+    startAutocompleteRef.current = autocomplete;
+  };
+  const onLoadDestAutocomplete = (autocomplete: any) => {
+    destAutocompleteRef.current = autocomplete;
+  };
 
+  const onPlaceChangedStart = () => {
+    if (startAutocompleteRef.current) {
+      const place = startAutocompleteRef.current.getPlace();
+      setStartSearchValue(place.formatted_address || place.name || "");
+    }
+  };
+  const onPlaceChangedDest = () => {
+    if (destAutocompleteRef.current) {
+      const place = destAutocompleteRef.current.getPlace();
+      setDestSearchValue(place.formatted_address || place.name || "");
+    }
+  };
 
   return (
-    <div
-    style={{
-    maxWidth: 600,
-    margin: "40px auto",
-    // background: isEditing ? "#fffbe6" : "#fff",
-    background: "#fff",
-    borderRadius: 16,
-    padding: 32,
-    border: isEditing ? "2px solid #c17030" : "none",
-    transition: "background 0.2s, border 0.2s"
-    }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2 style={{ fontFamily: "Comic Sans MS, cursive, sans-serif", color: "#c17030" }}>
-          {isEditing ? "Editing" : "Plan Details"}
+    <LoadScript googleMapsApiKey="AIzaSyAGR1fMiA0HwSF5h5zlv6oyL2JpoegvYuM" libraries={["places"]}>
+      <div
+        style={{
+          maxWidth: 600,
+          margin: "40px auto",
+          background: "#fff",
+          borderRadius: 16,
+          padding: 32,
+          border: isEditing ? "2px solid #c17030" : "none",
+          transition: "background 0.2s, border 0.2s"
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h2 style={{ fontFamily: "Comic Sans MS, cursive, sans-serif", color: "#c17030", paddingBottom: 15 }}>
+            {isEditing ? "Editing" : "Plan Details"}
           </h2>
-        {isEditing ? (
-          <span>
-            <IconButton onClick={handleSave} color="primary">
-              <SaveIcon />
+          {isEditing ? (
+            <span>
+              <IconButton onClick={handleSave} color="primary">
+                <SaveIcon />
+              </IconButton>
+              <IconButton onClick={handleCancel} color="error">
+                <CloseIcon />
+              </IconButton>
+            </span>
+          ) : (
+            <IconButton onClick={() => setIsEditing(true)}>
+              <EditIcon />
             </IconButton>
-            <IconButton onClick={handleCancel} color="error">
-              <CloseIcon />
-            </IconButton>
-          </span>
-        ) : (
-        <IconButton onClick={() => setIsEditing(true)}>
-          <EditIcon />
-        </IconButton>
-        )}
-      </div>
-      <form>
-        <div style={{ display: "flex", flexDirection: "column", gap: 24}}>
-          <TextField
-            label="Plan Name"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            fullWidth
-            InputProps={{ readOnly: !isEditing }}
-            style={{ margin: 0 }} // to override default margin settings
-          />
-          <FormControl fullWidth style={{ margin: 0 }}>
-            <InputLabel id="start-label">Starting Point</InputLabel>
-            <Select
-              label="Starting Point"
-              value={startIdx}
-              onChange={e => setStartIdx(Number(e.target.value))}
-              fullWidth
-              disabled={!isEditing}
-            >
-              {restaurants.map((r, idx) => (
-                <MenuItem key={idx} value={idx}>
-                  {r?.displayName?.text || r?.name || "Unnamed Restaurant"}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth style={{ margin: 0 }}>
-            <InputLabel id="end-label">Destination</InputLabel>
-            <Select
-              label="Destination"
-              value={endIdx}
-              onChange={e => setEndIdx(Number(e.target.value))}
-              fullWidth
-              disabled={!isEditing}
-            >
-              {restaurants.map((r, idx) => (
-                <MenuItem key={idx} value={idx}>
-                  {r.displayName?.text || r.name || "Unnamed Restaurant"}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <div>
-            <div style={{ fontWeight: "bold", marginBottom: 4 }}>Restaurants</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {/* Start */}
-              <div>{restaurants[startIdx]?.name} (Start)</div>
-
-              {/* Middle */}
-              {middleOrder.map((idx, i) => {
-                const r = restaurants[idx];
-                return (
-                  <div key={`${i}-${idx}`} style={{ display: "flex", alignItems: "center", gap: 8, padding: 8, background: "#f7f7f7", borderRadius: 6 }}>
-                    <span style={{ flex: 1 }}>
-                      {r?.displayName?.text || r?.name || "Unnamed Restaurant"}
-                    </span>
-                    {isEditing && (
-                      <>
-                        <Button size="small" onClick={() => moveMiddleUp(i)} disabled={i === 0}>↑</Button>
-                        <Button size="small" onClick={() => moveMiddleDown(i)} disabled={i === middleOrder.length - 1}>↓</Button>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* End */}
-              {startIdx !== endIdx && (
-                <div>{restaurants[endIdx]?.name} (End)</div>
-              )}
-
-            </div>
-          </div>
-
+          )}
         </div>
-      </form>
-    </div>
+        <form>
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <TextField
+              label="Plan Name"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              fullWidth
+              InputProps={{ readOnly: !isEditing }}
+              style={{ margin: 0 }}
+            />
+            {/* Start Date Field */}
+            <TextField
+              label="Start Date"
+              type="date"
+              value={tripStartDate}
+              onChange={e => setTripStartDate(e.target.value)}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ readOnly: !isEditing }}
+              style={{ margin: 0 }}
+            />
+            {/* Starting Point Autocomplete */}
+            <Autocomplete
+              onLoad={onLoadStartAutocomplete}
+              onPlaceChanged={onPlaceChangedStart}
+            >
+              <TextField
+                size="small"
+                label="Starting Point"
+                variant="outlined"
+                fullWidth
+                placeholder="Type a location"
+                value={startSearchValue}
+                onChange={e => setStartSearchValue(e.target.value)}
+                InputProps={{ readOnly: !isEditing }}
+              />
+            </Autocomplete>
+
+            <div>
+              <div style={{ fontWeight: "bold", marginBottom: 4 }}>Restaurants</div>
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                padding: "12px 0"
+              }}>
+                {(restaurants == null || restaurants.length === 0) ? (
+                  <div
+                    style={{
+                      padding: "24px 18px",
+                      background: "#f7f7f7",
+                      borderRadius: 10,
+                      border: "1px solid #e0e0e0",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                      color: "#888",
+                      textAlign: "center",
+                      fontStyle: "italic",
+                      fontSize: 18
+                    }}
+                  >
+                    No restaurants added yet.
+                  </div>
+                ) : (
+                  restaurants.map((r, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "14px 18px",
+                        background: "#f7f7f7",
+                        borderRadius: 10,
+                        border: "1px solid #e0e0e0",
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
+                      }}
+                    >
+                      <span style={{ flex: 1 }}>
+                        {r?.displayName?.text || r?.name || "Unnamed Restaurant"}
+                        {idx === 0 && " (Start)"}
+                        {idx === restaurants.length - 1 && " (End)"}
+                      </span>
+                      {isEditing && (
+                        <>
+                          <Button
+                            size="small"
+                            onClick={() => moveUp(idx)}
+                            disabled={idx === 0}
+                            sx={{ minWidth: 32, fontWeight: "bold" }}
+                          >
+                            ↑
+                          </Button>
+                          <Button
+                            size="small"
+                            onClick={() => moveDown(idx)}
+                            disabled={idx === restaurants.length - 1}
+                            sx={{ minWidth: 32, fontWeight: "bold" }}
+                          >
+                            ↓
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            {/* Destination Autocomplete */}
+            <Autocomplete
+              onLoad={onLoadDestAutocomplete}
+              onPlaceChanged={onPlaceChangedDest}
+            >
+              <TextField
+                size="small"
+                label="Final Destination"
+                variant="outlined"
+                fullWidth
+                placeholder="Type a location"
+                value={destSearchValue}
+                onChange={e => setDestSearchValue(e.target.value)}
+                InputProps={{ readOnly: !isEditing }}
+              />
+            </Autocomplete>
+          </div>
+        </form>
+      </div>
+    </LoadScript>
   );
 };
