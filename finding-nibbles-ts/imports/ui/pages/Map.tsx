@@ -250,7 +250,7 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   };
 
   
-  const isSaved = selectedMarkerIndex != null && savedIndexes.includes(selectedMarkerIndex);
+  // const isSaved = selectedRestaurant != null && savedIndexes.includes(selectedRestaurant);
 
   
   
@@ -546,44 +546,6 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
               );
             })}
 
-          {selectedMarkerIndex !== null && restaurants[selectedMarkerIndex] && (
-          <InfoWindow
-          position={{
-            lat: restaurants[selectedMarkerIndex].location.latitude,
-            lng: restaurants[selectedMarkerIndex].location.longitude,
-          }}
-          onCloseClick={() => setSelectedMarkerIndex(null)}
-        >
-          <div style={{ maxWidth: "200px" }}>
-            <h3 style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].displayName?.text || "N/A"}</h3>
-            <p style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].formattedAddress || "N/A"}</p>
-            <p style={{ margin: "0" }}>Rating: {restaurants[selectedMarkerIndex].rating ?? "N/A"}</p>
-            <p style={{ margin: "0" }}>
-              Cuisine:{" "}
-              {restaurants[selectedMarkerIndex].types
-                ?.filter((type) => type.includes("restaurant"))
-                .map(normalizeCuisineType)
-                .join(", ") || "N/A"}
-            </p>
-            <button
-              onClick={() => saveRestaurant(restaurants[selectedMarkerIndex], selectedMarkerIndex)}
-              disabled={isSaved}
-              style={{
-                marginTop: "8px",
-                padding: "6px 12px",
-                backgroundColor: isSaved ? "#aaa" : "#6200ea",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: isSaved ? "default" : "pointer"
-              }}
-            >
-              {isSaved ? "Saved" : "Save"}
-            </button>
-          </div>
-        </InfoWindow>
-        
-        )}
           </GoogleMap>
         )}
 
