@@ -50,6 +50,7 @@ export const Map = () => {
   const [searchValue, setSearchValue] = useState<string>('');
   const [searchSaved, setSearchSaved] = useState(false);
   const [selectedCusine, setSelectedCusine] = useState<string>('All');
+  const [savedIndexes, setSavedIndexes] = useState<number[]>([]);
 
   // Create debounced fetch function with useCallback
   const debouncedFetchRestaurants = useCallback(
@@ -103,7 +104,7 @@ export const Map = () => {
     ],
   };
 
-  const saveRestaurant = (restaurant: Restaurant) => {
+  const saveRestaurant = (restaurant: Restaurant, index: number) => {
     const userId = Meteor.userId();
     if (!userId) {
       alert("You must be logged in to save restaurants");
@@ -114,6 +115,8 @@ export const Map = () => {
       userId: userId,
       name: restaurant.displayName?.text ?? "Unknown Name",
       location: restaurant.formattedAddress ?? "Unknown Location",
+
+
     };
     
 
@@ -122,10 +125,15 @@ export const Map = () => {
         alert(`Failed to save: ${error.reason || error.message || error}`);
         console.error('Error saving restaurant:', error);
       } else {
-        alert('Restaurant saved successfully');
+        console.log('Restaurant saved successfully');
       }
     });
+    setSavedIndexes((prev) => [...prev, index]);
   };
+
+  
+  const isSaved = selectedMarkerIndex != null && savedIndexes.includes(selectedMarkerIndex);
+
   
   
   const containerStyle = {
@@ -133,7 +141,7 @@ export const Map = () => {
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: 0, 
     width: "100%",
     height: "100vh",
     zIndex: 0 // Ensure it's behind navbar and controls
@@ -433,18 +441,19 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                 .join(", ") || "N/A"}
             </p>
             <button
-              onClick={() => saveRestaurant(restaurants[selectedMarkerIndex])}
+              onClick={() => saveRestaurant(restaurants[selectedMarkerIndex], selectedMarkerIndex)}
+              disabled={isSaved}
               style={{
                 marginTop: "8px",
                 padding: "6px 12px",
-                backgroundColor: "#6200ea",
+                backgroundColor: isSaved ? "#aaa" : "#6200ea",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
-                cursor: "pointer"
+                cursor: isSaved ? "default" : "pointer"
               }}
             >
-              Save
+              {isSaved ? "Saved" : "Save"}
             </button>
           </div>
         </InfoWindow>

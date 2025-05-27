@@ -52,7 +52,7 @@ export const Register = () => {
         alert(`Registration failed: ${err}`);
       } else {
         console.log('User registered and logged in!');
-        navigate('/');
+        navigate('/login');
       }
     });
 
