@@ -41,7 +41,7 @@ export const Map = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [radius, setRadius] = useState(1000);  // Default radius set to 1000 meters
   const [hoveredMarkerIndex, setHoveredMarkerIndex] = useState<number | null>(null);
-  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<Restaurant | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [highlightedCuisine, setHighlightedCuisine] = useState<string | null>(null);
 
 
@@ -542,48 +542,53 @@ const getCuisineIcon = (types: string[] | undefined): string | undefined => {
                   animation={isHighlighted ? google.maps.Animation.BOUNCE : undefined}
                   onMouseOver={() => setHoveredMarkerIndex(index)}
                   onMouseOut={() => setHoveredMarkerIndex(null)}
-                  onClick={() => setSelectedMarkerIndex(index)}
+                  onClick={() => setSelectedRestaurant(restaurant)}
                 />
               );
             })}
 
-          {selectedMarkerIndex !== null && restaurants[selectedMarkerIndex] && (
-          <InfoWindow
-          position={{
-            lat: restaurants[selectedMarkerIndex].location.latitude,
-            lng: restaurants[selectedMarkerIndex].location.longitude,
-          }}
-          onCloseClick={() => setSelectedMarkerIndex(null)}
-        >
-          <div style={{ maxWidth: "200px" }}>
-            <h3 style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].displayName?.text || "N/A"}</h3>
-            <p style={{ margin: "0" }}>{restaurants[selectedMarkerIndex].formattedAddress || "N/A"}</p>
-            <p style={{ margin: "0" }}>Rating: {restaurants[selectedMarkerIndex].rating ?? "N/A"}</p>
-            <p style={{ margin: "0" }}>
-              Cuisine:{" "}
-              {restaurants[selectedMarkerIndex].types
-                ?.filter((type) => type.includes("restaurant"))
-                .map(normalizeCuisineType)
-                .join(", ") || "N/A"}
-            </p>
-            <button
-              onClick={() => saveRestaurant(restaurants[selectedMarkerIndex])}
-              style={{
-                marginTop: "8px",
-                padding: "6px 12px",
-                backgroundColor: "#6200ea",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer"
+
+          {selectedRestaurant && (
+            <InfoWindow
+              position={{
+                lat: selectedRestaurant.location.latitude,
+                lng: selectedRestaurant.location.longitude,
               }}
+              onCloseClick={() => setSelectedRestaurant(null)}
             >
-              Save
-            </button>
-          </div>
-        </InfoWindow>
-        
-        )}
+              <div style={{ maxWidth: "200px" }}>
+                <h3 style={{ margin: "0" }}>{selectedRestaurant.displayName?.text || "N/A"}</h3>
+                <p style={{ margin: "0" }}>{selectedRestaurant.formattedAddress || "N/A"}</p>
+                <p style={{ margin: "0" }}>Rating: {selectedRestaurant.rating ?? "N/A"}</p>
+                <p style={{ margin: "0" }}>
+                  Cuisine:{" "}
+                  {selectedRestaurant.types
+                    ?.filter((type) => type.includes("restaurant"))
+                    .map(normalizeCuisineType)
+                    .join(", ") || "N/A"}
+                </p>
+                <button
+                  onClick={() => saveRestaurant(selectedRestaurant)}
+                  style={{
+                    marginTop: "8px",
+                    padding: "6px 12px",
+                    backgroundColor: "#6200ea",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer"
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            </InfoWindow>
+          )}
+
+
+
+
+
           </GoogleMap>
         )}
 
