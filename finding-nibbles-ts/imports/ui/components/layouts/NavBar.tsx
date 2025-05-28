@@ -172,7 +172,7 @@ export const NavBar = () => {
             {[
               { label: "Map", path: "/map" },
               { label: "AI Suggestion", path: "/ai-suggestion" },
-              { label: "Travel Plan", path: "/travel-plan" },
+              { label: "Travel Plan", path: "/travel-plans" },
               { label: "Meal Plan", path: "/meal-planner" },
               { label: "Profile", path: "/profile" },
             ].map((item) => (
