@@ -15,7 +15,7 @@ import { NavBar } from "./components/layouts/NavBar";
 import { theme } from "./styling/theme";
 
 export const App = () => {
-    const login = true; // Change to false to see MapScreen
+    const login = true; // Change to false to see MapScreen test
     const isLoggedIn = useTracker(() => !!Meteor.userId(), []);
 
     return (
