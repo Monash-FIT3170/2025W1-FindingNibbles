@@ -119,9 +119,13 @@ export const Map = () => {
       setIsMapLoading(true);
       try {
 
-
+        // Results in 49 points
         const central_points = findCoordinates(lat, lng, 2000);
+
         const new_radius = Math.ceil((1 / 3) * 2000);
+
+
+        // 2nd recursive call. Results in 49 points being displayed
 
 
         // const innerPoints = central_points.flatMap(({ lat, lng }) =>
