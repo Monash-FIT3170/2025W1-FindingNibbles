@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Meteor } from 'meteor/meteor';
+import { useTracker } from 'meteor/react-meteor-data';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import {Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button} from '@mui/material';
 import {Sidebar} from '../components/layouts/Sidebar';
+import type { CustomUser } from '../types/User';
 
 
 export const MealPlanner = () => {
@@ -9,6 +12,7 @@ export const MealPlanner = () => {
 
   //state for storing user inputted calorie goal
   const [calorieGoal, setCalorieGoal] = useState('');
+  const [calorieError, setCalorieError] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   //defining the type for meal history entries
@@ -19,6 +23,46 @@ export const MealPlanner = () => {
     protein: number | null;
     fat: number | null;
     carbs: number | null;
+  };
+
+  Meteor.subscribe('userData');
+
+  //get current user
+  const user = useTracker(() => Meteor.user() as CustomUser | null);
+
+
+
+  //track if calorieGoal is already initialised
+  const initialized = React.useRef(false);
+
+  useEffect(() => {
+    if (!initialized.current && user && user.profile?.calorieGoal != null) {
+      setCalorieGoal(String(user.profile.calorieGoal));
+      initialized.current = true;  // mark as initialised to prevent resetting
+    }
+  }, [user]);
+
+  // Save calorie goal to backend 
+  const saveCalorieGoal = () => {
+    const goalNumber = Number(calorieGoal);
+
+    if (isNaN(goalNumber) || goalNumber <= 0) {
+      setCalorieError('Please enter a valid positive calorie goal');
+      return;
+    }
+
+    if (!user) {
+      setCalorieError('You must be logged in to save a calorie goal');
+      return;
+    }
+
+    Meteor.call('users.updateCalorieGoal', goalNumber, (error: Meteor.Error | null) => {
+      if (error) {
+        setCalorieError(error.message);
+      } else {
+        setCalorieError('');
+      }
+    });
   };
 
   //state for storing meal history, e.g. date a meal was consumed (logged), name of the meal and nutritional info
@@ -38,7 +82,7 @@ export const MealPlanner = () => {
     calories: '',
     protein: '',
     fat: '',
-    carbs: ''
+    carbs: '',
   });
 
   //opens modal
@@ -48,7 +92,7 @@ export const MealPlanner = () => {
 
   //function to update specific fields in mealdata object
   const handleChange = (field: string, value: string) => {
-    setMealData(prev => ({ ...prev, [field]: value }));
+    setMealData((prev) => ({ ...prev, [field]: value }));
   };
 
   //to parse/save meal data into mealHistory state
@@ -119,30 +163,41 @@ export const MealPlanner = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
+    <div className="flex min-h-screen">
 
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex flex-col flex-1 items-center p-6 w-full">
+      <div className="flex flex-col flex-1 items-center p-4 sm:p-6 w-full max-w-screen-md mx-auto min-w-0">
         {/* calorie goal input */}
-        <h2 className="text-[28px] font-bold mb-4">Enter your daily Calorie Goals</h2>
-        <div className="flex gap-4 mb-6">
+        <h2 className="text-[28px] font-bold mb-4">Enter Targeted Daily Caloric Limit</h2>
+        <div className="flex gap-4 mb-6 items-center"> 
           <input
             type="number"
             value={calorieGoal}
-            onChange={e => setCalorieGoal(e.target.value)}
-            className="border-2 border-[#b87b45] rounded-xl py-2 px-4 text-center w-40"
+            onChange={(e) => setCalorieGoal(e.target.value)}
+            className="border-2 border-[#b87b45] rounded-xl py-2 px-4 text-center w-full max-w-xs sm:max-w-sm md:max-w-md"
             placeholder="Calorie Goal"
           />
+          <Button
+            onClick={saveCalorieGoal}
+            variant="contained"
+            sx={{ backgroundColor: '#b87b45', color: 'white' }}
+            className="mt-3 bg-[#b87b45] text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm sm:text-base"
+          >
+            Save
+          </Button>
         </div>
+        {calorieError && (
+          <div className="text-red-600 text-sm font-medium mb-4">{calorieError}</div>
+        )}
 
         <h2 className="text-[24px] font-bold mb-4">Your Progress</h2>
 
         {/* meal history table */}
         <div className="overflow-x-auto w-full max-w-4xl mb-6">
-          <table className="w-full border border-[#b87b45] text-sm md:text-base">
+          <table className="w-full border border-[#b87b45] text-xs sm:text-sm md:text-base">
             <thead className="bg-[#d5a16e] text-white">
               <tr>
                 <th className="p-2">Date</th>
@@ -170,11 +225,11 @@ export const MealPlanner = () => {
               ))}
             </tbody>
           </table>
-          <button onClick={handleAddMeal} className="mt-3 bg-[#b87b45] text-white px-4 py-2 rounded-lg font-semibold">Add More</button>
+          <button onClick={handleAddMeal} className="mt-3 bg-[#b87b45] text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm sm:text-base">Add Meals</button>
         </div>
 
         {/* Graph */}
-        <div className="w-full max-w-2xl h-64">
+        <div className="w-full max-w-full sm:max-w-xl md:max-w-2xl h-64">
           <h3 className="text-lg font-semibold mb-2">Total calories over time</h3>
           <ResponsiveContainer width="100%" height="100%">
             {/* creates a line chart with the date, calories dummy data (from meal history var) */}
@@ -207,11 +262,10 @@ export const MealPlanner = () => {
         onClose={() => setDialogOpen(false)}
         slotProps={{
           paper: {
-            className: "w-[400px] h-[400px] rounded-xl",
+            className: 'w-[400px] h-[400px] rounded-xl',
           },
         }}
       >
-        {/* <Dialog open={isDialogOpen} onClose={() => setDialogOpen(false)}> */}
         <DialogTitle>Add a Meal</DialogTitle>
         <DialogContent ref={dialogContentRef} className="flex flex-col gap-3 py-2">
           {errorMessage && (
