@@ -39,4 +39,29 @@ Meteor.methods({
       throw new Meteor.Error('update-failed', error.message);
     }
   },
+
+
+  //method for updating macro goals
+  async 'users.updateMacroGoals'(macroGoals: { protein: number; fat: number; carbs: number }) {
+    if (!this.userId) {
+      throw new Meteor.Error('not-authorized', 'User must be logged in to update macro goals');
+    }
+
+    const { protein, fat, carbs } = macroGoals;
+
+    if (protein < 0 || fat < 0 || carbs < 0) {
+      throw new Meteor.Error('invalid-goal', 'Macro goals must be non-negative');
+    }
+
+    try {
+      await Meteor.users.updateAsync(this.userId, {
+        $set: {
+          'profile.macroGoals': macroGoals,
+        },
+      });
+    } catch (error: any) {
+      console.error('Update macro goals failed:', error);
+      throw new Meteor.Error('update-failed', error.message);
+    }
+  }
 });

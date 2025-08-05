@@ -8,7 +8,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { label: 'Profile', path: '/profile' },
-  { label: 'Meal Planner', path: '/meal-planner' },
+  { label: 'Meal Manager', path: '/meal-planner' },
   { label: 'Search History', path: '/search-history' },
   { label: 'Saved Restaurants', path: '/saved-restaurants' },
 ];
