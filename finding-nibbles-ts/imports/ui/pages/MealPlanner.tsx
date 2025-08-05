@@ -106,6 +106,27 @@ export const MealPlanner = () => {
       return;
     }
 
+    //max 100 char meal name limit
+    if (meal.length > 100) {
+      setErrorMessage("Error: meal name is too long.")
+      dialogContentRef.current?.scrollTo({ top: 0 });
+      return;
+    }
+
+    // max 10000 kcal calorie limit
+    if (Number(calories) > 10000){
+      setErrorMessage("Error: unreasonable calorie amount.")
+      dialogContentRef.current?.scrollTo({ top: 0 });
+      return;
+    }
+
+    // max 10000g protein/carb/fat limit
+    if (Number(protein) > 10000 || Number(carbs) > 10000 || Number(fat) > 10000){
+      setErrorMessage("Error: unreasonable macro nutrient amount.")
+      dialogContentRef.current?.scrollTo({ top: 0 });
+      return;
+    }
+
     if (!dateRegex.test(date)) {
       setErrorMessage("Error: expected date format is 'dd/mm/yyyy'.");
       dialogContentRef.current?.scrollTo({ top: 0 });
@@ -213,19 +234,19 @@ export const MealPlanner = () => {
               {mealHistory.map((meal, index) => (
                 <tr key={index} className="text-center border-b">
                   <td className="p-2">{meal.date}</td>
-                  <td>{meal.meal}</td>
+                  <td className="break-all">{meal.meal}</td>
                   <td>{meal.calories != null ? meal.calories : 'N/A'}</td>
                   <td>{meal.protein != null ? meal.protein : 'N/A'}</td>
                   <td>{meal.fat != null ? meal.fat : 'N/A'}</td>
                   <td>{meal.carbs != null ? meal.carbs : 'N/A'}</td>
                   <td>
-                    <button onClick={() => handleDeleteMeal(index)} className="text-red-500 font-bold">X</button>
+                    <button onClick={() => handleDeleteMeal(index)} className="text-red-500 font-bold hover:cursor-pointer">X</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <button onClick={handleAddMeal} className="mt-3 bg-[#b87b45] text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm sm:text-base">Add Meals</button>
+          <button onClick={handleAddMeal} className="mt-3 bg-[#b87b45] text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm sm:text-base hover:cursor-pointer">Add Meals</button>
         </div>
 
         {/* Graph */}
