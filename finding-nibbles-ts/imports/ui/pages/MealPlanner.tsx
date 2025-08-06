@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Meals } from '../api/meals';
+import type { MealType } from '../api/meals';
 import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
@@ -22,16 +24,6 @@ export const MealPlanner = () => {
   const [errorMessage, setErrorMessage] = useState('');
   // State for goal dialog modal
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
-
-  //defining the type for meal history entries
-  type Meal = {
-    date: string;
-    meal: string;
-    calories: number | null;
-    protein: number | null;
-    fat: number | null;
-    carbs: number | null;
-  };
 
   Meteor.subscribe('userData');
 
@@ -99,13 +91,8 @@ export const MealPlanner = () => {
     });
   };
 
-  //state for storing meal history, e.g. date a meal was consumed (logged), name of the meal and nutritional info
-  const [mealHistory, setMealHistory] = useState<Meal[]>([
-    { date: '13/05/2025', meal: 'Lasagna', calories: 100, protein: 10.5, fat: 10, carbs: 30 },
-    { date: '14/05/2025', meal: 'Fish', calories: 200, protein: 11.5, fat: 11, carbs: 35 },
-    { date: '15/05/2025', meal: 'Salad', calories: 300, protein: 12.0, fat: 12, carbs: 40 },
-    { date: '16/05/2025', meal: 'Chicken Soup', calories: 400, protein: 12.5, fat: 13, carbs: 45 },
-  ]);
+  Meteor.subscribe('meals');
+  const mealHistory: MealType[] = useTracker(() => Meals.find({}, { sort: { date: 1 } }).fetch(), []);
 
   //state for opening/closing view meal history modal
   const [mealTableOpen, setMealTableOpen] = useState(false);
@@ -190,17 +177,25 @@ export const MealPlanner = () => {
       carbs: carbs !== '' ? parseFloat(carbs) : null,
     };
 
-    setMealHistory([...mealHistory, newMeal]);
-    setDialogOpen(false);
-    setMealData({ date: '', meal: '', calories: '', protein: '', fat: '', carbs: '' });
-    setErrorMessage('');
+    Meteor.call('meals.insert', newMeal, (error: Meteor.Error | null) => {
+      if (error) {
+        setErrorMessage(error.message);
+        dialogContentRef.current?.scrollTo({ top: 0 });
+      } else {
+        setDialogOpen(false);
+        setMealData({ date: '', meal: '', calories: '', protein: '', fat: '', carbs: '' });
+        setErrorMessage('');
+      }
+    });
   };
 
   //function to delete an entry from meal history
-  const handleDeleteMeal = (index: number) => {
-    const updated = [...mealHistory];
-    updated.splice(index, 1);
-    setMealHistory(updated);
+  const handleDeleteMeal = (mealId: string) => {
+    Meteor.call('meals.remove', mealId, (error: Meteor.Error | null) => {
+      if (error) {
+        console.error(error.message);
+      }
+    });
   };
 
   const getAggregatedAndSortedChartData = () => {
@@ -300,8 +295,8 @@ export const MealPlanner = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {mealHistory.map((meal, index) => (
-                      <tr key={index} className="text-center border-b">
+                    {mealHistory.map((meal) => (
+                      <tr key={meal._id} className="text-center border-b">
                         <td className="p-2">{meal.date}</td>
                         <td className="break-all">{meal.meal}</td>
                         <td>{meal.calories != null ? meal.calories : 'N/A'}</td>
@@ -309,7 +304,7 @@ export const MealPlanner = () => {
                         <td>{meal.fat != null ? meal.fat : 'N/A'}</td>
                         <td>{meal.carbs != null ? meal.carbs : 'N/A'}</td>
                         <td>
-                          <button onClick={() => handleDeleteMeal(index)} className="text-red-500 font-bold hover:cursor-pointer">X</button>
+                          <button onClick={() => handleDeleteMeal(meal._id!)} className="text-red-500 font-bold hover:cursor-pointer">X</button>
                         </td>
                       </tr>
                     ))}
