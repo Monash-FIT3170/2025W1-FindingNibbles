@@ -39,13 +39,20 @@ const sampleDishes: Dish[] = [
 
 // Card component for displaying a dish with thumbs up/down buttons
 const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'dislike') => void }) => {
+  const [exitCondition, setExitCondition] = useState(0);
+
+  const handleSwipe = (action: 'like' | 'dislike') => {
+    setExitCondition(action === 'like' ? 200 : -200);
+    onSwipe(action);
+  };
+  
   return (
     <motion.div
       key={dish.id}
       className="absolute top-0 left-0 w-full h-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col max-w-full"
       initial={{ opacity: 0, y: 100 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -200 }}
+      exit={{ opacity: 0, x: exitCondition }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
 
       <img src={dish.image} alt={dish.name} className="w-full h-64 object-cover"/>
@@ -55,8 +62,8 @@ const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'd
         <p className="mt-2 text-[#4b2e19] text-sm">{dish.description}</p>
       </div>
       <div className="flex justify-around pb-4">
-        <button onClick={() => onSwipe('dislike')} className="w-1/2 mx-2 h-20 bg-red-200 hover:bg-red-300 text-red-800 rounded-xl shadow-lg flex items-center justify-center text-3xl transition-transform transform hover:scale-105 cursor-pointer" aria-label="Dislike"><ThumbDownIcon /></button>
-        <button onClick={() => onSwipe('like')} className="w-1/2 mx-2 h-20 bg-green-200 hover:bg-green-300 text-green-800 rounded-xl shadow-lg flex items-center justify-center text-3xl transition-transform transform hover:scale-105 cursor-pointer" aria-label="Like"><ThumbUpIcon /></button>
+        <button onClick={() => handleSwipe('dislike')} className="w-1/2 mx-2 h-20 bg-red-200 hover:bg-red-300 text-red-800 rounded-xl shadow-lg flex items-center justify-center text-3xl transition-transform transform hover:scale-105 cursor-pointer" aria-label="Dislike"><ThumbDownIcon /></button>
+        <button onClick={() => handleSwipe('like')} className="w-1/2 mx-2 h-20 bg-green-200 hover:bg-green-300 text-green-800 rounded-xl shadow-lg flex items-center justify-center text-3xl transition-transform transform hover:scale-105 cursor-pointer" aria-label="Like"><ThumbUpIcon /></button>
       </div>
     </motion.div>
   );
