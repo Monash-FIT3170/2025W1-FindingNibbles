@@ -174,6 +174,7 @@ export const NavBar = () => {
               { label: "AI Suggestion", path: "/ai-suggestion" },
               { label: "Travel Plan", path: "/travel-plans" },
               { label: "Meal Manager", path: "/meal-planner" },
+              { label: "Discover", path: "/discover" },
               { label: "Profile", path: "/profile" },
             ].map((item) => (
               <ListItem key={item.path} disablePadding>
