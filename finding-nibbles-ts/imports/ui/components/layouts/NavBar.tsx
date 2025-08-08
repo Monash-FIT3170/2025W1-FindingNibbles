@@ -104,7 +104,7 @@ export const NavBar = () => {
   return (
     <>
       {/* Main Navigation Bar */}
-      <nav className="bg-[#C47B4D] shadow-lg relative z-50" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
+      <nav className="bg-[#C47B4D] shadow-lg fixed top-0 left-0 right-0 z-50" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Title */}
@@ -207,7 +207,7 @@ export const NavBar = () => {
 
       {/* Profile Drawer */}
       {isDrawerOpen && (
-        <div className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-80 bg-[#d5a16e] shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-l-2 border-[#C47B4D]">
+        <div className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-80 bg-[#d5a16e] shadow-2xl z-40 transform transition-transform duration-300 ease-in-out border-l-2 border-[#C47B4D]">
             <div className="h-full flex flex-col p-6">
               {/* Close Button */}
               <div className="flex justify-end mb-4">

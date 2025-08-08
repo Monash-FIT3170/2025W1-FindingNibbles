@@ -49,7 +49,7 @@ export const SearchHistory = () => {
   };
   
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen pt-16">
       <Sidebar />
       <div className="flex-1 bg-[#fdfaf7] p-6" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
         <div className="max-w-4xl mx-auto">

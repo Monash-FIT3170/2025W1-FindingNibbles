@@ -50,7 +50,7 @@ export const Profile = () => {
   };
   
   return (
-    <div className="min-h-screen bg-[#fdfaf7] p-6" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
+    <div className="min-h-screen pt-16 bg-[#fdfaf7] p-6" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-[#4b2e19] mb-8">Profile Settings</h1>
   
