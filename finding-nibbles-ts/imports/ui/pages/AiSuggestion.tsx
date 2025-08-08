@@ -53,7 +53,7 @@ const AiSuggestion: React.FC = () => {
 
 
   return (
-    <div className="max-w-6xl mx-auto py-12 px-8 lg:px-20 bg-gradient-to-br from-orange-100 to-orange-200 min-h-screen pt-28">
+    <div className="max-w-6xl mx-auto pt-28 pb-12 px-8 lg:px-20 bg-gradient-to-br from-orange-100 to-orange-200 min-h-screen">
       <h1 className="text-4xl font-bold text-center mb-8 text-gray-800 drop-shadow-md">
         AI Dish Suggestions
       </h1>

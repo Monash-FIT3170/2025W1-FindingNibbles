@@ -536,7 +536,7 @@ export const Map = () => {
   };
   return (
     <LoadScript googleMapsApiKey="AIzaSyCA1yCyhdJfWaPncGA1ucy5GFjMuqj5PUA" libraries={["places"]}>
-      <div style={{ position: "relative", height: "100vh" }}>
+      <div style={{ position: "relative", height: "100vh", paddingTop: "4rem" }}>
         {userLocation && (
           <GoogleMap
             mapContainerStyle={containerStyle}

@@ -48,7 +48,7 @@ export const Login = () => {
 
   return (
     <div 
-      className="min-h-screen w-screen bg-cover bg-center flex items-center justify-center p-5" 
+      className="min-h-screen pt-16 w-screen bg-cover bg-center flex items-center justify-center p-5" 
       style={{ 
         backgroundImage: "url('/images/login.png')",
         fontFamily: '"Comic Sans MS", cursive, sans-serif'

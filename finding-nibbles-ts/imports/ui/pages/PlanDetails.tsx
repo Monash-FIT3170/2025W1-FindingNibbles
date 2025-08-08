@@ -114,7 +114,7 @@ export const PlanDetails = () => {
       <div
         style={{
           maxWidth: 600,
-          margin: "40px auto",
+          margin: "104px auto 40px auto",
           background: "#fff",
           borderRadius: 16,
           padding: 32,

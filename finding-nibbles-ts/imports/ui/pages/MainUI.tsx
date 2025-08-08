@@ -19,7 +19,7 @@ export const MainUI = () => {
 
   return (
     <div 
-      className="w-full min-h-screen bg-cover bg-center flex items-center justify-center"
+      className="w-full min-h-screen pt-16 bg-cover bg-center flex items-center justify-center"
       style={{ 
         backgroundImage: "url('/images/food_background.png')",
         fontFamily: '"Comic Sans MS", cursive, sans-serif'
