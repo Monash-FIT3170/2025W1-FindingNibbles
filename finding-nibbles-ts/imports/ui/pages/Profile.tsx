@@ -3,7 +3,6 @@ import { Meteor } from 'meteor/meteor';
 import type {CustomUser} from '../types/User.ts';
 import { useNavigate } from 'react-router-dom';
 import AddPreferenceModal from '../components/profile/AddPreferenceModal';
-import { Sidebar } from '../components/layouts/Sidebar';
 
 export const Profile = () => {
   const user = Meteor.user() as CustomUser;
@@ -51,10 +50,8 @@ export const Profile = () => {
   };
   
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 bg-[#fdfaf7] p-6" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
-        <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-[#fdfaf7] p-6" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
+      <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-[#4b2e19] mb-8">Profile Settings</h1>
   
         <div className="bg-white rounded-2xl shadow-lg border border-[#e2cfc3] p-8">
@@ -187,7 +184,6 @@ export const Profile = () => {
           enableSelectList={true}
           enableCustomInput={true}
         />
-        </div>
       </div>
     </div>
   );
