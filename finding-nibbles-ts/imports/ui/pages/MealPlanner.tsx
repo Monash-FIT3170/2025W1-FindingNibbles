@@ -242,7 +242,7 @@ export const MealPlanner = () => {
   };
 
   return (
-    <div className="flex min-h-screen pt-16">
+    <div className="flex min-h-screen pt-20">
 
       {/* Sidebar */}
       <Sidebar />

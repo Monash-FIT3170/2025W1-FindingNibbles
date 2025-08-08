@@ -99,7 +99,7 @@ export const Discover = () => {
   const currentDish = sampleDishes[currentIndex];
 
   return (
-    <div className="flex min-h-screen pt-16 bg-[#fdfaf7]">
+    <div className="flex min-h-screen pt-20 bg-[#fdfaf7]">
       <div className="flex flex-col flex-1 py-8 px-4 sm:px-6 space-y-12">
         {/* Page heading */}
         <div className="max-w-5xl mx-auto">
