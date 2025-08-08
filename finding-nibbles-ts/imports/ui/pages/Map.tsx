@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { TextField, Box, MenuItem } from "@mui/material";
+// Removed MUI components - using Tailwind CSS instead
 import { Meteor } from 'meteor/meteor';
 import DicePopup from "../components/popups/DicePopup";
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete, InfoWindow } from "@react-google-maps/api";
 import { ISavedRestaurant } from "../api/SavedRestaurants";
-import { Modal, Box as MuiBox, Typography } from "@mui/material";
+// Removed MUI Modal components - using custom modal if needed
 import { useTracker } from 'meteor/react-meteor-data';
 import { Plans, PlanType } from '../api/Plans';
 import { AddToPlanModal } from "../components/plans/AddToPlanModal";
@@ -651,80 +651,42 @@ export const Map = () => {
           </GoogleMap>
         )}
 
-        <Box
-          sx={{
-            position: "absolute",
-            top: "70px",
-            left: "20px",
-            bgcolor: "white",
-            p: 1,
-            borderRadius: 2,
-            boxShadow: 3,
-            zIndex: 1500,
-            width: "300px",
-          }}
-        >
+        <div className="absolute top-[70px] left-5 bg-white p-3 rounded-lg shadow-lg z-[1500] w-80">
           <form onSubmit={handleSearchSubmit}>
             <Autocomplete
               onLoad={onLoadAutocomplete}
               onPlaceChanged={onPlaceChanged}
             >
-              <TextField
-                size="small"
-                label="Search location"
-                variant="outlined"
-                fullWidth
-                placeholder="Type a location"
+              <input
+                type="text"
+                placeholder="Search location"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-transparent text-sm"
                 value={searchValue}
                 onChange={handleSearchInputChange}
               />
             </Autocomplete>
           </form>
           {searchSaved && (
-            <div className="mt-1 text-xs text-green-600">Search saved!</div>
+            <div className="mt-2 text-xs text-green-600 font-medium">Search saved!</div>
           )}
-        </Box>
+        </div>
 
-        <div>
-          <Box
-            sx={{
-              position: "absolute",
-              top: "140px",
-              left: "20px",
-              bgcolor: "white",
-              p: 1,
-              borderRadius: 2,
-              boxShadow: 3,
-              zIndex: 300,
-              width: "200px",
-            }}
+        <div className="absolute top-[150px] left-5 bg-white p-3 rounded-lg shadow-lg z-[1300] w-52">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Filter by Cuisine
+          </label>
+          <select
+            value={selectedCusine}
+            onChange={(e) => setSelectedCusine(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-transparent text-sm bg-white"
           >
-            <TextField
-              select
-              fullWidth
-              label="Filter by Cuisine"
-              size="small"
-              value={selectedCusine}
-              onChange={(e) => setSelectedCusine(e.target.value)}
-              SelectProps={{
-                MenuProps: {
-                  PaperProps: {
-                    style: {
-                      maxHeight: 200,
-                      overflowY: 'auto',
-                    },
-                  },
-                },
-              }}
-            >
-              <MenuItem value="All">All</MenuItem>
-              {availableCuisines.map((cuisine) => (
-                <MenuItem key={cuisine} value={cuisine}>
-                  {cuisine}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
+            <option value="All">All Cuisines</option>
+            {availableCuisines.map((cuisine) => (
+              <option key={cuisine} value={cuisine}>
+                {cuisine}
+              </option>
+            ))}
+          </select>
         </div>
         {userLocation && (
           <>
