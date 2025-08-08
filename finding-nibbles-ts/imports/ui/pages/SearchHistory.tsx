@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { SearchHistory as SearchHistoryCollection, ISearchHistory } from '/imports/ui/api/searchHistory';
+import { Sidebar } from '../components/layouts/Sidebar';
 
 
 export const SearchHistory = () => {
@@ -48,8 +49,10 @@ export const SearchHistory = () => {
   };
   
   return (
-    <div className="min-h-screen bg-[#fdfaf7] p-6" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
-      <div className="max-w-4xl mx-auto">
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 bg-[#fdfaf7] p-6" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
+        <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-[#4b2e19] mb-8">Search History</h1>
         
         {/* Loading State */}
@@ -95,6 +98,7 @@ export const SearchHistory = () => {
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

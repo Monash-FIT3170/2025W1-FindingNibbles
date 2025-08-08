@@ -76,6 +76,14 @@ export const NavBar = () => {
   const isCurrentPage = (path: string) => {
     const currentPath = location.pathname;
     if (path === "/map" && (currentPath === "/" || currentPath === "/map")) return true;
+    
+    // Keep meal planner highlighted when on related sidebar pages
+    if (path === "/meal-planner" && (
+      currentPath === "/meal-planner" ||
+      currentPath === "/search-history" ||
+      currentPath === "/saved-restaurants"
+    )) return true;
+    
     return currentPath === path;
   };
 
