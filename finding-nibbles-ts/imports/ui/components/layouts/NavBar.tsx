@@ -122,8 +122,8 @@ export const NavBar = () => {
                     to={item.path}
                     className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isCurrentPage(item.path)
-                        ? "bg-white bg-opacity-20 text-white"
-                        : "text-white text-opacity-70 hover:text-white hover:bg-white hover:bg-opacity-10"
+                        ? "bg-[#A35F35] text-white font-bold"
+                        : "text-white text-opacity-80 hover:text-white hover:bg-[#A35F35] hover:font-semibold"
                     }`}
                   >
                     {item.icon}
@@ -155,7 +155,7 @@ export const NavBar = () => {
                   {/* Mobile Menu Button */}
                   <button
                     onClick={toggleMobileMenu}
-                    className="md:hidden text-white p-2 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors"
+                    className="md:hidden text-white p-2 hover:bg-[#A35F35] rounded-lg transition-colors"
                   >
                     {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
                   </button>
@@ -163,7 +163,7 @@ export const NavBar = () => {
                   {/* Profile Button */}
                   <button
                     onClick={toggleDrawer}
-                    className="text-white hover:bg-white hover:bg-opacity-10 p-2 rounded-lg transition-colors"
+                    className="text-white hover:bg-[#A35F35] p-2 rounded-lg transition-colors"
                   >
                     <ProfileIcon />
                   </button>
@@ -183,8 +183,8 @@ export const NavBar = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center space-x-3 px-4 py-3 text-sm font-medium transition-all duration-200 ${
                       isCurrentPage(item.path)
-                        ? "bg-white bg-opacity-20 text-white border-l-4 border-white"
-                        : "text-white text-opacity-70 hover:text-white hover:bg-white hover:bg-opacity-10"
+                        ? "bg-[#A35F35] text-white border-l-4 border-[#8B4A2B] font-bold"
+                        : "text-white text-opacity-80 hover:text-white hover:bg-[#A35F35] hover:font-semibold"
                     }`}
                   >
                     {item.icon}
@@ -197,18 +197,22 @@ export const NavBar = () => {
         </div>
       </nav>
 
-      {/* Profile Drawer Overlay */}
+      {/* Profile Drawer */}
       {isDrawerOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Background Overlay */}
-          <div
-            className="absolute inset-0 bg-black bg-opacity-50"
-            onClick={toggleDrawer}
-          />
-          
-          {/* Drawer Panel */}
-          <div className="absolute right-0 top-0 h-full w-80 bg-[#d5a16e] shadow-xl">
+        <div className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-80 bg-[#d5a16e] shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-l-2 border-[#C47B4D]">
             <div className="h-full flex flex-col p-6">
+              {/* Close Button */}
+              <div className="flex justify-end mb-4">
+                <button
+                  onClick={toggleDrawer}
+                  className="text-white hover:text-[#a95f30] p-1 rounded-lg transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
               {/* Profile Section */}
               <div className="flex flex-col items-center mb-6">
                 <RouterLink
@@ -253,7 +257,6 @@ export const NavBar = () => {
               </nav>
             </div>
           </div>
-        </div>
       )}
     </>
   );
