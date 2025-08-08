@@ -100,7 +100,7 @@ export const Discover = () => {
 
   return (
     <div className="flex min-h-screen pt-20 bg-[#fdfaf7]">
-      <div className="flex flex-col flex-1 py-8 px-4 sm:px-6 space-y-12">
+      <div className="flex flex-col flex-1 pb-8 px-4 sm:px-6 space-y-12">
         {/* Page heading */}
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl font-bold text-[#4b2e19] mb-2">Discover</h1>

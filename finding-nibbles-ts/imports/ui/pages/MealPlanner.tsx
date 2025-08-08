@@ -249,7 +249,7 @@ export const MealPlanner = () => {
 
       {/* Main Content */}
       <div className="flex flex-col flex-1">
-        <div className="flex flex-col w-full space-y-6 py-8">
+        <div className="flex flex-col w-full space-y-6 pb-8">
           
           {/* Page Title */}
           <div className="w-full max-w-4xl mx-auto px-4 sm:px-6">

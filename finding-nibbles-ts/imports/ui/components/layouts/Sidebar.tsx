@@ -17,7 +17,7 @@ export const Sidebar: React.FC = () => {
   const location = useLocation();
 
   return (
-    <div className="w-60 bg-[#d5a16e] p-5 min-h-screen font-[Comic_Sans_MS,cursive,sans-serif] shadow-md">
+    <div className="w-60 bg-[#d5a16e] px-5 pb-5 min-h-full font-[Comic_Sans_MS,cursive,sans-serif] shadow-md">
       {navItems.map((item) => (
         <button
           key={item.path}

@@ -111,17 +111,18 @@ export const PlanDetails = () => {
 
   return (
     <LoadScript googleMapsApiKey="AIzaSyCA1yCyhdJfWaPncGA1ucy5GFjMuqj5PUA" libraries={["places"]}>
-      <div
-        style={{
-          maxWidth: 600,
-          margin: "104px auto 40px auto",
-          background: "#fff",
-          borderRadius: 16,
-          padding: 32,
-          border: isEditing ? "2px solid #c17030" : "none",
-          transition: "background 0.2s, border 0.2s"
-        }}
-      >
+      <div style={{ paddingTop: "5rem", minHeight: "100vh", background: "#fdfaf7" }}>
+        <div
+          style={{
+            maxWidth: 600,
+            margin: "40px auto",
+            background: "#fff",
+            borderRadius: 16,
+            padding: 32,
+            border: isEditing ? "2px solid #c17030" : "none",
+            transition: "background 0.2s, border 0.2s"
+          }}
+        >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h2 style={{ fontFamily: "Comic Sans MS, cursive, sans-serif", color: "#c17030", paddingBottom: 15 }}>
             {isEditing ? "Editing" : "Plan Details"}
@@ -266,6 +267,7 @@ export const PlanDetails = () => {
             </Autocomplete>
           </div>
         </form>
+        </div>
       </div>
     </LoadScript>
   );

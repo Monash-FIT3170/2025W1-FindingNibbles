@@ -306,12 +306,12 @@ export const Map = () => {
 
   const containerStyle = {
     position: "fixed" as const,
-    top: 0,
+    top: "4rem",
     left: 0,
     right: 0,
     bottom: 0,
     width: "100%",
-    height: "100vh",
+    height: "calc(100vh - 4rem)",
     zIndex: 0 // Ensure it's behind navbar and controls
   };
   const onLoadAutocomplete = (autocompleteInstance: google.maps.places.Autocomplete) => {
