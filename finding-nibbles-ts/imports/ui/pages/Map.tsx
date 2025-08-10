@@ -283,14 +283,22 @@ export const Map = () => {
 
     const savedRestaurant: ISavedRestaurant = {
       userId: userId,
+      id: restaurant.id || "", // Google Places ID or fallback
       name: restaurant.displayName?.text ?? "Unknown Name",
       location: restaurant.formattedAddress ?? "Unknown Location",
+      latitude: restaurant.location?.latitude ?? 0,
+      longitude: restaurant.location?.longitude ?? 0,
+      rating: restaurant.rating ?? null,
+      types: restaurant.types || [],
     };
-
 
     Meteor.call('savedRestaurants.save', savedRestaurant, (error: Meteor.Error | null) => {
       if (error) {
-        alert(`Failed to save: ${error.reason || error.message || error}`);
+        if (error.error === 'duplicate-entry') {
+          alert('This restaurant is already saved.');
+        } else {
+          alert(`Failed to save: ${error.reason || error.message || error}`);
+        }
         console.error('Error saving restaurant:', error);
       } else {
         alert('Restaurant saved successfully!');
@@ -298,6 +306,7 @@ export const Map = () => {
       }
     });
   };
+
 
 
   // const isSaved = selectedRestaurant != null && savedIndexes.includes(selectedRestaurant);
