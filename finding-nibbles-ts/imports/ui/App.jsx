@@ -13,6 +13,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { RoutesConfig } from "./routes/RoutesConfig";
 import { NavBar } from "./components/layouts/NavBar";
 import { theme } from "./styling/theme";
+import { Meteor } from 'meteor/meteor';
 
 export const App = () => {
     const login = true; // Change to false to see MapScreen test
