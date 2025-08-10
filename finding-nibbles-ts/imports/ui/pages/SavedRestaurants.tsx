@@ -4,29 +4,74 @@ import { Tracker } from 'meteor/tracker';
 import { SavedRestaurantsCollection, ISavedRestaurant } from '../api/SavedRestaurants';
 import { Sidebar } from '../components/layouts/Sidebar';
 
+const debugApiKey = () => {
+  console.log('=== API KEY DEBUG ===');
+  console.log('Meteor.settings:', Meteor.settings);
+  console.log('Meteor.settings.public:', Meteor.settings.public);
+  console.log('API Key from settings:', Meteor.settings.public?.googlePlacesApiKey);
+  console.log('API Key exists:', !!Meteor.settings.public?.googlePlacesApiKey);
+  
+  const apiKey = Meteor.settings.public?.googlePlacesApiKey;
+  alert(`API Key: ${apiKey || 'NOT FOUND'}`);
+};
+
 export const SavedRestaurantsList = () => {
   const [restaurants, setRestaurants] = useState<ISavedRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const subscription = Meteor.subscribe('savedRestaurants');
-
+    let subscription: Meteor.SubscriptionHandle | null = null;
+    
     const computation = Tracker.autorun(() => {
-      if (subscription.ready()) {
-        const saved = SavedRestaurantsCollection.find({}, { sort: { createdAt: -1 } }).fetch();
-        setRestaurants(saved);
-        setLoading(false);
+      // Wait for authentication to be ready
+      if (Meteor.loggingIn()) {
+        setLoading(true);
+        return;
       }
+
+      const user = Meteor.user();
+      
+      if (!user) {
+        setRestaurants([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      
+      // Stop previous subscription if it exists
+      if (subscription) {
+        subscription.stop();
+      }
+      
+      subscription = Meteor.subscribe('savedRestaurants');
+      
+      // Use a nested autorun to watch for subscription readiness and data changes
+      const dataComputation = Tracker.autorun(() => {
+        if (subscription?.ready()) {
+          const saved = SavedRestaurantsCollection.find(
+            {}, 
+            { sort: { createdAt: -1 } }
+          ).fetch();
+          setRestaurants(saved);
+          setLoading(false);
+        }
+      });
+      
+      // Clean up nested computation when user changes
+      return () => dataComputation.stop();
     });
 
     return () => {
-      subscription.stop();
       computation.stop();
+      if (subscription) {
+        subscription.stop();
+      }
     };
   }, []);
 
-  const handleRemove = (id: string) => {
-    Meteor.call('savedRestaurants.remove', id, (error: any) => {
+  const handleRemove = (placeId: string) => {
+    Meteor.call('savedRestaurants.remove', placeId, (error: any) => {
       if (error) {
         alert(`Failed to remove: ${error.reason || error.message || error}`);
       }
@@ -37,29 +82,44 @@ export const SavedRestaurantsList = () => {
     <div className="flex flex-col md:flex-row min-h-screen font-[Comic_Sans_MS]">
       <Sidebar />
 
-      <div className="flex flex-col flex-1 items-center p-6">
+      <main className="flex flex-col flex-1 items-center p-6">
         <h1 className="text-2xl font-bold mb-6">Saved Restaurants</h1>
+
+        <button onClick={debugApiKey} className="bg-red-500 text-white p-2 rounded mb-4">
+        Test API Key
+        </button>
 
         {loading ? (
           <div className="flex justify-center items-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#b87b45]"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#b87b45]" />
           </div>
         ) : (
           <div className="flex flex-col gap-4 w-full max-w-md">
             {restaurants.length > 0 ? (
               restaurants.map((restaurant) => (
                 <div
-                  key={restaurant.id}
-                  className="flex justify-between items-center border-2 border-[#b87b45] rounded-full px-4 py-2 text-center text-base text-black"
+                  key={restaurant._id}
+                  className="flex flex-col border-2 border-[#b87b45] rounded-xl px-4 py-3 bg-white shadow"
+                  role="region"
+                  aria-label={`Saved restaurant ${restaurant.name}`}
                 >
-                  <span>{restaurant.name}</span>
-                  <button
-                    onClick={() => handleRemove(restaurant.id)}
-                    className="text-black font-bold hover:text-[#b87b45]"
-                    aria-label={`Remove ${restaurant.name}`}
-                  >
-                    ×
-                  </button>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-semibold">{restaurant.name}</h2>
+                    <button
+                      onClick={() => handleRemove(restaurant.placeId)}
+                      className="text-black font-bold hover:text-[#b87b45]"
+                      aria-label={`Remove ${restaurant.name}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-700">{restaurant.location}</p>
+                  {restaurant.rating !== undefined && restaurant.rating !== null && (
+                    <p className="text-sm text-gray-700">Rating: {restaurant.rating}</p>
+                  )}
+                  {restaurant.cuisine && restaurant.cuisine.length > 0 && (
+                    <p className="text-sm text-gray-700">Cuisine: {restaurant.cuisine.join(', ')}</p>
+                  )}
                 </div>
               ))
             ) : (
@@ -67,7 +127,7 @@ export const SavedRestaurantsList = () => {
             )}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

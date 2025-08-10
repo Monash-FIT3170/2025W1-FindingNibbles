@@ -13,6 +13,7 @@ import { RadarChart } from "recharts";
 import { GenerateContentResponseHandler } from "@google-cloud/vertexai";
 // Add debounce utility
 const debounce = (func: Function, delay: number) => {
+  
   let timeoutId: NodeJS.Timeout;
   return (...args: any[]) => {
     clearTimeout(timeoutId);
@@ -64,6 +65,8 @@ export const Map = () => {
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [newPlanTitle, setNewPlanTitle] = useState("");
   const [addingToPlanId, setAddingToPlanId] = useState<number | null>(null); // plan index being added to
+
+  const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
 
   const userPlans = useTracker(() => {
     Meteor.subscribe('plans');
@@ -282,20 +285,20 @@ export const Map = () => {
     }
 
     const savedRestaurant: ISavedRestaurant = {
-      userId: userId,
-      id: restaurant.id || "", // Google Places ID or fallback
+      userId,
+      placeId: restaurant.id || "",
       name: restaurant.displayName?.text ?? "Unknown Name",
       location: restaurant.formattedAddress ?? "Unknown Location",
-      latitude: restaurant.location?.latitude ?? 0,
-      longitude: restaurant.location?.longitude ?? 0,
+      latitude: restaurant.location?.latitude,
+      longitude: restaurant.location?.longitude,
       rating: restaurant.rating ?? null,
-      types: restaurant.types || [],
+      cuisine: restaurant.types ? restaurant.types.filter(isCuisineType).map(normalizeCuisineType) : [],
     };
 
     Meteor.call('savedRestaurants.save', savedRestaurant, (error: Meteor.Error | null) => {
       if (error) {
         if (error.error === 'duplicate-entry') {
-          alert('This restaurant is already saved.');
+          alert('This restaurant is already in your saved list!');
         } else {
           alert(`Failed to save: ${error.reason || error.message || error}`);
         }
@@ -417,53 +420,72 @@ export const Map = () => {
     return type.includes("restaurant") && !genericTypes.some((genericType) => type === genericType);
   };
   async function fetchRestaurants(latitude: number, longitude: number, searchRadius: number = radius): Promise<Restaurant[]> {
-    const API_KEY = {import.meta.env.VITE_GooglePlacesMapsAPI};
-    const URL = "https://places.googleapis.com/v1/places:searchNearby";
-    const payload = {
-      includedTypes: ["restaurant"],
-      maxResultCount: 20,
-      locationRestriction: {
-        circle: {
-          center: { latitude, longitude },
-          radius: searchRadius,
-        },
-      },
-    };
-    const headers = {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": API_KEY,
-      "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.types",
-    };
-    try {
-      const response = await fetch(URL, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error ${response.status}: ${errorText}`);
+      const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
+      
+      if (!API_KEY) {
+          console.error('Google Places API key not found in settings');
+          throw new Error('Google Places API key not configured');
       }
-      const data = await response.json();
-      const restaurants = data.places || [];
-      // Extract and process cuisine types
-      const cuisineTypes = new Set<string>();
-      restaurants.forEach((restaurant: Restaurant) => {
-        if (restaurant.types) {
-          restaurant.types.forEach((type: string) => {
-            if (isCuisineType(type)) {
-              cuisineTypes.add(normalizeCuisineType(type));
-            }
-          });
-        }
-      });
-      setAvailableCuisines(Array.from(cuisineTypes));
-      return restaurants;
-    } catch (error) {
-      console.error("Error fetching restaurants:", error instanceof Error ? error.message : String(error));
-      return [];
-    }
+      
+      console.log('=== FETCHING RESTAURANTS DEBUG ===');
+      console.log('API Key:', API_KEY);
+      console.log('Latitude:', latitude);
+      console.log('Longitude:', longitude);
+      console.log('Search Radius:', searchRadius);
+      
+      const URL = "https://places.googleapis.com/v1/places:searchNearby";
 
+      const requestBody = {
+          includedTypes: ["restaurant"],
+          maxResultCount: 10,
+          locationRestriction: {
+              circle: {
+                  center: {
+                      latitude: latitude,
+                      longitude: longitude
+                  },
+                  radius: searchRadius
+              }
+          }
+      };
+
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
+
+      try {
+          const response = await fetch(URL, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-Goog-Api-Key': API_KEY,
+                  'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.rating,places.types,places.id,places.location'
+              },
+              body: JSON.stringify(requestBody)
+          });
+
+          console.log('Response status:', response.status);
+          console.log('Response headers:', response.headers);
+
+          if (!response.ok) {
+              const errorText = await response.text();
+              console.error('API Error Response:', errorText);
+              throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+          }
+
+          const data = await response.json();
+          console.log('API Response data:', data);
+
+          if (!data.places || data.places.length === 0) {
+              console.warn('No restaurants found in the response');
+              return [];
+          }
+
+          console.log(`Found ${data.places.length} restaurants`);
+          return data.places;
+
+      } catch (error) {
+          console.error('Error fetching restaurants:', error);
+          throw error;
+      }
   }
 
   const cuisineIcons: Record<string, string> = {
@@ -544,7 +566,7 @@ export const Map = () => {
     }) ?? false;
   };
   return (
-    <LoadScript googleMapsApiKey={import.meta.env.VITE_GooglePlacesMapsAPI} libraries={["places"]}>
+    <LoadScript googleMapsApiKey={API_KEY} libraries={["places"]}>
       <div style={{ position: "relative", height: "100vh" }}>
         {userLocation && (
           <GoogleMap
@@ -848,7 +870,6 @@ export const Map = () => {
     </LoadScript>
   );
 };
-
 
 
 
