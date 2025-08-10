@@ -4,17 +4,6 @@ import { Tracker } from 'meteor/tracker';
 import { SavedRestaurantsCollection, ISavedRestaurant } from '../api/SavedRestaurants';
 import { Sidebar } from '../components/layouts/Sidebar';
 
-const debugApiKey = () => {
-  console.log('=== API KEY DEBUG ===');
-  console.log('Meteor.settings:', Meteor.settings);
-  console.log('Meteor.settings.public:', Meteor.settings.public);
-  console.log('API Key from settings:', Meteor.settings.public?.googlePlacesApiKey);
-  console.log('API Key exists:', !!Meteor.settings.public?.googlePlacesApiKey);
-  
-  const apiKey = Meteor.settings.public?.googlePlacesApiKey;
-  alert(`API Key: ${apiKey || 'NOT FOUND'}`);
-};
-
 export const SavedRestaurantsList = () => {
   const [restaurants, setRestaurants] = useState<ISavedRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,10 +73,6 @@ export const SavedRestaurantsList = () => {
 
       <main className="flex flex-col flex-1 items-center p-6">
         <h1 className="text-2xl font-bold mb-6">Saved Restaurants</h1>
-
-        <button onClick={debugApiKey} className="bg-red-500 text-white p-2 rounded mb-4">
-        Test API Key
-        </button>
 
         {loading ? (
           <div className="flex justify-center items-center">

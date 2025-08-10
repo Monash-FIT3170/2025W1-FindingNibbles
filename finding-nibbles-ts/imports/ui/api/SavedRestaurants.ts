@@ -2,16 +2,16 @@ import { Mongo } from 'meteor/mongo';
 import { Meteor } from 'meteor/meteor';
 import { check, Match } from 'meteor/check';
 
-// Interface for saved restaurant documents
 export interface ISavedRestaurant {
+  _id?: string; // <-- Add this line
   userId: string;
-  placeId: string;        // Changed from 'id' to 'placeId ' for clarity
+  placeId: string;
   name: string;
   location: string;
   latitude?: number;
   longitude?: number;
   rating?: number | null;
-  cuisine?: string[];     // Renamed from 'types' to 'cuisine' for clarity
+  cuisine?: string[];
   createdAt?: Date;
 }
 
