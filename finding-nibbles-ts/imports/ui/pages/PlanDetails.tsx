@@ -110,7 +110,7 @@ export const PlanDetails = () => {
   };
 
   return (
-    <LoadScript googleMapsApiKey="AIzaSyCA1yCyhdJfWaPncGA1ucy5GFjMuqj5PUA" libraries={["places"]}>
+    <LoadScript googleMapsApiKey={import.meta.env.GooglePlacesMapsAPI} libraries={["places"]}>
       <div
         style={{
           maxWidth: 600,
