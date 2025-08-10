@@ -13,7 +13,7 @@ export const SavedRestaurantsList = () => {
 
     const computation = Tracker.autorun(() => {
       if (subscription.ready()) {
-        const saved = SavedRestaurantsCollection.find({}).fetch();
+        const saved = SavedRestaurantsCollection.find({}, { sort: { createdAt: -1 } }).fetch();
         setRestaurants(saved);
         setLoading(false);
       }
@@ -25,8 +25,8 @@ export const SavedRestaurantsList = () => {
     };
   }, []);
 
-  const handleRemove = (name: string) => {
-    Meteor.call('savedRestaurants.remove', name, (error: any) => {
+  const handleRemove = (id: string) => {
+    Meteor.call('savedRestaurants.remove', id, (error: any) => {
       if (error) {
         alert(`Failed to remove: ${error.reason || error.message || error}`);
       }
@@ -47,14 +47,14 @@ export const SavedRestaurantsList = () => {
         ) : (
           <div className="flex flex-col gap-4 w-full max-w-md">
             {restaurants.length > 0 ? (
-              restaurants.map((restaurant: any) => (
+              restaurants.map((restaurant) => (
                 <div
-                  key={restaurant.name}
+                  key={restaurant.id}
                   className="flex justify-between items-center border-2 border-[#b87b45] rounded-full px-4 py-2 text-center text-base text-black"
                 >
                   <span>{restaurant.name}</span>
                   <button
-                    onClick={() => handleRemove(restaurant.name)}
+                    onClick={() => handleRemove(restaurant.id)}
                     className="text-black font-bold hover:text-[#b87b45]"
                     aria-label={`Remove ${restaurant.name}`}
                   >
