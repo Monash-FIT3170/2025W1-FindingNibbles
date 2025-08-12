@@ -8,6 +8,7 @@ import {
 import { Accounts } from 'meteor/accounts-base';
 import { useNavigate } from 'react-router-dom';
 import { RegisterFormData } from '../types/User';
+import { toast } from 'react-toastify';
 
 export const Register = () => {
   const [formData, setFormData] = useState<RegisterFormData>({
@@ -52,6 +53,7 @@ export const Register = () => {
         alert(`Registration failed: ${err}`);
       } else {
         console.log('User registered and logged in!');
+        toast.success('Registered successfully');
         navigate('/login');
       }
     });

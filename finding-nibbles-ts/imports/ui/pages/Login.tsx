@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Meteor } from 'meteor/meteor';
+import { toast } from 'react-toastify';
 
 import {
   TextField,
@@ -36,6 +37,7 @@ export const Login = () => {
       });
 
       console.log('Login successful');
+      toast.success('Logged in successfully'); 
       navigate('/');
     } catch (error: any) {
       console.error('Login failed:', error.reason || error.message);

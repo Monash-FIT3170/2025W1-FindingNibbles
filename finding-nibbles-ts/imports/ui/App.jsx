@@ -27,10 +27,11 @@ export const App = () => {
                 <NavBar />
                 <RoutesConfig isLoggedIn={isLoggedIn} />
             </Router>
-            <ToastContainer
-                position="top-middle"
-                autoClose={3000}
+             <ToastContainer
+                position="top-center"
+                autoClose={2000}
                 closeOnClick
+                pauseOnHover
             />
         </ThemeProvider>
     );

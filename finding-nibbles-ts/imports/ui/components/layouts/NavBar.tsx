@@ -16,6 +16,7 @@ import {
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import type { CustomUser } from "../../types/User";
+import { toast } from "react-toastify";
 
 const bunnyIcon = "./images/bunnyIcon.png";
 
@@ -29,6 +30,7 @@ export const NavBar = () => {
 
   const handleLogout = () => {
     Meteor.logout(() => {
+      toast.success('Logged out successfully');
       navigate("/login");
     });
   };
