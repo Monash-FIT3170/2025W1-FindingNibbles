@@ -31,12 +31,12 @@ export const Register = () => {
     const { username, email, password, confirmPassword } = formData;
 
     if (!username || !email || !password || !confirmPassword) {
-      alert('Please fill out all fields');
+      toast.error('Please fill out all fields');
       return;
     }
 
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
@@ -50,7 +50,8 @@ export const Register = () => {
       }
     }, (err) => {
       if (err) {
-        alert(`Registration failed: ${err}`);
+        console.log(err);
+        toast.error('Registration failed: Duplicate email');
       } else {
         console.log('User registered and logged in!');
         toast.success('Registered successfully');
