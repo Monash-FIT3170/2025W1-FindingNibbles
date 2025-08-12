@@ -5,7 +5,9 @@ import {
     Route,
     useNavigate,
 } from "react-router-dom";
-import { useTracker } from 'meteor/react-meteor-data';
+import { useTracker } from "meteor/react-meteor-data";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -24,7 +26,12 @@ export const App = () => {
             <Router>
                 <NavBar />
                 <RoutesConfig isLoggedIn={isLoggedIn} />
-                </Router>
+            </Router>
+            <ToastContainer
+                position="top-middle"
+                autoClose={3000}
+                closeOnClick
+            />
         </ThemeProvider>
     );
 };
