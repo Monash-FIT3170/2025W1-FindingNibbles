@@ -51,7 +51,7 @@ export const Register = () => {
     }, (err) => {
       if (err) {
         console.log(err);
-        toast.error('Duplicate email found in the system');
+        toast.error('Duplicate email/username found in the system');
       } else {
         console.log('User registered and logged in!');
         toast.success('Registered successfully');
