@@ -9,7 +9,14 @@ export interface CustomUserProfile {
   };
 }
 
-export interface CustomUser extends Meteor.User {
+export interface CustomUser  {
   profile?: CustomUserProfile;
   emails?: { address: string }[];
+}
+
+export interface RegisterFormData {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
 }
