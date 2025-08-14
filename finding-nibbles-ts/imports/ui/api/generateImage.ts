@@ -57,8 +57,8 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
       res.end(JSON.stringify({ image: imageBase64 }));
     } catch (error) {
       console.error(error);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Failed to generate image.' }));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ imageUrl: 'https://media.istockphoto.com/id/1007786322/photo/is-it-delicious.jpg?s=612x612&w=0&k=20&c=pC5bVK9uKAEYDwPDs07g8eyL3Rtin0SJ8HGYysGfNTE=' }));
     }
   });
 });
