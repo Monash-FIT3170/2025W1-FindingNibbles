@@ -34,8 +34,8 @@ WebApp.rawHandlers.use((req: IncomingMessage, res: ServerResponse, next: () => v
 
   req.on('end', async () => {
     try {
-      const requestData: { occasion?: string; preferences?: string } = JSON.parse(body);
-      const { occasion, preferences } = requestData;
+      const requestData: { occasion?: string; preferences?: string; prompt?: string; type?: string } = JSON.parse(body);
+      const { occasion, preferences, prompt, type } = requestData;
 
       let parsedPreferences: string[] = [];
       if (preferences) {
@@ -54,21 +54,24 @@ WebApp.rawHandlers.use((req: IncomingMessage, res: ServerResponse, next: () => v
       }
 
 
-      let prompt = '';
+      let aiPrompt = '';
 
-      if (occasion) {
-        prompt = `Suggest a dish suitable for a special occasion like ${occasion} in three sentences and bold the dish.`;
+      if (prompt && type === 'recommendations') {
+        // Use the custom prompt for recommendations
+        aiPrompt = prompt;
+      } else if (occasion) {
+        aiPrompt = `Suggest a dish suitable for a special occasion like ${occasion} in three sentences and bold the dish.`;
       } else if (parsedPreferences.length > 0) {
-        prompt = `Suggest a dish that suits someone withone of the following dietary preferences: ${parsedPreferences.join(', ')} in a three sentences with mentioning which preference is used.`;
+        aiPrompt = `Suggest a dish that suits someone withone of the following dietary preferences: ${parsedPreferences.join(', ')} in a three sentences with mentioning which preference is used.`;
       } else {
-        prompt = 'Suggest a dish to eat in three sentences and bold the dish.';
+        aiPrompt = 'Suggest a dish to eat in three sentences and bold the dish.';
       }
 
       const result = await model.generateContent({
         contents: [
           {
             role: 'user',
-            parts: [{ text: prompt }],
+            parts: [{ text: aiPrompt }],
           },
         ],
       });
