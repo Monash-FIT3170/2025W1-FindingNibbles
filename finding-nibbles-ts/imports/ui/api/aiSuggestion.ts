@@ -5,7 +5,6 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import { VertexAI } from '@google-cloud/vertexai';
 
 
-
 const project = process.env.PROJECT_ID || 'findingnibbles-460212';
 const location = process.env.LOCATION || 'us-central1';
 
@@ -17,7 +16,20 @@ const model = vertexAI.getGenerativeModel({
   model: 'gemini-2.0-flash-001',
 });
 
-WebApp.rawHandlers.use((req: IncomingMessage, res: ServerResponse, next: () => void) => {
+function parsePreferences(preferences?: string | string[]): string[] {
+  if (!preferences) return [];
+  if (Array.isArray(preferences)) return preferences;
+
+  try {
+    const parsed = JSON.parse(preferences);
+    return Array.isArray(parsed) ? parsed : [preferences];
+  } catch {
+    return [preferences];
+  }
+}
+
+
+WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
   const { pathname } = parse(req.url || '', true);
   if (pathname !== '/api/aiSuggestion') return next();
 
@@ -28,40 +40,19 @@ WebApp.rawHandlers.use((req: IncomingMessage, res: ServerResponse, next: () => v
   }
 
   let body = '';
-  req.on('data', chunk => {
-    body += chunk;
-  });
-
+  req.on('data', chunk => body += chunk);
   req.on('end', async () => {
     try {
-      const requestData: { occasion?: string; preferences?: string } = JSON.parse(body);
-      const { occasion, preferences } = requestData;
-
-      let parsedPreferences: string[] = [];
-      if (preferences) {
-        if (Array.isArray(preferences)) {
-          parsedPreferences = preferences;
-        } else if (typeof preferences === "string") {
-          try {
-            parsedPreferences = JSON.parse(preferences);
-            if (!Array.isArray(parsedPreferences)) {
-              parsedPreferences = [preferences];
-            }
-          } catch {
-            parsedPreferences = [preferences];
-          }
-        }
-      }
-
+      const { occasion, preferences } = JSON.parse(body);
+      const parsedPreferences = parsePreferences(preferences);
 
       let prompt = '';
-
       if (occasion) {
-        prompt = `Suggest a dish suitable for a special occasion like ${occasion} in three sentences and bold the dish.`;
+        prompt = `Suggest a dish suitable for a special occasion like ${occasion} with only its name and description in json format with "name" and "description" fields.`;
       } else if (parsedPreferences.length > 0) {
-        prompt = `Suggest a dish that suits someone withone of the following dietary preferences: ${parsedPreferences.join(', ')} in a three sentences with mentioning which preference is used.`;
+        prompt = `Suggest a dish that suits someone with one of the following dietary preferences: ${parsedPreferences.join(', ')}. Respond with only its name and description in json format with "name" and "description" fields.`;
       } else {
-        prompt = 'Suggest a dish to eat in three sentences and bold the dish.';
+        prompt = 'Suggest a japanese dish with only its name and description in json format with "name" and "description" fields.';
       }
 
       const result = await model.generateContent({
@@ -73,14 +64,33 @@ WebApp.rawHandlers.use((req: IncomingMessage, res: ServerResponse, next: () => v
         ],
       });
 
-      const suggestion = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || 'No suggestion generated.';
+      const rawText = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || 'No suggestion generated.';
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ suggestion }));
+      try {
+        // Strip markdown-style code block if accidentally included
+        const cleaned = rawText.replace(/```json|```/g, '').trim();
+
+        const parsed = JSON.parse(cleaned); 
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            dish: {
+              name: parsed.name,
+              description: parsed.description
+            }
+          }));
+
     } catch (error) {
       console.error('Vertex AI Error:', error);
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Failed to generate dish suggestion.' }));
     }
+      
+    } catch (error) {
+      console.error('Request Handler Error:', error);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Internal Server Error' }));
+    }
   });
 });
+

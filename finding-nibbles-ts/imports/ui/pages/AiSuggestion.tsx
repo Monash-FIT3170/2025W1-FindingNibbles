@@ -4,10 +4,16 @@ import type { CustomUser } from "../types/User";
 
 const AiSuggestion: React.FC = () => {
   const [suggestion, setSuggestion] = useState<string>("");
+  const [image, setImage] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [selectedOccasion, setSelectedOccasion] = useState<string>("birthday");
   const [preferences, setPreferences] = useState<string[]>([]);
+
+  function extractSuggestedDish(text: string): string | null {
+      const match = text.match(/\*\*([^*]+)\*\*/);
+      return match ? match[1] : null;
+    }
 
   function formatBold(text: string) {
     return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
@@ -21,6 +27,7 @@ const AiSuggestion: React.FC = () => {
   const fetchSuggestion = async (params: Record<string, string> = {}): Promise<void> => {
     setLoading(true);
     setSuggestion("");
+    setImage("");
     setError("");
 
     try {
@@ -36,6 +43,29 @@ const AiSuggestion: React.FC = () => {
 
       const data: { suggestion?: string } = await response.json();
       setSuggestion(data.suggestion || "No suggestion received.");
+
+      const dish = extractSuggestedDish(data.suggestion ?? "");
+
+      const imageRes = await fetch("/api/generateImage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: dish }),
+      });
+
+      // if (!imageRes.ok) {
+      //   throw new Error("Image generation failed");
+      // }
+
+      const imageData = await imageRes.json();
+      
+      // Use fallback image if imageUrl is present
+      if (imageData.imageUrl) {
+        setImage(imageData.imageUrl);
+      } else {
+        setImage(`data:image/png;base64,${imageData.image}`);
+      }
+
+
     } catch (err) {
       console.error("Failed to fetch suggestion:", err);
       setError("Failed to get a suggestion. Please try again.");
@@ -74,6 +104,16 @@ const AiSuggestion: React.FC = () => {
               <span className="font-bold text-yellow-700">Recommended Dish:</span>
               {formatBold(suggestion)}
             </p>
+            {image && (
+              <div className="mt-6 flex justify-center">
+                <img
+                  src={image}
+                  alt="AI generated dish"
+                  className="rounded-lg shadow-lg max-w-md border-4 border-yellow-300"
+                />
+              </div>
+            )}
+
           </div>
         ) : null}
       </div>

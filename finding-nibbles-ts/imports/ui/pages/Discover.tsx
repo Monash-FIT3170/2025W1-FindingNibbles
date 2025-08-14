@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import { Meteor } from 'meteor/meteor';
+import type { CustomUser } from "../types/User";
 
 // Custom SVG Icons
 const ThumbUpIcon = () => (
@@ -18,35 +22,10 @@ const ThumbDownIcon = () => (
 type Dish = {
   id: number;
   name: string;
-  restaurant: string;
   image: string;
   description: string;
 };
 
-//test dish data
-const sampleDishes: Dish[] = [
-  {
-    id: 1,
-    name: 'Lanzhou Beef Noodles',
-    restaurant: 'Bowltiful',
-    image: 'https://media.timeout.com/images/105975769/750/422/image.jpg',
-    description: 'Hand-pulled noodles, flavorful halal beef, and rich broth.',
-  },
-  {
-    id: 2,
-    name: 'Pepperoni Pizza',
-    restaurant: 'Pizza Hut',
-    image: 'https://tb-static.uber.com/prod/image-proc/processed_images/8e42f0ba1d0f35a331e93a147fa4eb36/db809eadd12d21eb61044e0f3bf7c9b7.jpeg',
-    description: 'Lots of pepperoni and mozzarella cheese.',
-  },
-  {
-    id: 3,
-    name: 'Subdog',
-    restaurant: 'Subway',
-    image: 'https://www.cmgassets.com/s3fs-public/styles/opengraph/public/2024-09/subway_subdog_.jpeg?h=0995d4b4&itok=roPWZmK7',
-    description: 'The American-style hotdog with mozzarella cheese, tomato sauce and limited-edition tangy mustard',
-  },
-];
 
 // Card component for displaying a dish with thumbs up/down buttons
 const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'dislike') => void }) => {
@@ -60,7 +39,7 @@ const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'd
   return (
     <motion.div
       key={dish.id}
-      className="absolute top-0 left-0 w-full h-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col max-w-full"
+      className="w-full h-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col"
       initial={{ opacity: 0, y: 100 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: exitCondition }}
@@ -69,7 +48,6 @@ const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'd
       <img src={dish.image} alt={dish.name} className="w-full h-64 object-cover"/>
       <div className="p-4">
         <h3 className="text-xl font-bold text-[#4b2e19]">{dish.name}</h3>
-        <p className="text-sm text-[#7a5c43]">{dish.restaurant}</p>
         <p className="mt-2 text-[#4b2e19] text-sm">{dish.description}</p>
       </div>
       <div className="flex justify-around pb-4">
@@ -81,22 +59,91 @@ const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'd
 };
 
 export const Discover = () => {
-  //index of currently shown dish
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // liked/disliked dishes lists
   const [liked, setLiked] = useState<Dish[]>([]);
   const [disliked, setDisliked] = useState<Dish[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [preferences, setPreferences] = useState<string[]>([]);
+  const [currentDish, setCurrentDish] = useState<Dish | null>(null);
+  const [recommendedDish, setRecommendedDish] = useState<Dish | null>(null);
+  const [specialDish, setSpecialDish] = useState<Dish | null>(null);
 
-  //function to handle preferences and update lists
-  const handlePreference = (action: 'like' | 'dislike') => {
-    const dish = sampleDishes[currentIndex];
-    if (action === 'like') setLiked([...liked, dish]);
-    if (action === 'dislike') setDisliked([...disliked, dish]);
-    setCurrentIndex((prev) => prev + 1);
+
+  useEffect(() => {
+    const user = Meteor.user() as CustomUser | null;
+    if (user?.profile?.preferences) {
+      setPreferences(user.profile.preferences);
+    }
+    fetchSuggestion({}, setCurrentDish);
+    fetchSuggestion({ preferences: user?.profile?.preferences?.join(',') || '' }, setRecommendedDish);
+    fetchSuggestion({ occasion: 'birthday' }, setSpecialDish);
+  }, []);
+
+const fetchSuggestion = async (
+    params: Record<string, any> = {},
+    setDish: React.Dispatch<React.SetStateAction<Dish | null>> = setCurrentDish
+  ) => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/aiSuggestion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify( params ),
+      });
+
+      if (!response.ok) throw new Error('AI suggestion failed');
+
+      const data = await response.json();
+      const { name, description } = data.dish;
+
+      console.log('AI Suggestion Response:', name);
+
+      if (!name || !description) {
+        throw new Error('Invalid dish data received');
+      }
+
+      const imageRes = await fetch('/api/generateImage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: name }),
+      });
+
+      const imageData = await imageRes.json();
+      const imageUrl = imageData.imageUrl || `data:image/png;base64,${imageData.image}`;
+
+      const newDish: Dish = {
+        id: Date.now(),
+        name: name,
+        image: imageUrl,
+        description: description,
+      };
+ 
+      setDish(newDish);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to get AI-generated dish.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const currentDish = sampleDishes[currentIndex];
+  const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
+    if (!dish) return;
+    if (action === 'like') setLiked((prev) => [...prev, dish]);
+    if (action === 'dislike') setDisliked((prev) => [...prev, dish]);
+  };
+
+ const handleSwipe = (
+    action: 'like' | 'dislike',
+    fetchParams: Record<string, any> = {},
+    setDish: React.Dispatch<React.SetStateAction<Dish | null>>,
+    dish: Dish | null
+  ) => {
+    handlePreference(action, dish);
+    fetchSuggestion(fetchParams, setDish);
+  };
 
   return (
     <div className="flex min-h-screen pt-20 bg-[#fdfaf7]">
@@ -117,27 +164,35 @@ export const Discover = () => {
         {/*try me section*/}
         <div className="max-w-5xl mx-auto w-full">
           <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Try Me!</h2>
-          <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl shadow-md p-6 w-full max-w-5xl h-[500px] mx-auto relative text-[#7a5c43]">
+          <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl shadow-md p-6 min-h-[200px] text-[#7a5c43]">
             <AnimatePresence>
                 {/* shows current dish if available, else msg */}
-              {currentDish ? (<DishCard key={currentDish.id} dish={currentDish} onSwipe={handlePreference} />) : (<p className="text-lg">You're preferences have been saved and future recommendations will be adjusted accordingly. Refresh for more!</p>)}
+              {currentDish ? (<DishCard key={currentDish.id} dish={currentDish}  onSwipe={(action) =>
+                    handleSwipe(action, {}, setCurrentDish, currentDish)
+                  } />) : (<p className="text-lg">Generating a dish recommendation...</p>)}
             </AnimatePresence>
           </div>
         </div>
 
-        {/* Recommended Restaurants placeholder */}
+        {/* Recommended Dish placeholder */}
         <div className="max-w-5xl mx-auto w-full">
-          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Recommended Restaurants</h2>
+          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Recommended Dish</h2>
           <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl shadow-md p-6 min-h-[200px] text-[#7a5c43]">
-            <p className="text-center text-lg">Coming soon!</p>
+            <AnimatePresence>
+                {/* shows current dish if available, else msg */}
+              {recommendedDish ? (<DishCard key={recommendedDish.id} dish={recommendedDish}  onSwipe={(action) => handleSwipe(action, { preferences: preferences.join(',') }, setRecommendedDish, recommendedDish)} />) : (<p className="text-lg">Generating a dish recommendation...</p>)}
+            </AnimatePresence>
           </div>
         </div>
 
         {/* Specials placeholder */}
         <div className="max-w-5xl mx-auto w-full">
-          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Specials</h2>
+          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Special dish for ...</h2>
           <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl shadow-md p-6 min-h-[200px] text-[#7a5c43]">
-            <p className="text-center text-lg">Coming soon!</p>
+            <AnimatePresence>
+                {/* shows current dish if available, else msg */}
+              {specialDish ? (<DishCard key={specialDish.id} dish={specialDish} onSwipe={(action) => handleSwipe(action, { "occasion": "birthday" }, setSpecialDish, specialDish)}  />) : (<p className="text-lg">Generating a dish recommendation...</p>)}
+            </AnimatePresence>
           </div>
         </div>
       </div>
