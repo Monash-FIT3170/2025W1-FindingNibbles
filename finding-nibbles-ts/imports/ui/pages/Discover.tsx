@@ -1,7 +1,5 @@
 import React, { useState, useEffect} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import { Meteor } from 'meteor/meteor';
 import type { CustomUser } from "../types/User";
 
@@ -151,14 +149,6 @@ const fetchSuggestion = async (
         {/* Page heading */}
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl font-bold text-[#4b2e19] mb-2">Discover</h1>
-        </div>
-
-        {/* Search input field */}
-        <div className="max-w-5xl mx-auto w-full">
-          <input
-            type="text"
-            placeholder="Search for a dish or restaurant..."
-            className="w-full px-4 py-3 border border-[#e2cfc3] rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d9bca8] text-[#4b2e19] bg-white"/>
         </div>
 
         {/*try me section*/}
