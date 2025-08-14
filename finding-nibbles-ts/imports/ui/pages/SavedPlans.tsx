@@ -32,7 +32,8 @@ export const SavedPlans = () => {
   };
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "40px auto", background: "#fff", borderRadius: 16, padding: 32, minHeight: 500 }}>
+    <div style={{ paddingTop: "5rem", minHeight: "100vh", background: "#fdfaf7" }}>
+      <div style={{ maxWidth: "1200px", margin: "40px auto", background: "#fff", borderRadius: 16, padding: 32, minHeight: 500 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
         <h2 style={{ fontFamily: "Comic Sans MS, cursive, sans-serif", color: "#c17030", fontSize: 32, margin: 0 }}>
           Saved Plans
@@ -55,6 +56,7 @@ export const SavedPlans = () => {
         </Button>
       </div>
       <PlanTable plans={plans} />
+      </div>
     </div>
   );
 };
