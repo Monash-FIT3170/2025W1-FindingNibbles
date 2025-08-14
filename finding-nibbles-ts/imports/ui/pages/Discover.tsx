@@ -167,11 +167,11 @@ const fetchSuggestion = async (
 
         {/* Specials placeholder */}
         <div className="max-w-5xl mx-auto w-full">
-          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Specials</h2>
+          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Special dish for ...</h2>
           <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl shadow-md p-6 min-h-[200px] text-[#7a5c43]">
             <AnimatePresence>
                 {/* shows current dish if available, else msg */}
-              {specialDish ? (<DishCard key={specialDish.id} dish={specialDish} onSwipe={(action) => handleSwipe(action, { "params": { "occasion": "birthday" } }, setSpecialDish, specialDish)}  />) : (<p className="text-lg">Generating a dish recommendation...</p>)}
+              {specialDish ? (<DishCard key={specialDish.id} dish={specialDish} onSwipe={(action) => handleSwipe(action, { "occasion": "birthday" }, setSpecialDish, specialDish)}  />) : (<p className="text-lg">Generating a dish recommendation...</p>)}
             </AnimatePresence>
           </div>
         </div>
