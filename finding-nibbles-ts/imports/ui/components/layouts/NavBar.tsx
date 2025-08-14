@@ -171,6 +171,7 @@ export const NavBar = () => {
           <List className="space-y-1">
             {[
               { label: "Map", path: "/map" },
+              { label: "Explore", path: "/explore" },
               { label: "AI Suggestion", path: "/ai-suggestion" },
               { label: "Travel Plan", path: "/travel-plans" },
               { label: "Meal Manager", path: "/meal-planner" },

@@ -33,7 +33,7 @@ const sampleDishes: Dish[] = [
     name: 'Subdog',
     restaurant: 'Subway',
     image: 'https://www.cmgassets.com/s3fs-public/styles/opengraph/public/2024-09/subway_subdog_.jpeg?h=0995d4b4&itok=roPWZmK7',
-    description: 'The American-style hotdog with mozzarella cheese, tomato sauce and limited-edition tangy mustard',
+    description: 'The American-style hotdog with mozzarella cheese, tomato sauce and limited-edition tangy mustard',
   },
 ];
 
@@ -62,7 +62,7 @@ const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'd
   );
 };
 
-export const Discover = () => {
+export const Explore = () => {
   //index of currently shown dish
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -85,7 +85,7 @@ export const Discover = () => {
       <div className="flex flex-col flex-1 py-8 px-4 sm:px-6 space-y-12">
         {/* Page heading */}
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-4xl font-bold text-[#4b2e19] mb-2">Discover</h1>
+          <h1 className="text-4xl font-bold text-[#4b2e19] mb-2">Explore</h1>
         </div>
 
         {/* Search input field */}
