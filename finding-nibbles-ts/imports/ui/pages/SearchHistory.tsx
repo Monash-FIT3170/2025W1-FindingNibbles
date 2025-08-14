@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Link as RouterLink} from "react-router-dom";
-import {
-    ListItem,
-    ListItemButton,
-  } from "@mui/material";
 import { Meteor } from 'meteor/meteor';
 import { SearchHistory as SearchHistoryCollection, ISearchHistory } from '/imports/ui/api/searchHistory';
-import {Sidebar} from '../components/layouts/Sidebar';
+import { Sidebar } from '../components/layouts/Sidebar';
 
 
 export const SearchHistory = () => {
@@ -52,44 +47,58 @@ export const SearchHistory = () => {
       }
     });
   };
-
+  
   return (
-    <div className="flex flex-col md:flex-row min-h-screen font-[Comic_Sans_MS]">
-      {/* Sidebar */}
+    <div className="flex min-h-screen pt-20">
       <Sidebar />
-
-      {/* Main Content */}
-      <div className="flex flex-col flex-1 items-center p-6">
-        <h1 className="text-2xl font-bold mb-6">Search History</h1>
-        {/* display loading state */}
+      <div className="flex-1 bg-[#fdfaf7] px-6 pb-6" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
+        <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-[#4b2e19] mb-8">Search History</h1>
+        
+        {/* Loading State */}
         {historyLoading ? (
-          <div className="flex justify-center items-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#b87b45]"></div>
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C47B4D]"></div>
           </div>
         ) : (
-          /* display each item from history */
-          <div className="flex flex-col gap-4 w-full max-w-md">
+          /* Search History Items */
+          <div className="space-y-4">
             {history.length > 0 ? (
               history.map((item: ISearchHistory) => (
                 <div
                   key={item._id}
-                  className="flex justify-between items-center border-2 border-[#b87b45] rounded-full px-4 py-2 text-center text-base text-black"
+                  className="flex justify-between items-center bg-white border border-[#e2cfc3] rounded-xl px-6 py-4 shadow-sm hover:shadow-md transition-shadow duration-200"
                 >
-                  <span>{item.searchTerm}</span>
-                  {/* delete history entry button */}
+                  <div className="flex flex-col">
+                    <span className="text-[#4b2e19] font-medium text-lg">
+                      {item.searchTerm}
+                    </span>
+                    <span className="text-[#7a5c43] text-sm">
+                      {new Date(item.timestamp).toLocaleDateString()} at {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  
+                  {/* Delete Button */}
                   <button
                     onClick={() => handleRemoveItem(item.searchTerm)}
-                    className="text-black font-bold hover:text-[#b87b45]"
+                    className="text-[#7a5c43] hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all duration-200 text-xl font-bold"
+                    aria-label="Remove search item"
                   >
                     ×
                   </button>
                 </div>
               ))
             ) : (
-              <p className="text-center text-gray-500">No search history found</p>
+              <div className="text-center py-12">
+                <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl p-8">
+                  <p className="text-[#7a5c43] text-lg">No search history found</p>
+                  <p className="text-[#7a5c43] text-sm mt-2">Your search terms will appear here as you use the app</p>
+                </div>
+              </div>
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

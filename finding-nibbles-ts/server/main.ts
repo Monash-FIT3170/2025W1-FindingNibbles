@@ -3,6 +3,7 @@ import { Accounts } from 'meteor/accounts-base';
 import { MOCK_DATA } from './config';
 import '../imports/ui/api/user.methods.ts';
 import '../imports/ui/api/aiSuggestion.ts';
+import '../imports/ui/api/generateImage.ts';
 import '../imports/ui/api/searchHistory.ts';
 import '../imports/ui/api/SavedRestaurants';
 import '../imports/ui/api/Plans';

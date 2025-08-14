@@ -68,10 +68,11 @@ export const SavedRestaurantsList = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen font-[Comic_Sans_MS]">
+    <div className="flex flex-col md:flex-row min-h-screen pt-20 font-[Comic_Sans_MS]">
       <Sidebar />
 
       <main className="flex flex-col flex-1 items-center p-6">
+      <div className="flex flex-col flex-1 items-center px-6 pb-6">
         <h1 className="text-2xl font-bold mb-6">Saved Restaurants</h1>
 
         {loading ? (
