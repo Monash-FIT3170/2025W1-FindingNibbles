@@ -124,15 +124,17 @@ export const Map = () => {
         const new_radius = Math.ceil((1 / 3) * 2000);
 
 
-        const innerPoints = central_points.flatMap(({ lat, lng }) =>
-          findCoordinates(lat, lng, new_radius)
-        );
+        // const innerPoints = central_points.flatMap(({ lat, lng }) =>
+        //   findCoordinates(lat, lng, new_radius)
+        // );
 
         const full_restaurant_search: Restaurant[][] = await Promise.all(
-          innerPoints.map(({ lat, lng, radius }) =>
+          central_points.map(({ lat, lng, radius }) =>
             fetchRestaurants(lat, lng, radius)
           )
         );
+
+
         setRestaurants(full_restaurant_search.flat());
 
       } catch (error) {
