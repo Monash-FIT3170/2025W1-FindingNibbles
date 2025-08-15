@@ -88,6 +88,7 @@ export const NavBar = () => {
   };
 
   const handleLogout = () => {
+    setIsDrawerOpen(false);
     Meteor.logout(() => {
       navigate("/login");
     });
