@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Meteor } from 'meteor/meteor';
-import type {CustomUser} from '../types/User.ts';
+import type {CustomUser} from '../types/User';
 import { useNavigate } from 'react-router-dom';
 import AddPreferenceModal from '../components/profile/AddPreferenceModal';
 import { useTracker } from 'meteor/react-meteor-data';
