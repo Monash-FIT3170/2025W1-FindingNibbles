@@ -70,7 +70,7 @@ export const NavBar = () => {
     { label: "AI Suggestion", path: "/ai-suggestion", icon: <AIIcon /> },
     { label: "Discover", path: "/discover", icon: <DiscoverIcon /> },
     { label: "Meal Planner", path: "/meal-planner", icon: <MealIcon /> },
-    { label: "Travel Plans", path: "/travel-plans", icon: <TravelIcon /> },
+    { label: "Travel Plans", path: "/travel-planning", icon: <TravelIcon /> },
   ];
 
   const isCurrentPage = (path: string) => {
