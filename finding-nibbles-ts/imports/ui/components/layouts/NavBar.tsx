@@ -229,8 +229,12 @@ export const NavBar = () => {
                   onClick={() => setIsDrawerOpen(false)}
                   className="mb-3"
                 >
-                  <div className="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white">
-                    <ProfileIcon />
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white mx-auto">
+                    <img
+                      src={user?.profile?.profileImage || '/images/default-profile-pic.png'}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </RouterLink>
                 <span className="text-white text-lg font-bold">
