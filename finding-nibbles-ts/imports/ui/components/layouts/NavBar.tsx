@@ -69,7 +69,7 @@ export const NavBar = () => {
     { label: "Map", path: "/map", icon: <MapIcon /> },
     { label: "AI Suggestion", path: "/ai-suggestion", icon: <AIIcon /> },
     { label: "Discover", path: "/discover", icon: <DiscoverIcon /> },
-    { label: "Meal Planner", path: "/meal-planner", icon: <MealIcon /> },
+    { label: "Meal Manager", path: "/meal-planner", icon: <MealIcon /> },
     { label: "Travel Plans", path: "/travel-plans", icon: <TravelIcon /> },
   ];
 
@@ -247,8 +247,8 @@ export const NavBar = () => {
                 <div className="space-y-2">
                   {[
                     { label: "Profile", path: "/profile" },
-                    { label: "Search History", path: "/search-history" },
                     { label: "Saved Restaurants", path: "/saved-restaurants" },
+                    { label: "Search History", path: "/search-history" },
                   ].map((item) => (
                     <RouterLink
                       key={item.path}
