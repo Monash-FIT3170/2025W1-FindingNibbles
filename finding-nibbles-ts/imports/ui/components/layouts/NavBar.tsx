@@ -132,7 +132,7 @@ export const NavBar = () => {
                     className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isCurrentPage(item.path)
                         ? "bg-[#A35F35] text-white font-bold"
-                        : "text-white text-opacity-80 hover:text-white hover:bg-[#A35F35] hover:font-semibold"
+                        : "text-white text-opacity-80 hover:text-white hover:bg-[#A35F35]"
                     }`}
                   >
                     {item.icon}
