@@ -39,7 +39,7 @@ const SwipeDishesPopup: React.FC<SwipeDishesPopupProps> = ({ dishes, onClose }) 
   const handlers = useSwipeable({
     onSwipedLeft: () => handleSwipe('left'),
     onSwipedRight: () => handleSwipe('right'),
-    preventDefaultTouchmoveEvent: true,
+    preventScrollOnSwipe: true,
     trackMouse: true,
   });
 
