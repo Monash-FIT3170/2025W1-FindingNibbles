@@ -129,9 +129,13 @@ export const Map = () => {
       setIsMapLoading(true);
       try {
 
-
+        // Results in 49 points
         const central_points = findCoordinates(lat, lng, 2000);
+
         const new_radius = Math.ceil((1 / 3) * 2000);
+
+
+        // 2nd recursive call. Results in 49 points being displayed
 
 
         // const innerPoints = central_points.flatMap(({ lat, lng }) =>
@@ -351,7 +355,7 @@ export const Map = () => {
           console.error('Error saving search term:', error);
         } else {
           console.log('Search term saved successfully:', term, result);
-          Meteor.subscribe('searchHistory');
+          // Meteor.subscribe('searchHistory');
         }
         setTimeout(() => setSearchSaved(false), 500);
       });
@@ -432,7 +436,7 @@ export const Map = () => {
     return type.includes("restaurant") && !genericTypes.some((genericType) => type === genericType);
   };
   async function fetchRestaurants(latitude: number, longitude: number, searchRadius: number = radius): Promise<Restaurant[]> {
-      const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
+      //const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
       
       if (!API_KEY) {
           console.error('Google Places API key not found in settings');

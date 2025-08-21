@@ -84,13 +84,7 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
       console.error('Vertex AI Error:', error);
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Failed to generate dish suggestion.' }));
-    }
-      
-    } catch (error) {
-      console.error('Request Handler Error:', error);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Internal Server Error' }));
-    }
+    } 
   });
 });
 

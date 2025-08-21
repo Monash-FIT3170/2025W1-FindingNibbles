@@ -1,7 +1,7 @@
 import React, { useState, useEffect} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Meteor } from 'meteor/meteor';
-import type { CustomUser } from "../types/User";
+import type { CustomUser } from "../types/User"; 
 
 // Custom SVG Icons
 const ThumbUpIcon = () => (
@@ -77,7 +77,7 @@ export const Discover = () => {
     fetchSuggestion({ occasion: 'birthday' }, setSpecialDish);
   }, []);
 
-const fetchSuggestion = async (
+  const fetchSuggestion = async (
     params: Record<string, any> = {},
     setDish: React.Dispatch<React.SetStateAction<Dish | null>> = setCurrentDish
   ) => {
@@ -127,7 +127,17 @@ const fetchSuggestion = async (
     }
   };
 
-  const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
+  //function to handle preferences and update lists
+  // const handlePreference = (action: 'like' | 'dislike') => {
+  //   const dish = sampleDishes[currentIndex];
+
+
+  //   if (action === 'like') setLiked([...liked, dish]);
+  //   if (action === 'dislike') setDisliked([...disliked, dish]);
+  //   setCurrentIndex((prev) => prev + 1);
+  // };
+
+const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
     if (!dish) return;
     if (action === 'like') setLiked((prev) => [...prev, dish]);
     if (action === 'dislike') setDisliked((prev) => [...prev, dish]);
@@ -142,6 +152,8 @@ const fetchSuggestion = async (
     handlePreference(action, dish);
     fetchSuggestion(fetchParams, setDish);
   };
+  
+  
 
   return (
     <div className="flex min-h-screen pt-20 bg-[#fdfaf7]">

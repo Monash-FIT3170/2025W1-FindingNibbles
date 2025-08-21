@@ -1,38 +1,69 @@
 import React, { useEffect, useState } from 'react';
-import { Meteor } from 'meteor/meteor';
+import { Meteor } from 'meteor/meteor'; 
 import { SearchHistory as SearchHistoryCollection, ISearchHistory } from '/imports/ui/api/searchHistory';
-import { Sidebar } from '../components/layouts/Sidebar';
+import {Tracker} from 'meteor/tracker';
 
 
 export const SearchHistory = () => {
   const [history, setHistory] = useState<ISearchHistory[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
 
-  useEffect(() => {
-    // Set up the subscription
+
+
+
+
+
+  // useEffect(() => {
+  //   // Set up the subscription
+  //   const subscription = Meteor.subscribe('searchHistory');
+    
+  //   // Function to update history data
+  //   const updateHistory = () => {
+  //     if (subscription.ready()) {
+  //       const historyItems = SearchHistoryCollection.find({}, { sort: { timestamp: -1 } }).fetch();
+  //       setHistory(historyItems);
+  //       setHistoryLoading(false);
+  //     }
+  //   };
+    
+  //   // Initial update
+  //   updateHistory();
+    
+  //   // Set up an interval to check for changes
+  //   const intervalId = setInterval(updateHistory, 500);
+    
+  //   // Clean up on unmount
+  //   return () => {
+  //     subscription.stop();
+  //     clearInterval(intervalId);
+  //   };
+  // }, []);
+
+
+  useEffect(()=> {
+    // Start the subscription
     const subscription = Meteor.subscribe('searchHistory');
-    
-    // Function to update history data
-    const updateHistory = () => {
-      if (subscription.ready()) {
-        const historyItems = SearchHistoryCollection.find({}, { sort: { timestamp: -1 } }).fetch();
-        setHistory(historyItems);
-        setHistoryLoading(false);
-      }
-    };
-    
-    // Initial update
-    updateHistory();
-    
-    // Set up an interval to check for changes
-    const intervalId = setInterval(updateHistory, 500);
-    
-    // Clean up on unmount
-    return () => {
+
+    // Set up a reactive computation
+
+    const computation = Tracker.autorun(()=>{
+
+      const items = SearchHistoryCollection
+      .find({},{sort: {timestamp: -1}})
+      .fetch();
+
+      setHistory(items);
+      setHistoryLoading(!subscription.ready());
+    });
+
+    // Cleanup
+    return() => {
+      // Stop the autorun
+      computation.stop();
       subscription.stop();
-      clearInterval(intervalId);
     };
-  }, []);
+  },[]);
+
 
   // Function to remove an item from search history
   const handleRemoveItem = (searchTerm: string) => {
@@ -50,7 +81,6 @@ export const SearchHistory = () => {
   
   return (
     <div className="flex min-h-screen pt-20">
-      <Sidebar />
       <div className="flex-1 bg-[#fdfaf7] px-6 pb-6" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
         <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-[#4b2e19] mb-8">Search History</h1>

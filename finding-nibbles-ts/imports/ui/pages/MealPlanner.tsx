@@ -5,7 +5,6 @@ import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import {Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button} from '@mui/material';
-import {Sidebar} from '../components/layouts/Sidebar';
 import type { CustomUser } from '../types/User';
 import AddIcon from '@mui/icons-material/Add';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -243,9 +242,6 @@ export const MealPlanner = () => {
 
   return (
     <div className="flex min-h-screen pt-20">
-
-      {/* Sidebar */}
-      <Sidebar />
 
       {/* Main Content */}
       <div className="flex flex-col flex-1">

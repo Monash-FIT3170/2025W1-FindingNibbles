@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Tracker } from 'meteor/tracker';
 import { SavedRestaurantsCollection, ISavedRestaurant } from '../api/SavedRestaurants';
-import { Sidebar } from '../components/layouts/Sidebar';
 
 export const SavedRestaurantsList = () => {
   const [restaurants, setRestaurants] = useState<ISavedRestaurant[]>([]);
@@ -65,7 +64,6 @@ export const SavedRestaurantsList = () => {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen pt-20 font-[Comic_Sans_MS]">
-      <Sidebar />
 
       <main className="flex flex-col flex-1 items-center p-6">
         <div className="flex flex-col flex-1 items-center px-6 pb-6">
