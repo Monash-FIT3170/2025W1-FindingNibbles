@@ -443,11 +443,11 @@ export const Map = () => {
           throw new Error('Google Places API key not configured');
       }
       
-      console.log('=== FETCHING RESTAURANTS DEBUG ===');
-      console.log('API Key:', API_KEY);
-      console.log('Latitude:', latitude);
-      console.log('Longitude:', longitude);
-      console.log('Search Radius:', searchRadius);
+      // console.log('=== FETCHING RESTAURANTS DEBUG ===');
+      // console.log('API Key:', API_KEY);
+      // console.log('Latitude:', latitude);
+      // console.log('Longitude:', longitude);
+      // console.log('Search Radius:', searchRadius);
       
       const URL = "https://places.googleapis.com/v1/places:searchNearby";
 
