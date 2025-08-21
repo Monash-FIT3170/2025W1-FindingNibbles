@@ -1,6 +1,7 @@
 import React, { useState, useEffect} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Meteor } from 'meteor/meteor';
+import type { CustomUser } from "../types/User"; 
 
 // Custom SVG Icons
 const ThumbUpIcon = () => (
@@ -58,6 +59,73 @@ const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'd
 export const Discover = () => {
   const [liked, setLiked] = useState<Dish[]>([]);
   const [disliked, setDisliked] = useState<Dish[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [preferences, setPreferences] = useState<string[]>([]);
+  const [currentDish, setCurrentDish] = useState<Dish | null>(null);
+  const [recommendedDish, setRecommendedDish] = useState<Dish | null>(null);
+  const [specialDish, setSpecialDish] = useState<Dish | null>(null);
+
+
+  useEffect(() => {
+    const user = Meteor.user() as CustomUser | null;
+    if (user?.profile?.preferences) {
+      setPreferences(user.profile.preferences);
+    }
+    fetchSuggestion({}, setCurrentDish);
+    fetchSuggestion({ preferences: user?.profile?.preferences?.join(',') || '' }, setRecommendedDish);
+    fetchSuggestion({ occasion: 'birthday' }, setSpecialDish);
+  }, []);
+
+  const fetchSuggestion = async (
+    params: Record<string, any> = {},
+    setDish: React.Dispatch<React.SetStateAction<Dish | null>> = setCurrentDish
+  ) => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/aiSuggestion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify( params ),
+      });
+
+      if (!response.ok) throw new Error('AI suggestion failed');
+
+      const data = await response.json();
+      const { name, description } = data.dish;
+
+      console.log('AI Suggestion Response:', name);
+
+      if (!name || !description) {
+        throw new Error('Invalid dish data received');
+      }
+
+      const imageRes = await fetch('/api/generateImage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: name }),
+      });
+
+      const imageData = await imageRes.json();
+      const imageUrl = imageData.imageUrl || `data:image/png;base64,${imageData.image}`;
+
+      const newDish: Dish = {
+        id: Date.now(),
+        name: name,
+        image: imageUrl,
+        description: description,
+      };
+ 
+      setDish(newDish);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to get AI-generated dish.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   //function to handle preferences and update lists
   // const handlePreference = (action: 'like' | 'dislike') => {
@@ -69,30 +137,21 @@ export const Discover = () => {
   //   setCurrentIndex((prev) => prev + 1);
   // };
 
-const handlePreference = (action: 'like' | 'dislike') => {
-  const dish = sampleDishes[currentIndex];
-  
-  // Call Meteor method to save preference
-  Meteor.call('userPreferences.updateFromSwipe', {
-    dishId: dish.id,
-    action: action,
-    rating: action === 'like' ? 4 : 2 // Default ratings
-  }, (error, result) => {
-    if (error) {
-      console.error('Error saving preference:', error);
-    } else {
-      console.log('Preference saved successfully');
-    }
-  });
-  
-  // Update local state
-  if (action === 'like') setLiked([...liked, dish]);
-  if (action === 'dislike') setDisliked([...disliked, dish]);
-  setCurrentIndex((prev) => prev + 1);
-};
+const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
+    if (!dish) return;
+    if (action === 'like') setLiked((prev) => [...prev, dish]);
+    if (action === 'dislike') setDisliked((prev) => [...prev, dish]);
+  };
 
-
-  const currentDish = sampleDishes[currentIndex];
+ const handleSwipe = (
+    action: 'like' | 'dislike',
+    fetchParams: Record<string, any> = {},
+    setDish: React.Dispatch<React.SetStateAction<Dish | null>>,
+    dish: Dish | null
+  ) => {
+    handlePreference(action, dish);
+    fetchSuggestion(fetchParams, setDish);
+  };
   
   
 
