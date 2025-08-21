@@ -1,3 +1,51 @@
+// Gemini API endpoint for random dishes with images
+WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+  const { pathname } = parse(req.url || '', true);
+  if (pathname !== '/api/geminiDishes') return next();
+
+  if (req.method !== 'POST') {
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+    return;
+  }
+
+  let body = '';
+  req.on('data', chunk => body += chunk);
+  req.on('end', async () => {
+    try {
+      const { count = 5 } = JSON.parse(body || '{}');
+      const dishes: any[] = [];
+      for (let i = 0; i < count; i++) {
+        const prompt = 'Suggest a random international dish with a short description and a realistic image url. Respond in JSON: {"id": string, "name": string, "description": string, "image": string}';
+        const result = await model.generateContent({
+          contents: [
+            { role: 'user', parts: [{ text: prompt }] },
+          ],
+        });
+        const rawText = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        try {
+          const cleaned = rawText.replace(/```json|```/g, '').trim();
+          const parsed = JSON.parse(cleaned);
+          if (parsed && parsed.name && parsed.description && parsed.image) {
+            dishes.push({
+              id: parsed.id || `${Date.now()}-${i}`,
+              name: parsed.name,
+              description: parsed.description,
+              image: parsed.image,
+            });
+          }
+        } catch (e) {
+          // skip malformed response
+        }
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(dishes));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to generate dishes.' }));
+    }
+  });
+});
 import 'dotenv/config';
 import { WebApp } from 'meteor/webapp';
 import { parse } from 'url';
