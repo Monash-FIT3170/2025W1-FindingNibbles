@@ -408,7 +408,7 @@ export const Map = () => {
     return type.includes("restaurant") && !genericTypes.some((genericType) => type === genericType);
   };
   async function fetchRestaurants(latitude: number, longitude: number, searchRadius: number = radius): Promise<Restaurant[]> {
-    const API_KEY = "AIzaSyCA1yCyhdJfWaPncGA1ucy5GFjMuqj5PUA";
+    const API_KEY = Meteor.settings.public?.googlePlacesApiKey || "AIzaSyDMgS81-Z8y-C7g_9I7jfaahGpPMWacRSo";
     const URL = "https://places.googleapis.com/v1/places:searchNearby";
     const payload = {
       includedTypes: ["restaurant"],
