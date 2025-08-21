@@ -426,7 +426,7 @@ export const Map = () => {
     return type.includes("restaurant") && !genericTypes.some((genericType) => type === genericType);
   };
   async function fetchRestaurants(latitude: number, longitude: number, searchRadius: number = radius): Promise<Restaurant[]> {
-      const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
+      //const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
       
       if (!API_KEY) {
           console.error('Google Places API key not found in settings');
