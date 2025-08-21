@@ -345,7 +345,7 @@ export const Map = () => {
           console.error('Error saving search term:', error);
         } else {
           console.log('Search term saved successfully:', term, result);
-          Meteor.subscribe('searchHistory');
+          // Meteor.subscribe('searchHistory');
         }
         setTimeout(() => setSearchSaved(false), 500);
       });

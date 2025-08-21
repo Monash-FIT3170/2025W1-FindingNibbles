@@ -15,7 +15,9 @@ export const SearchHistory = new Mongo.Collection<ISearchHistory>('searchHistory
 // Prevent duplicate recent searches
 if (Meteor.isServer) {
   Meteor.startup(() => {
-    SearchHistory.rawCollection().createIndex({ userId: 1, searchTerm: 1 }, { unique: true })
+    SearchHistory.rawCollection().createIndex({ userId: 1, searchTerm: 1 }
+      // , { unique: true }
+    )
       .then(() => console.log('Search history index created'))
       .catch(err => console.error('Error creating search history index:', err));
   });
@@ -32,18 +34,21 @@ Meteor.methods({
 
     try {
       // Upsert to handle the case where this search already exists
-      const result = await SearchHistory.upsertAsync(
-        { userId: this.userId, searchTerm },
-        { 
-          $set: { 
-            userId: this.userId, 
-            searchTerm, 
-            timestamp: new Date() 
-          } 
-        }
-      );
-      
-      return result;
+      const insertedId = await SearchHistory.insertAsync(
+        { userId: this.userId,
+           searchTerm,
+          timestamp: new Date() 
+        });
+        
+        return {insertedId}
+
+        // { 
+        //   $set: { 
+        //     userId: this.userId, 
+        //     searchTerm, 
+        //     timestamp: new Date() 
+        //   } 
+        // }
     } catch (error) {
       console.error('Error saving search history:', error);
       throw new Meteor.Error('db-error', 'Failed to save search term');

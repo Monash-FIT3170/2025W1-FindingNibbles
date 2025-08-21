@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Meteor } from 'meteor/meteor';
+import { Meteor } from 'meteor/meteor'; 
 import { SearchHistory as SearchHistoryCollection, ISearchHistory } from '/imports/ui/api/searchHistory';
 
 
