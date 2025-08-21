@@ -1,37 +1,69 @@
 import React, { useEffect, useState } from 'react';
 import { Meteor } from 'meteor/meteor'; 
 import { SearchHistory as SearchHistoryCollection, ISearchHistory } from '/imports/ui/api/searchHistory';
+import {Tracker} from 'meteor/tracker';
 
 
 export const SearchHistory = () => {
   const [history, setHistory] = useState<ISearchHistory[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
 
-  useEffect(() => {
-    // Set up the subscription
+
+
+
+
+
+  // useEffect(() => {
+  //   // Set up the subscription
+  //   const subscription = Meteor.subscribe('searchHistory');
+    
+  //   // Function to update history data
+  //   const updateHistory = () => {
+  //     if (subscription.ready()) {
+  //       const historyItems = SearchHistoryCollection.find({}, { sort: { timestamp: -1 } }).fetch();
+  //       setHistory(historyItems);
+  //       setHistoryLoading(false);
+  //     }
+  //   };
+    
+  //   // Initial update
+  //   updateHistory();
+    
+  //   // Set up an interval to check for changes
+  //   const intervalId = setInterval(updateHistory, 500);
+    
+  //   // Clean up on unmount
+  //   return () => {
+  //     subscription.stop();
+  //     clearInterval(intervalId);
+  //   };
+  // }, []);
+
+
+  useEffect(()=> {
+    // Start the subscription
     const subscription = Meteor.subscribe('searchHistory');
-    
-    // Function to update history data
-    const updateHistory = () => {
-      if (subscription.ready()) {
-        const historyItems = SearchHistoryCollection.find({}, { sort: { timestamp: -1 } }).fetch();
-        setHistory(historyItems);
-        setHistoryLoading(false);
-      }
-    };
-    
-    // Initial update
-    updateHistory();
-    
-    // Set up an interval to check for changes
-    const intervalId = setInterval(updateHistory, 500);
-    
-    // Clean up on unmount
-    return () => {
+
+    // Set up a reactive computation
+
+    const computation = Tracker.autorun(()=>{
+
+      const items = SearchHistoryCollection
+      .find({},{sort: {timestamp: -1}})
+      .fetch();
+
+      setHistory(items);
+      setHistoryLoading(!subscription.ready());
+    });
+
+    // Cleanup
+    return() => {
+      // Stop the autorun
+      computation.stop();
       subscription.stop();
-      clearInterval(intervalId);
     };
-  }, []);
+  },[]);
+
 
   // Function to remove an item from search history
   const handleRemoveItem = (searchTerm: string) => {
