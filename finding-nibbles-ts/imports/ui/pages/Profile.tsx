@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Meteor } from 'meteor/meteor';
-import type {CustomUser} from '../types/User.ts';
+import type {CustomUser} from '../types/User';
 import Button from '@mui/material/Button';
 import '../styling/profile-form.css';
 import { TextField } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import {Sidebar} from '../components/layouts/Sidebar.tsx';
+import {Sidebar} from '../components/layouts/Sidebar';
 import { Box } from '@mui/material';
 import AddPreferenceModal from '../components/profile/AddPreferenceModal';
 
