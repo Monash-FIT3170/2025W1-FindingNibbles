@@ -2,6 +2,17 @@ import React, { useState, useEffect, useCallback } from "react";
 // Removed MUI components - using Tailwind CSS instead
 import { Meteor } from 'meteor/meteor';
 import DicePopup from "../components/popups/DicePopup";
+import SwipeDishesPopup from "../components/popups/SwipeDishesPopup";
+// Fetch Gemini dishes from the backend
+async function fetchGeminiDishes(count = 5) {
+  const response = await fetch('/api/geminiDishes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ count }),
+  });
+  if (!response.ok) throw new Error('Failed to fetch dishes');
+  return response.json();
+}
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete, InfoWindow } from "@react-google-maps/api";
 import { ISavedRestaurant } from "../api/SavedRestaurants";
 // Removed MUI Modal components - using custom modal if needed
@@ -40,6 +51,19 @@ interface Restaurant {
 }
 export const Map = () => {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
+  // Gemini swipe popup state
+  const [showSwipePopup, setShowSwipePopup] = useState(false);
+  const [swipeDishes, setSwipeDishes] = useState([]);
+  // Handler to open the swipe popup with random dishes
+  const openSwipePopup = async () => {
+    try {
+      const dishes = await fetchGeminiDishes(5);
+      setSwipeDishes(dishes);
+      setShowSwipePopup(true);
+    } catch (e) {
+      alert('Failed to load dishes');
+    }
+  };
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [availableCuisines, setAvailableCuisines] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -814,6 +838,23 @@ export const Map = () => {
             )}
           </div>
         )}
+
+        {/* Gemini Swipe Dishes Button */}
+        <button
+          className="fixed bottom-8 right-8 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full shadow-lg z-[10000]"
+          onClick={openSwipePopup}
+        >
+          Try Random Dishes
+        </button>
+
+        {/* Swipe Dishes Popup */}
+        {showSwipePopup && (
+          <SwipeDishesPopup
+            dishes={swipeDishes}
+            onClose={() => setShowSwipePopup(false)}
+          />
+        )}
+
         <DicePopup
           open={isDicePopupOpen}
           onClose={() => {
