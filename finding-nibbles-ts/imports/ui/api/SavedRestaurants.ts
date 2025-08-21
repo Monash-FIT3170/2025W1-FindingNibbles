@@ -21,7 +21,7 @@ if (Meteor.isServer) {
   Meteor.startup(() => {
     SavedRestaurantsCollection.rawCollection().createIndex(
       { userId: 1, name: 1 }, // Use `name` instead of missing `restaurantId`
-      { unique: false }
+      { unique: true }
     ).then(() => console.log('Saved restaurants index created'))
       .catch(err => console.error('Error creating saved restaurant index:', err));
   });
