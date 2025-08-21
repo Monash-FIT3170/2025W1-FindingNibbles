@@ -1,0 +1,54 @@
+/* Fullscreen swipe popup styles */
+.swipe-popup-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.swipe-popup-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  padding: 2rem;
+  max-width: 90vw;
+  width: 400px;
+  text-align: center;
+  position: relative;
+  transition: transform 0.3s;
+}
+.swipe-popup-card.left {
+  transform: translateX(-100vw) rotate(-10deg);
+}
+.swipe-popup-card.right {
+  transform: translateX(100vw) rotate(10deg);
+}
+.swipe-popup-img {
+  width: 100%;
+  max-height: 250px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+}
+.swipe-popup-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+.swipe-popup-actions button {
+  flex: 1;
+  margin: 0 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  background: #eee;
+  transition: background 0.2s;
+}
+.swipe-popup-actions button:hover {
+  background: #f5a623;
+  color: #fff;
+}
