@@ -11,9 +11,6 @@ import '../imports/ui/api/meals.ts';
 
 Meteor.startup(async () => {
   // Debug: Check if settings are loaded
-  console.log('=== SERVER STARTUP ===');
-  console.log('Meteor.settings.public:', Meteor.settings.public);
-  console.log('Google API Key from settings:', Meteor.settings.public?.googlePlacesApiKey ? 'FOUND' : 'NOT FOUND');
 
   // Create seed user if it doesn't exist
   if (!(await Accounts.findUserByUsername(MOCK_DATA.SEED_USERNAME))) {
