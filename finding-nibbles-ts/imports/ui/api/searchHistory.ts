@@ -35,7 +35,6 @@ if (Meteor.isServer) {
   });
 }
 
-
 // Define methods for working with search history
 Meteor.methods({
 
@@ -43,14 +42,14 @@ Meteor.methods({
   check(searchTerm, String);
   if (!this.userId) throw new Meteor.Error('not-authorized');
 
-  const t = searchTerm.trim().replace(/\s+/g, ' ');
+  const term = searchTerm.trim().replace(/\s+/g, ' ');
   const now = new Date();
 
   try {
     await SearchHistory.rawCollection().updateOne(
-      { userId: this.userId, searchTerm: t },
+      { userId: this.userId, searchTerm: term },
       {
-        $setOnInsert: { userId: this.userId, searchTerm: t, createdAt: now },
+        $setOnInsert: { userId: this.userId, searchTerm: term, createdAt: now },
         $set: { timestamp: now } 
       },
       { upsert: true }
@@ -61,13 +60,11 @@ Meteor.methods({
     throw new Meteor.Error('db-error', 'Failed to save search term');
   }
 },
-
 async 'searchHistory.remove'(searchTerm: string) {
     check(searchTerm, String);
     if (!this.userId) {
       throw new Meteor.Error('not-authorized', 'You must be logged in to remove search history');
     }
-
     try {
       const result = await SearchHistory.rawCollection().deleteOne({
         userId: this.userId,
@@ -79,12 +76,7 @@ async 'searchHistory.remove'(searchTerm: string) {
       throw new Meteor.Error('db-error', 'Failed to remove search term');
     }
   }
-
 });
-
-
-
-
 
 if (Meteor.isServer) {
   Meteor.publish('searchHistory', function() {

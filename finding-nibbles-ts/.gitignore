@@ -1,6 +1,9 @@
 node_modules/
 .env
 settings.json
+
+
+settings.json
 # secrets
 *.pem
 *.key
