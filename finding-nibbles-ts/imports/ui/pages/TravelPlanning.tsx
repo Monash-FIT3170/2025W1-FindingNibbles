@@ -65,12 +65,13 @@ export const TravelPlanning = () => {
             );
 
             const result = await response.json();
-            const base64Image = result.generations?.[0]?.image;
+            console.log("Full API result:", result);
 
             // Update the specific dish image in state
             setCityDishes((prev) => {
               const newState = [...prev];
-              newState[cityIndex].dishes[dishIndex].image = base64Image;
+              newState[cityIndex].dishes[dishIndex].image =
+                "data:image/png;base64,${base64Image}";
               return newState;
             });
           } catch (err) {
