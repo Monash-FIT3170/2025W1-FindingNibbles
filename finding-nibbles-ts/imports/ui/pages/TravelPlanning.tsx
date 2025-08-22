@@ -11,7 +11,8 @@ import {
 
 interface Dish {
   name: string;
-  image?: string; // base64 image string
+  image?: string; // path to local image
+  imageLoaded?: boolean; // track if image exists
 }
 
 interface CityDishes {
@@ -26,17 +27,45 @@ export const TravelPlanning = () => {
 
   const dishesData: DishesJSON = dishesDataJson;
 
+  // Helper function to convert dish name to filename format
+  const dishNameToFilename = (dishName: string): string => {
+    return dishName
+      .replace(/[^a-zA-Z0-9\s\-_]/g, "") // Remove special characters except spaces, hyphens, underscores
+      .replace(/\s+/g, "_") // Replace spaces with underscores
+      .replace(/[()]/g, ""); // Remove parentheses
+  };
+
+  // Helper function to get image path
+  const getImagePath = (cityName: string, dishName: string): string => {
+    const filename = dishNameToFilename(dishName);
+    return `/images/dishes/${cityName}/${filename}.jpg`;
+  };
+
+  // Function to check if image exists
+  const checkImageExists = async (imagePath: string): Promise<boolean> => {
+    try {
+      const response = await fetch(imagePath, { method: "HEAD" });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  };
+
   useEffect(() => {
-    // Step 1: Build initial structure immediately
+    // Step 1: Build initial structure with image paths
     const initialCities: CityDishes[] = Object.keys(dishesData).map((city) => ({
       city,
-      dishes: dishesData[city].map((dishName) => ({ name: dishName }))
+      dishes: dishesData[city].map((dishName) => ({
+        name: dishName,
+        image: getImagePath(city, dishName),
+        imageLoaded: false
+      }))
     }));
 
     setCityDishes(initialCities);
 
-    // Step 2: Fetch images asynchronously
-    const fetchImages = async () => {
+    // Step 2: Check which images exist asynchronously
+    const checkImages = async () => {
       for (let cityIndex = 0; cityIndex < initialCities.length; cityIndex++) {
         const cityObj = initialCities[cityIndex];
 
@@ -47,44 +76,31 @@ export const TravelPlanning = () => {
         ) {
           const dish = cityObj.dishes[dishIndex];
 
-          try {
-            const response = await fetch(
-              "https://router.huggingface.co/together/v1/images/generations",
-              {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${Meteor.settings.public?.HuggingFaceAccessToken}`,
-                  "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                  prompt: `A high quality photo of ${dish.name}, famous dish from ${cityObj.city}`,
-                  response_format: "base64",
-                  model: "black-forest-labs/FLUX.1-dev"
-                })
-              }
-            );
+          if (dish.image) {
+            const imageExists = await checkImageExists(dish.image);
 
-            const result = await response.json();
-            console.log("Full API result:", result);
-
-            // Update the specific dish image in state
+            // Update the specific dish image loaded status in state
             setCityDishes((prev) => {
               const newState = [...prev];
-              newState[cityIndex].dishes[dishIndex].image =
-                "data:image/png;base64,${base64Image}";
+              newState[cityIndex].dishes[dishIndex].imageLoaded = imageExists;
+              if (!imageExists) {
+                // If image doesn't exist, clear the image path
+                newState[cityIndex].dishes[dishIndex].image = undefined;
+              }
               return newState;
             });
-          } catch (err) {
-            console.error(`Error generating image for ${dish.name}:`, err);
           }
+
+          // Small delay to avoid overwhelming the server with requests
+          await new Promise((resolve) => setTimeout(resolve, 10));
         }
       }
     };
 
-    fetchImages();
+    checkImages();
   }, []);
 
-  // Saved Restaurants useEffect
+  // Saved Restaurants useEffect (unchanged)
   useEffect(() => {
     let subscription: Meteor.SubscriptionHandle | null = null;
 
@@ -223,9 +239,9 @@ export const TravelPlanning = () => {
                       flexShrink: 0
                     }}
                   >
-                    {dish.image ? (
+                    {dish.image && dish.imageLoaded !== false ? (
                       <img
-                        src={`data:image/png;base64,${dish.image}`}
+                        src={dish.image}
                         alt={dish.name}
                         style={{
                           width: "150px",
@@ -233,22 +249,51 @@ export const TravelPlanning = () => {
                           objectFit: "cover",
                           borderRadius: "8px"
                         }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: "150px",
-                          height: "150px",
-                          backgroundColor: "#eee",
-                          borderRadius: "8px",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center"
+                        onError={(e) => {
+                          // Handle image load error by showing placeholder
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                          const placeholder =
+                            target.nextElementSibling as HTMLElement;
+                          if (placeholder) {
+                            placeholder.style.display = "flex";
+                          }
                         }}
-                      >
-                        Loading...
-                      </div>
-                    )}
+                      />
+                    ) : null}
+
+                    {/* Placeholder div - shown when image doesn't exist or is loading */}
+                    <div
+                      style={{
+                        width: "150px",
+                        height: "150px",
+                        backgroundColor: "#eee",
+                        borderRadius: "8px",
+                        display:
+                          dish.image && dish.imageLoaded !== false
+                            ? "none"
+                            : "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        flexDirection: "column",
+                        color: "#666",
+                        fontSize: "0.8rem",
+                        textAlign: "center",
+                        padding: "0.5rem",
+                        boxSizing: "border-box"
+                      }}
+                    >
+                      {dish.imageLoaded === false ? (
+                        <>
+                          <div style={{ marginBottom: "0.5rem" }}>📷</div>
+                          <div>No image</div>
+                          <div>available</div>
+                        </>
+                      ) : (
+                        "Checking..."
+                      )}
+                    </div>
+
                     <p
                       style={{
                         marginTop: "0.5rem",
