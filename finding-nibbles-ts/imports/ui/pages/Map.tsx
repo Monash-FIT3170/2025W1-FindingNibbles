@@ -867,7 +867,7 @@ export const Map = () => {
                   {/* Reviews Section */}
                   {restaurant.reviews && restaurant.reviews.length > 0 && (
                     <div className="mt-3">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Recent Reviews</h4>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Recent Google Reviews</h4>
                       <div className="max-h-40 overflow-y-auto">
                         {restaurant.reviews.slice(0, 3).map((review, reviewIndex) => (
                           <div key={reviewIndex} className="text-xs bg-white p-2 rounded border mb-2 shadow-sm">
