@@ -38,7 +38,7 @@ export const TravelPlanning = () => {
   // Helper function to get image path
   const getImagePath = (cityName: string, dishName: string): string => {
     const filename = dishNameToFilename(dishName);
-    return `/images/dishes/${cityName}/${filename}.jpg`;
+    return `/images/dishes/${cityName}/${filename}.png`;
   };
 
   // Function to check if image exists
