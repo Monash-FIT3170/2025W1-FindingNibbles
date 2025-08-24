@@ -9,6 +9,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 
 import { RoutesConfig } from "./routes/RoutesConfig";
 import { NavBar } from "./components/layouts/NavBar";
+import { Meteor } from 'meteor/meteor';
 
 export const App = () => {
     const isLoggedIn = useTracker(() => !!Meteor.userId(), []);

@@ -1,34 +1,44 @@
 import { Mongo } from 'meteor/mongo';
 import { Meteor } from 'meteor/meteor';
-import { check } from 'meteor/check';
+import { check, Match } from 'meteor/check';
 
-// Define the interface for saved restaurant documents
 export interface ISavedRestaurant {
+  _id?: string; // <-- Add this line
   userId: string;
+  placeId: string;
   name: string;
   location: string;
+  latitude?: number;
+  longitude?: number;
+  rating?: number | null;
+  cuisine?: string[];
+  createdAt?: Date;
 }
 
 export const SavedRestaurantsCollection = new Mongo.Collection<ISavedRestaurant>('savedRestaurants');
 
-// Create a unique index to prevent duplicate saves per user
 if (Meteor.isServer) {
   Meteor.startup(() => {
     SavedRestaurantsCollection.rawCollection().createIndex(
       { userId: 1, name: 1 }, // Use `name` instead of missing `restaurantId`
       { unique: true }
     ).then(() => console.log('Saved restaurants index created'))
-     .catch(err => console.error('Error creating saved restaurant index:', err));
+      .catch(err => console.error('Error creating saved restaurant index:', err));
   });
 }
 
-// Define methods for saving/removing restaurants
 Meteor.methods({
-  async 'savedRestaurants.save'(restaurant: { userId: string, name: string; location: string }) {
+  async 'savedRestaurants.save'(restaurant: ISavedRestaurant) {
+    // Validate input matches expected schema exactly
     check(restaurant, {
-      userId: String,
+      userId: String,          // You can optionally omit userId from client and set from Meteor.userId()
+      placeId: String,
       name: String,
       location: String,
+      latitude: Match.Optional(Number),
+      longitude: Match.Optional(Number),
+      rating: Match.Optional(Number),
+      cuisine: Match.Optional([String]),
     });
 
     const userId = Meteor.userId();
@@ -36,15 +46,25 @@ Meteor.methods({
       throw new Meteor.Error('not-authorized', 'You must be logged in to save restaurants');
     }
 
+    // Enforce server-side userId instead of client-sent userId
+    const restaurantToInsert = {
+      ...restaurant,
+      userId,
+      createdAt: new Date(),
+    };
+
+    // Check for existing saved restaurant for this user and placeId
+    const existing = SavedRestaurantsCollection.findOne({ userId, placeId: restaurant.placeId });
+    if (existing) {
+      throw new Meteor.Error('duplicate-entry', 'You have already saved this restaurant');
+    }
+
     try {
-      const result = await SavedRestaurantsCollection.insertAsync({
-        userId,
-        name: restaurant.name,
-        location: restaurant.location,
-      });
+      // Insert restaurant document asynchronously
+      const result = await SavedRestaurantsCollection.insertAsync(restaurantToInsert);
       return result;
     } catch (error: any) {
-      if (error.code === 11000) {
+      if (error.code === 11000) { // duplicate key error
         throw new Meteor.Error('duplicate-entry', 'You already saved this restaurant');
       }
       console.error('Error saving restaurant:', error);
@@ -52,15 +72,15 @@ Meteor.methods({
     }
   },
 
-  async 'savedRestaurants.remove'(name: string) {
-    check(name, String);
+  async 'savedRestaurants.remove'(placeId: string) {
+    check(placeId, String);
 
     const userId = Meteor.userId();
     if (!userId) {
       throw new Meteor.Error('not-authorized');
     }
 
-    const removed = await SavedRestaurantsCollection.removeAsync({ userId, name });
+    const removed = await SavedRestaurantsCollection.removeAsync({ userId, placeId });
 
     if (removed === 0) {
       throw new Meteor.Error('not-found', 'Restaurant not found');
@@ -70,13 +90,16 @@ Meteor.methods({
   }
 });
 
-// Publication for the user's saved restaurants
+// Publication
 if (Meteor.isServer) {
   Meteor.publish('savedRestaurants', function () {
     if (!this.userId) {
       return this.ready();
     }
 
-    return SavedRestaurantsCollection.find({ userId: this.userId });
+    return SavedRestaurantsCollection.find(
+      { userId: this.userId },
+      { sort: { createdAt: -1 } }
+    );
   });
 }

@@ -14,12 +14,6 @@ const MapIcon = () => (
   </svg>
 );
 
-const AIIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-  </svg>
-);
-
 const DiscoverIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
@@ -28,7 +22,7 @@ const DiscoverIcon = () => (
 
 const MealIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H19M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-4-2v4m0 0H9m3 0h3"/>
   </svg>
 );
 
@@ -68,9 +62,8 @@ export const NavBar = () => {
   // Navigation items for logged-in users
   const navItems = [
     { label: "Map", path: "/map", icon: <MapIcon /> },
-    { label: "AI Suggestion", path: "/ai-suggestion", icon: <AIIcon /> },
     { label: "Discover", path: "/discover", icon: <DiscoverIcon /> },
-    { label: "Meal Planner", path: "/meal-planner", icon: <MealIcon /> },
+    { label: "Meal Manager", path: "/meal-planner", icon: <MealIcon /> },
     { label: "Travel Plans", path: "/travel-plans", icon: <TravelIcon /> },
   ];
 
@@ -89,6 +82,7 @@ export const NavBar = () => {
   };
 
   const handleLogout = () => {
+    setIsDrawerOpen(false);
     Meteor.logout(() => {
       toast.success('Logged out successfully');
       navigate("/login");
@@ -133,7 +127,7 @@ export const NavBar = () => {
                     className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isCurrentPage(item.path)
                         ? "bg-[#A35F35] text-white font-bold"
-                        : "text-white text-opacity-80 hover:text-white hover:bg-[#A35F35] hover:font-semibold"
+                        : "text-white text-opacity-80 hover:text-white hover:bg-[#A35F35]"
                     }`}
                   >
                     {item.icon}
@@ -230,8 +224,12 @@ export const NavBar = () => {
                   onClick={() => setIsDrawerOpen(false)}
                   className="mb-3"
                 >
-                  <div className="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white">
-                    <ProfileIcon />
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white mx-auto">
+                    <img
+                      src={user?.profile?.profileImage || '/images/default-profile-pic.png'}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </RouterLink>
                 <span className="text-white text-lg font-bold">
@@ -244,8 +242,8 @@ export const NavBar = () => {
                 <div className="space-y-2">
                   {[
                     { label: "Profile", path: "/profile" },
-                    { label: "Search History", path: "/search-history" },
                     { label: "Saved Restaurants", path: "/saved-restaurants" },
+                    { label: "Search History", path: "/search-history" },
                   ].map((item) => (
                     <RouterLink
                       key={item.path}

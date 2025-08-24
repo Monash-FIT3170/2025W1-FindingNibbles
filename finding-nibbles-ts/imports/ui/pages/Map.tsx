@@ -13,6 +13,7 @@ import { RadarChart } from "recharts";
 import { GenerateContentResponseHandler } from "@google-cloud/vertexai";
 // Add debounce utility
 const debounce = (func: Function, delay: number) => {
+  
   let timeoutId: NodeJS.Timeout;
   return (...args: any[]) => {
     clearTimeout(timeoutId);
@@ -24,6 +25,15 @@ interface Location {
   lat: number;
   lng: number;
 }
+
+interface Review {
+  authorName: string;
+  rating: number;
+  relativeTimeDescription: string;
+  text: string;
+  time: number;
+}
+
 interface Restaurant {
   id?: string;
   displayName?: {
@@ -36,6 +46,7 @@ interface Restaurant {
   };
   rating?: number;
   types?: string[];
+  reviews?: Review[];
 }
 export const Map = () => {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
@@ -64,6 +75,8 @@ export const Map = () => {
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [newPlanTitle, setNewPlanTitle] = useState("");
   const [addingToPlanId, setAddingToPlanId] = useState<number | null>(null); // plan index being added to
+
+  const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
 
   const userPlans = useTracker(() => {
     Meteor.subscribe('plans');
@@ -116,20 +129,26 @@ export const Map = () => {
       setIsMapLoading(true);
       try {
 
-
+        // Results in 49 points
         const central_points = findCoordinates(lat, lng, 2000);
+
         const new_radius = Math.ceil((1 / 3) * 2000);
 
 
-        const innerPoints = central_points.flatMap(({ lat, lng }) =>
-          findCoordinates(lat, lng, new_radius)
-        );
+        // 2nd recursive call. Results in 49 points being displayed
+
+
+        // const innerPoints = central_points.flatMap(({ lat, lng }) =>
+        //   findCoordinates(lat, lng, new_radius)
+        // );
 
         const full_restaurant_search: Restaurant[][] = await Promise.all(
-          innerPoints.map(({ lat, lng, radius }) =>
+          central_points.map(({ lat, lng, radius }) =>
             fetchRestaurants(lat, lng, radius)
           )
         );
+
+
         setRestaurants(full_restaurant_search.flat());
 
       } catch (error) {
@@ -282,15 +301,23 @@ export const Map = () => {
     }
 
     const savedRestaurant: ISavedRestaurant = {
-      userId: userId,
+      userId,
+      placeId: restaurant.id || "",
       name: restaurant.displayName?.text ?? "Unknown Name",
       location: restaurant.formattedAddress ?? "Unknown Location",
+      latitude: restaurant.location?.latitude,
+      longitude: restaurant.location?.longitude,
+      rating: restaurant.rating ?? null,
+      cuisine: restaurant.types ? restaurant.types.filter(isCuisineType).map(normalizeCuisineType) : [],
     };
-
 
     Meteor.call('savedRestaurants.save', savedRestaurant, (error: Meteor.Error | null) => {
       if (error) {
-        alert(`Failed to save: ${error.reason || error.message || error}`);
+        if (error.error === 'duplicate-entry') {
+          alert('This restaurant is already in your saved list!');
+        } else {
+          alert(`Failed to save: ${error.reason || error.message || error}`);
+        }
         console.error('Error saving restaurant:', error);
       } else {
         alert('Restaurant saved successfully!');
@@ -298,6 +325,7 @@ export const Map = () => {
       }
     });
   };
+
 
 
   // const isSaved = selectedRestaurant != null && savedIndexes.includes(selectedRestaurant);
@@ -327,7 +355,7 @@ export const Map = () => {
           console.error('Error saving search term:', error);
         } else {
           console.log('Search term saved successfully:', term, result);
-          Meteor.subscribe('searchHistory');
+          // Meteor.subscribe('searchHistory');
         }
         setTimeout(() => setSearchSaved(false), 500);
       });
@@ -408,53 +436,114 @@ export const Map = () => {
     return type.includes("restaurant") && !genericTypes.some((genericType) => type === genericType);
   };
   async function fetchRestaurants(latitude: number, longitude: number, searchRadius: number = radius): Promise<Restaurant[]> {
-    const API_KEY = "AIzaSyCA1yCyhdJfWaPncGA1ucy5GFjMuqj5PUA";
-    const URL = "https://places.googleapis.com/v1/places:searchNearby";
-    const payload = {
-      includedTypes: ["restaurant"],
-      maxResultCount: 20,
-      locationRestriction: {
-        circle: {
-          center: { latitude, longitude },
-          radius: searchRadius,
-        },
-      },
-    };
-    const headers = {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": API_KEY,
-      "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.types",
-    };
-    try {
-      const response = await fetch(URL, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error ${response.status}: ${errorText}`);
+      //const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
+      
+      if (!API_KEY) {
+          console.error('Google Places API key not found in settings');
+          throw new Error('Google Places API key not configured');
       }
-      const data = await response.json();
-      const restaurants = data.places || [];
-      // Extract and process cuisine types
-      const cuisineTypes = new Set<string>();
-      restaurants.forEach((restaurant: Restaurant) => {
-        if (restaurant.types) {
-          restaurant.types.forEach((type: string) => {
-            if (isCuisineType(type)) {
-              cuisineTypes.add(normalizeCuisineType(type));
-            }
-          });
-        }
-      });
-      setAvailableCuisines(Array.from(cuisineTypes));
-      return restaurants;
-    } catch (error) {
-      console.error("Error fetching restaurants:", error instanceof Error ? error.message : String(error));
-      return [];
-    }
+      
+      // console.log('=== FETCHING RESTAURANTS DEBUG ===');
+      // console.log('API Key:', API_KEY);
+      // console.log('Latitude:', latitude);
+      // console.log('Longitude:', longitude);
+      // console.log('Search Radius:', searchRadius);
+      
+      const URL = "https://places.googleapis.com/v1/places:searchNearby";
 
+      const requestBody = {
+          includedTypes: ["restaurant"],
+          maxResultCount: 10,
+          locationRestriction: {
+              circle: {
+                  center: {
+                      latitude: latitude,
+                      longitude: longitude
+                  },
+                  radius: searchRadius
+              }
+          }
+      };
+
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
+
+      try {
+          const response = await fetch(URL, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-Goog-Api-Key': API_KEY,
+                  'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.rating,places.types,places.id,places.location'
+              },
+              body: JSON.stringify(requestBody)
+          });
+
+          console.log('Response status:', response.status);
+          console.log('Response headers:', response.headers);
+
+          if (!response.ok) {
+              const errorText = await response.text();
+              console.error('API Error Response:', errorText);
+              throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+          }
+
+          const data = await response.json();
+          console.log('API Response data:', data);
+
+          if (!data.places || data.places.length === 0) {
+              console.warn('No restaurants found in the response');
+              return [];
+          }
+
+                    console.log(`Found ${data.places.length} restaurants`);
+          
+          // Fetch reviews for each restaurant
+          const restaurantsWithReviews = await Promise.all(
+            data.places.map(async (restaurant: any) => {
+              try {
+                const detailsUrl = `https://places.googleapis.com/v1/places/${restaurant.id}`;
+                const reviewsResponse = await fetch(detailsUrl, {
+                  headers: {
+                    'X-Goog-Api-Key': API_KEY,
+                    'X-Goog-FieldMask': [
+                      'reviews.rating',
+                      'reviews.text',
+                      'reviews.publishTime',
+                      'reviews.relativePublishTimeDescription',
+                      'reviews.authorAttribution.displayName'
+                    ].join(','),
+                  },
+                });
+                if (reviewsResponse.ok) {
+                  const reviewsData = await reviewsResponse.json();
+                  const normalizedReviews: Review[] = (reviewsData.reviews || []).map((rev: any) => ({
+                    authorName: rev.authorAttribution?.displayName ?? 'Anonymous',
+                    rating: rev.rating ?? 0,
+                    relativeTimeDescription: rev.relativePublishTimeDescription ?? '',
+                    text: rev.text?.text ?? '',
+                    time: rev.publishTime ? Date.parse(rev.publishTime) : 0,
+                  }));
+                  return {
+                    ...restaurant,
+                    reviews: normalizedReviews,
+                  };
+                }
+              } catch (error) {
+                console.error(`Error fetching reviews for ${restaurant.id}:`, error);
+              }
+              return {
+                ...restaurant,
+                reviews: [],
+              };
+            })
+          );
+          
+          return restaurantsWithReviews;
+          
+      } catch (error) {
+          console.error('Error fetching restaurants:', error);
+          throw error;
+      }
   }
 
   const cuisineIcons: Record<string, string> = {
@@ -535,8 +624,8 @@ export const Map = () => {
     }) ?? false;
   };
   return (
-    <LoadScript googleMapsApiKey="AIzaSyCA1yCyhdJfWaPncGA1ucy5GFjMuqj5PUA" libraries={["places"]}>
-      <div style={{ position: "relative", height: "calc(100vh - 4rem)", paddingTop: "5rem" }}>
+    <LoadScript googleMapsApiKey={API_KEY} libraries={["places"]}>
+      <div style={{ position: "relative", height: "100vh" }}>
         {userLocation && (
           <GoogleMap
             mapContainerStyle={containerStyle}
@@ -774,6 +863,34 @@ export const Map = () => {
                     {restaurant.types?.filter((type) => type.includes("restaurant")).map(normalizeCuisineType).join(", ") ||
                       "N/A"}
                   </p>
+                  
+                  {/* Reviews Section */}
+                  {restaurant.reviews && restaurant.reviews.length > 0 && (
+                    <div className="mt-3">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Recent Google Reviews</h4>
+                      <div className="max-h-40 overflow-y-auto">
+                        {restaurant.reviews.slice(0, 3).map((review, reviewIndex) => (
+                          <div key={reviewIndex} className="text-xs bg-white p-2 rounded border mb-2 shadow-sm">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium text-gray-800">{review.authorName}</span>
+                              <span className="text-yellow-500">⭐ {review.rating}/5</span>
+                            </div>
+                            <p className="text-gray-600 text-xs leading-relaxed">
+                              {review.text.length > 120 
+                                ? `${review.text.substring(0, 120)}...` 
+                                : review.text
+                              }
+                            </p>
+                            <div className="text-right mt-1">
+                              <span className="text-gray-400 text-xs">
+                                {review.relativeTimeDescription}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
@@ -801,7 +918,6 @@ export const Map = () => {
     </LoadScript>
   );
 };
-
 
 
 

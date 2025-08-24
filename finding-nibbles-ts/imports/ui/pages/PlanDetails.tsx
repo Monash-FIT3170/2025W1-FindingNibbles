@@ -109,8 +109,10 @@ export const PlanDetails = () => {
     }
   };
 
+  const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
+
   return (
-    <LoadScript googleMapsApiKey="AIzaSyCA1yCyhdJfWaPncGA1ucy5GFjMuqj5PUA" libraries={["places"]}>
+    <LoadScript googleMapsApiKey={API_KEY} libraries={["places"]}>
       <div style={{ paddingTop: "5rem", minHeight: "100vh", background: "#fdfaf7" }}>
         <div
           style={{

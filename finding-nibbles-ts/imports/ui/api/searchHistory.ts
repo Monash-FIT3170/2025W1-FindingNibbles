@@ -10,55 +10,67 @@ export interface ISearchHistory {
   timestamp: Date;
 }
 
+function normalizeTerm(s: string) {
+  return s.trim().replace(/\s+/g, ' ');
+}
+
 export const SearchHistory = new Mongo.Collection<ISearchHistory>('searchHistory');
 
-// Prevent duplicate recent searches
 if (Meteor.isServer) {
-  Meteor.startup(() => {
-    SearchHistory.rawCollection().createIndex({ userId: 1, searchTerm: 1 }, { unique: true })
-      .then(() => console.log('Search history index created'))
-      .catch(err => console.error('Error creating search history index:', err));
+  Meteor.startup(async () => {
+    try {
+      await SearchHistory.rawCollection().createIndex(
+        { userId: 1, searchTerm: 1 },
+        { unique: true, name: 'userId_1_searchTerm_1' } 
+      );
+      // Optional: for sort performance
+      await SearchHistory.rawCollection().createIndex(
+        { userId: 1, timestamp: -1 },
+        { name: 'userId_1_timestamp_-1' }
+      );
+    } catch (err: any) {
+
+      console.error('Error ensuring search history indexes:', err);
+    }
   });
 }
 
 // Define methods for working with search history
 Meteor.methods({
+
   async 'searchHistory.save'(searchTerm: string) {
-    check(searchTerm, String);
-    
-    if (!this.userId) {
-      throw new Meteor.Error('not-authorized', 'You must be logged in to save search history');
-    }
+  check(searchTerm, String);
+  if (!this.userId) throw new Meteor.Error('not-authorized');
 
-    try {
-      // Upsert to handle the case where this search already exists
-      const result = await SearchHistory.upsertAsync(
-        { userId: this.userId, searchTerm },
-        { 
-          $set: { 
-            userId: this.userId, 
-            searchTerm, 
-            timestamp: new Date() 
-          } 
-        }
-      );
-      
-      return result;
-    } catch (error) {
-      console.error('Error saving search history:', error);
-      throw new Meteor.Error('db-error', 'Failed to save search term');
-    }
-  },
+  const term = searchTerm.trim().replace(/\s+/g, ' ');
+  const now = new Date();
 
-  async 'searchHistory.remove'(searchTerm: string) {
+  try {
+    await SearchHistory.rawCollection().updateOne(
+      { userId: this.userId, searchTerm: term },
+      {
+        $setOnInsert: { userId: this.userId, searchTerm: term, createdAt: now },
+        $set: { timestamp: now } 
+      },
+      { upsert: true }
+    );
+    return { ok: 1 };
+  } catch (error) {
+    console.error('Error saving search history:', error);
+    throw new Meteor.Error('db-error', 'Failed to save search term');
+  }
+},
+async 'searchHistory.remove'(searchTerm: string) {
     check(searchTerm, String);
-    
     if (!this.userId) {
       throw new Meteor.Error('not-authorized', 'You must be logged in to remove search history');
     }
-    
     try {
-      await SearchHistory.removeAsync({ userId: this.userId, searchTerm });
+      const result = await SearchHistory.rawCollection().deleteOne({
+        userId: this.userId,
+        searchTerm: normalizeTerm(searchTerm),
+      });
+      return { deletedCount: result.deletedCount ?? 0 };
     } catch (error) {
       console.error('Error removing search history:', error);
       throw new Meteor.Error('db-error', 'Failed to remove search term');

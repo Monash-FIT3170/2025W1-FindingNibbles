@@ -1,3 +1,5 @@
+import { Meteor } from "meteor/meteor";
+
 export interface CustomUserProfile {
   name?: string;
   preferences?: string[];
@@ -7,11 +9,12 @@ export interface CustomUserProfile {
     fat: number;
     carbs: number;
   };
+  profileImage?: string;
 }
 
 export interface CustomUser  {
   profile?: CustomUserProfile;
-  emails?: { address: string }[];
+  emails?: { address: string; verified: boolean }[];
 }
 
 export interface RegisterFormData {

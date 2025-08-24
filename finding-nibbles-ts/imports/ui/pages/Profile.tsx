@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Meteor } from 'meteor/meteor';
-import type {CustomUser} from '../types/User.ts';
+import type {CustomUser} from '../types/User';
 import { useNavigate } from 'react-router-dom';
 import AddPreferenceModal from '../components/profile/AddPreferenceModal';
+import { useTracker } from 'meteor/react-meteor-data';
 
 export const Profile = () => {
-  const user = Meteor.user() as CustomUser;
+  const user = useTracker(() => Meteor.user() as CustomUser);
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [name, setName] = useState(user?.profile?.name || '');
   const [email, setEmail] = useState(user?.emails?.[0]?.address || '');
@@ -15,6 +17,16 @@ export const Profile = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const [profileImage, setProfileImage] = useState<string>(
+    user?.profile?.profileImage || '/images/default-profile-pic.png'
+  );
+
+  useEffect(() => {
+    setProfileImage(user?.profile?.profileImage || '/images/default-profile-pic.png');
+  }, [user?.profile?.profileImage]);
+
 
   const handleRemovePreference = (pref: string) => {
     setPreferences(preferences.filter(p => p !== pref));
@@ -28,6 +40,61 @@ export const Profile = () => {
     if (newPref && !preferences.includes(newPref)) {
       setPreferences([...preferences, newPref]);
     }
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setMessage('Please select an image file.');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage('Image size must be less than 5MB.');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
+    setUploadingImage(true);
+    setMessage('');
+
+    // Create a preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64Data = (e.target?.result as string).split(',')[1];
+
+
+      Meteor.call(
+        'users.uploadProfileImage',
+        {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          data: base64Data
+        },
+        (err: Meteor.Error | undefined) => {
+          setUploadingImage(false);
+          if (err) {
+            setMessage(`Failed to upload image: ${err.reason}`);
+            // Revert to previous image
+          } else {
+            setProfileImage(`data:${file.type};base64,${base64Data}`);
+            setMessage('Profile image updated successfully!');
+            setTimeout(() => setMessage(''), 3000);
+          }
+        }
+      );
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleSave = () => {
@@ -59,16 +126,57 @@ export const Profile = () => {
           <div className="flex justify-center mb-8">
             <div className="relative">
               <img
-                src="/images/default-profile-pic.png"
+                src={profileImage}
                 alt="Profile"
-                className="w-24 h-24 rounded-full border-4 border-[#C47B4D] shadow-lg"
+                className={`w-24 h-24 rounded-full border-4 border-[#C47B4D] shadow-lg object-cover transition-opacity ${
+                  uploadingImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'
+                }`}
+                onClick={uploadingImage ? undefined : handleImageClick}
               />
-              <button className="absolute bottom-0 right-0 bg-[#C47B4D] text-white p-2 rounded-full hover:bg-[#A35F35] transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
+              <button 
+                className="absolute bottom-0 right-0 bg-[#C47B4D] text-white p-2 rounded-full hover:bg-[#A35F35] transition-colors disabled:opacity-50"
+                onClick={handleImageClick}
+                disabled={uploadingImage}
+              >
+                {uploadingImage ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                )}
               </button>
+              {uploadingImage && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-full">
+                  <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                disabled={uploadingImage}
+              />
             </div>
+          </div>
+
+          {/* Upload Instructions */}
+          <div className="text-center mb-6">
+            <p className="text-sm text-[#7a5c43]">
+              Click on your profile picture to upload a new one
+            </p>
+            <p className="text-xs text-[#7a5c43] opacity-70 mt-1">
+              Supported formats: JPG, PNG, GIF (max 5MB)
+            </p>
+            {uploadingImage && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-700">
+                  Uploading image... Please wait.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Form Fields */}
