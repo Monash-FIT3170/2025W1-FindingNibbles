@@ -484,6 +484,17 @@ export const Map = () => {
               console.warn('No restaurants found in the response');
               return [];
           }
+          const cuisineTypes = new Set<string>();
+          restaurants.forEach((restaurant: Restaurant) => {
+            if (restaurant.types) {
+              restaurant.types.forEach((type: string) => {
+                if (isCuisineType(type)) {
+                  cuisineTypes.add(normalizeCuisineType(type));
+                }
+              });
+            }
+          });
+      setAvailableCuisines(Array.from(cuisineTypes));
 
           console.log(`Found ${data.places.length} restaurants`);
           return data.places;
@@ -823,7 +834,7 @@ export const Map = () => {
           onClose={() => {
             setIsDicePopupOpen(false);
           }}
-          availableCuisines={availableCuisines}
+          availableCuisines={availableCuisines} 
           onRoll={handleDiceRoll}
         />
 

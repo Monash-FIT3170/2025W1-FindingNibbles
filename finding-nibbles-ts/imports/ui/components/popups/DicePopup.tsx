@@ -9,13 +9,17 @@ interface DicePopupProps {
 }
 
 const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines, onRoll }) => {
-  if (!open) return null;
 
   const [rolledCuisine, setRolledCuisine] = useState<string | null>(null);
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>(availableCuisines); // Initialize with all cuisines
   const [isRolling, setIsRolling] = useState(false);
   const [diceFaces, setDiceFaces] = useState<string[]>([]);
 
+    // Keep selected cuisines in sync when `availableCuisines` changes on open
+  useEffect(() => {
+    if (open) setSelectedCuisines(availableCuisines);
+  }, [open, availableCuisines]);
+  
   // Update dice faces when selected cuisines change
   useEffect(() => {
     if (selectedCuisines.length > 0) {
@@ -69,6 +73,8 @@ const DicePopup: React.FC<DicePopupProps> = ({ open, onClose, availableCuisines,
       setDiceFaces([selected, rightFace, used[3], used[4], topFace, used[5]]);
     }, 1000);
   };
+
+  if (!open) return null;
 
   return (
     <div className="dice-modal-overlay">

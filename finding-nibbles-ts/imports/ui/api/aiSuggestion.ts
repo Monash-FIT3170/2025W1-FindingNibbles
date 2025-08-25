@@ -5,7 +5,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import { VertexAI } from '@google-cloud/vertexai';
 
 
-const project = process.env.PROJECT_ID || 'findingnibbles-460212';
+const project = process.env.PROJECT_ID || 'sacred-vault-469801-f4';
 const location = process.env.LOCATION || 'us-central1';
 
 console.log("PROJECT_ID:", process.env.PROJECT_ID ?? 'Not set');
