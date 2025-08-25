@@ -25,6 +25,15 @@ interface Location {
   lat: number;
   lng: number;
 }
+
+interface Review {
+  authorName: string;
+  rating: number;
+  relativeTimeDescription: string;
+  text: string;
+  time: number;
+}
+
 interface Restaurant {
   id?: string;
   displayName?: {
@@ -37,6 +46,7 @@ interface Restaurant {
   };
   rating?: number;
   types?: string[];
+  reviews?: Review[];
 }
 export const Map = () => {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
@@ -496,9 +506,51 @@ export const Map = () => {
           });
       setAvailableCuisines(Array.from(cuisineTypes));
 
-          console.log(`Found ${data.places.length} restaurants`);
-          return data.places;
-
+                    console.log(`Found ${data.places.length} restaurants`);
+          
+          // Fetch reviews for each restaurant
+          const restaurantsWithReviews = await Promise.all(
+            data.places.map(async (restaurant: any) => {
+              try {
+                const detailsUrl = `https://places.googleapis.com/v1/places/${restaurant.id}`;
+                const reviewsResponse = await fetch(detailsUrl, {
+                  headers: {
+                    'X-Goog-Api-Key': API_KEY,
+                    'X-Goog-FieldMask': [
+                      'reviews.rating',
+                      'reviews.text',
+                      'reviews.publishTime',
+                      'reviews.relativePublishTimeDescription',
+                      'reviews.authorAttribution.displayName'
+                    ].join(','),
+                  },
+                });
+                if (reviewsResponse.ok) {
+                  const reviewsData = await reviewsResponse.json();
+                  const normalizedReviews: Review[] = (reviewsData.reviews || []).map((rev: any) => ({
+                    authorName: rev.authorAttribution?.displayName ?? 'Anonymous',
+                    rating: rev.rating ?? 0,
+                    relativeTimeDescription: rev.relativePublishTimeDescription ?? '',
+                    text: rev.text?.text ?? '',
+                    time: rev.publishTime ? Date.parse(rev.publishTime) : 0,
+                  }));
+                  return {
+                    ...restaurant,
+                    reviews: normalizedReviews,
+                  };
+                }
+              } catch (error) {
+                console.error(`Error fetching reviews for ${restaurant.id}:`, error);
+              }
+              return {
+                ...restaurant,
+                reviews: [],
+              };
+            })
+          );
+          
+          return restaurantsWithReviews;
+          
       } catch (error) {
           console.error('Error fetching restaurants:', error);
           throw error;
@@ -822,6 +874,34 @@ export const Map = () => {
                     {restaurant.types?.filter((type) => type.includes("restaurant")).map(normalizeCuisineType).join(", ") ||
                       "N/A"}
                   </p>
+                  
+                  {/* Reviews Section */}
+                  {restaurant.reviews && restaurant.reviews.length > 0 && (
+                    <div className="mt-3">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Recent Google Reviews</h4>
+                      <div className="max-h-40 overflow-y-auto">
+                        {restaurant.reviews.slice(0, 3).map((review, reviewIndex) => (
+                          <div key={reviewIndex} className="text-xs bg-white p-2 rounded border mb-2 shadow-sm">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium text-gray-800">{review.authorName}</span>
+                              <span className="text-yellow-500">⭐ {review.rating}/5</span>
+                            </div>
+                            <p className="text-gray-600 text-xs leading-relaxed">
+                              {review.text.length > 120 
+                                ? `${review.text.substring(0, 120)}...` 
+                                : review.text
+                              }
+                            </p>
+                            <div className="text-right mt-1">
+                              <span className="text-gray-400 text-xs">
+                                {review.relativeTimeDescription}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
