@@ -12,6 +12,11 @@ import '../imports/ui/api/meals.ts';
 Meteor.startup(async () => {
   // Debug: Check if settings are loaded
 
+  const p = Meteor.settings.private;
+  if (p?.googleServiceAccountPath) {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = p.googleServiceAccountPath;
+  }
+
   // Create seed user if it doesn't exist
   if (!(await Accounts.findUserByUsername(MOCK_DATA.SEED_USERNAME))) {
     await Accounts.createUser({
