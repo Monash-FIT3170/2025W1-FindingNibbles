@@ -279,6 +279,17 @@ export const Map = () => {
     setSortedRestaurants(sorted);
   }, [restaurants]);
 
+  useEffect(() => {
+  const cuisineTypes = new Set<string>();
+  restaurants.forEach((r) => {
+    r.types?.forEach((t) => {
+      if (isCuisineType(t)) cuisineTypes.add(normalizeCuisineType(t));
+    });
+  });
+  setAvailableCuisines([...cuisineTypes].sort());
+}, [restaurants]);
+
+
   const mapContainerStyle: google.maps.MapOptions = {
     fullscreenControl: false,
     mapTypeControl: false,
@@ -494,19 +505,7 @@ export const Map = () => {
               console.warn('No restaurants found in the response');
               return [];
           }
-          const cuisineTypes = new Set<string>();
-          restaurants.forEach((restaurant: Restaurant) => {
-            if (restaurant.types) {
-              restaurant.types.forEach((type: string) => {
-                if (isCuisineType(type)) {
-                  cuisineTypes.add(normalizeCuisineType(type));
-                }
-              });
-            }
-          });
-      setAvailableCuisines(Array.from(cuisineTypes));
 
-                    console.log(`Found ${data.places.length} restaurants`);
           
           // Fetch reviews for each restaurant
           const restaurantsWithReviews = await Promise.all(
@@ -599,6 +598,8 @@ export const Map = () => {
   useEffect(() => {
     getUserLocation();
   }, []);
+
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -751,7 +752,7 @@ export const Map = () => {
           </GoogleMap>
         )}
 
-        <div className="absolute top-[70px] left-5 bg-white p-3 rounded-lg shadow-lg z-[1500] w-80">
+        <div className="absolute top-[70px] left-5 bg-white rounded-lg shadow-lg z-[1500] w-80">
           <form onSubmit={handleSearchSubmit}>
             <Autocomplete
               onLoad={onLoadAutocomplete}
@@ -771,7 +772,7 @@ export const Map = () => {
           )}
         </div>
 
-        <div className="absolute top-[150px] left-5 bg-white p-3 rounded-lg shadow-lg z-[1300] w-52">
+        <div className="absolute top-[150px] left-5 bg-white p-3 rounded-lg shadow-lg z-[900] w-52">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Filter by Cuisine
           </label>
