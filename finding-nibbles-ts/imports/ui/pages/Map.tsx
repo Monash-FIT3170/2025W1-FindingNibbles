@@ -9,8 +9,22 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { Plans, PlanType } from '../api/Plans';
 import { AddToPlanModal } from "../components/plans/AddToPlanModal";
 
-import { RadarChart } from "recharts";
-import { GenerateContentResponseHandler } from "@google-cloud/vertexai";
+import SwipeDishesPopup from "../components/popups/SwipeDishesPopup";
+
+const NavigationScreen = () => {
+  const [showPopup, setShowPopup] = useState(false);
+
+  return (
+    <>
+      <button onClick={() => setShowPopup(true)}>Swipe Dishes</button>
+      {showPopup && <SwipeDishesPopup onClose={() => setShowPopup(false)} />}
+    </>
+  );
+};
+
+export default NavigationScreen;
+
+
 // Add debounce utility
 const debounce = (func: Function, delay: number) => {
   
@@ -50,6 +64,7 @@ interface Restaurant {
 }
 export const Map = () => {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
+  const [showSwipePopup, setShowSwipePopup] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [availableCuisines, setAvailableCuisines] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -77,6 +92,15 @@ export const Map = () => {
   const [addingToPlanId, setAddingToPlanId] = useState<number | null>(null); // plan index being added to
 
   const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
+
+  // Show swipe popup on login (when Map loads), only once per session
+  useEffect(() => {
+    const hasSeenSwipe = sessionStorage.getItem('hasSeenSwipePopup');
+    if (!hasSeenSwipe) {
+      setShowSwipePopup(true);
+      sessionStorage.setItem('hasSeenSwipePopup', 'true');
+    }
+  }, []);
 
   const userPlans = useTracker(() => {
     Meteor.subscribe('plans');
@@ -636,7 +660,11 @@ export const Map = () => {
     }) ?? false;
   };
   return (
-    <LoadScript googleMapsApiKey={API_KEY} libraries={["places"]}>
+    <>
+      {showSwipePopup && (
+        <SwipeDishesPopup onClose={() => setShowSwipePopup(false)} />
+      )}
+      <LoadScript googleMapsApiKey={API_KEY} libraries={["places"]}>
       <div style={{ position: "relative", height: "100vh" }}>
         {userLocation && (
           <GoogleMap
@@ -928,6 +956,7 @@ export const Map = () => {
         />
       </div>
     </LoadScript>
+    </>
   );
 };
 

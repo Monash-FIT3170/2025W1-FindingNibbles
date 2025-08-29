@@ -8,6 +8,21 @@ import '../imports/ui/api/searchHistory.ts';
 import '../imports/ui/api/SavedRestaurants';
 import '../imports/ui/api/Plans';
 import '../imports/ui/api/meals.ts';
+import { Mongo } from "meteor/mongo";
+
+export const DishSwipes = new Mongo.Collection("dishSwipes");
+
+Meteor.methods({
+  "dishes.swipe"({ name, liked }) {
+    if (!this.userId) throw new Meteor.Error("Not authorized");
+    DishSwipes.insert({
+      userId: this.userId,
+      name,
+      liked,
+      createdAt: new Date(),
+    });
+  },
+});
 
 Meteor.startup(async () => {
   // Debug: Check if settings are loaded
@@ -32,3 +47,4 @@ Meteor.startup(async () => {
     console.log('Seed user already exists');
   }
 });
+
