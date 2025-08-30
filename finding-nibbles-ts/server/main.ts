@@ -8,6 +8,7 @@ import '../imports/ui/api/searchHistory.ts';
 import '../imports/ui/api/SavedRestaurants';
 import '../imports/ui/api/Plans';
 import '../imports/ui/api/meals.ts';
+import "/imports/ui/api/savedDishes";
 
 Meteor.startup(async () => {
   // Debug: Check if settings are loaded

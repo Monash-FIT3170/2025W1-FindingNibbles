@@ -14,6 +14,7 @@ import { SavedRestaurantsList } from '../pages/SavedRestaurants';
 import { SavedPlans } from '../pages/SavedPlans';
 import { PlanDetails } from '../pages/PlanDetails';
 import { Discover } from '../pages/Discover';
+import { TravelPlanning } from '../pages/TravelPlanning';
 
 
 export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
@@ -41,6 +42,7 @@ export const RoutesConfig = ({ isLoggedIn }: RoutesConfigProps) => {
             <Route path="/travel-plans" element={requireAuth(<SavedPlans />)} />
             <Route path="/travel-plans/:planId" element={requireAuth(<PlanDetails />)} />
             <Route path="/discover" element={requireAuth(<Discover />)} />
+            <Route path="/travel-planning" element={requireAuth(<TravelPlanning />)} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
