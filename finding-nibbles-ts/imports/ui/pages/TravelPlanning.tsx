@@ -4,6 +4,8 @@ import dishesDataJson from "../../data/famous_dishes_by_city.json";
 import { Meteor } from "meteor/meteor";
 import { Tracker } from "meteor/tracker";
 import { DishesJSON } from "../api/dishtypes"; // interface { [city: string]: string[] }
+import { SavedDishesCollection, ISavedDish } from "../api/savedDishes";
+
 import {
   SavedRestaurantsCollection,
   ISavedRestaurant
@@ -24,6 +26,8 @@ export const TravelPlanning = () => {
   const [cityDishes, setCityDishes] = useState<CityDishes[]>([]);
   const [restaurants, setRestaurants] = useState<ISavedRestaurant[]>([]);
   const [restaurantsLoading, setRestaurantsLoading] = useState(true);
+  const [wishlist, setWishlist] = useState<ISavedDish[]>([]);
+  const [wishlistLoading, setWishlistLoading] = useState(true);
 
   const dishesData: DishesJSON = dishesDataJson;
 
@@ -49,6 +53,56 @@ export const TravelPlanning = () => {
     } catch {
       return false;
     }
+  };
+
+  useEffect(() => {
+    let subscription: Meteor.SubscriptionHandle | null = null;
+
+    const computation = Tracker.autorun(() => {
+      if (Meteor.loggingIn()) {
+        setWishlistLoading(true);
+        return;
+      }
+      const user = Meteor.user();
+      if (!user) {
+        setWishlist([]);
+        setWishlistLoading(false);
+        return;
+      }
+      setWishlistLoading(true);
+      if (subscription) subscription.stop();
+
+      subscription = Meteor.subscribe("savedDishes");
+
+      const dataComputation = Tracker.autorun(() => {
+        if (subscription?.ready()) {
+          const saved = SavedDishesCollection.find(
+            {},
+            { sort: { createdAt: -1 } }
+          ).fetch();
+          setWishlist(saved);
+          setWishlistLoading(false);
+        }
+      });
+      return () => dataComputation.stop();
+    });
+
+    return () => {
+      computation.stop();
+      if (subscription) subscription.stop();
+    };
+  }, []);
+
+  const handleAddDish = (dishName: string, city: string) => {
+    Meteor.call("savedDishes.add", dishName, city, (err: any) => {
+      if (err) alert(err.reason || err.message);
+    });
+  };
+
+  const handleRemoveDish = (dishId: string) => {
+    Meteor.call("savedDishes.remove", dishId, (err: any) => {
+      if (err) alert(err.reason || err.message);
+    });
   };
 
   useEffect(() => {
@@ -233,6 +287,7 @@ export const TravelPlanning = () => {
                   <div
                     key={idx}
                     style={{
+                      position: "relative",
                       minWidth: "150px",
                       marginRight: "0.5rem",
                       textAlign: "center",
@@ -240,26 +295,52 @@ export const TravelPlanning = () => {
                     }}
                   >
                     {dish.image && dish.imageLoaded !== false ? (
-                      <img
-                        src={dish.image}
-                        alt={dish.name}
+                      <div
                         style={{
-                          width: "150px",
-                          height: "150px",
-                          objectFit: "cover",
-                          borderRadius: "8px"
+                          position: "relative",
+                          display: "inline-block"
                         }}
-                        onError={(e) => {
-                          // Handle image load error by showing placeholder
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                          const placeholder =
-                            target.nextElementSibling as HTMLElement;
-                          if (placeholder) {
-                            placeholder.style.display = "flex";
-                          }
-                        }}
-                      />
+                      >
+                        <img
+                          src={dish.image}
+                          alt={dish.name}
+                          style={{
+                            width: "150px",
+                            height: "150px",
+                            objectFit: "cover",
+                            borderRadius: "8px"
+                          }}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            const placeholder =
+                              target.nextElementSibling as HTMLElement;
+                            if (placeholder) placeholder.style.display = "flex";
+                          }}
+                        />
+                        {/* Heart button */}
+                        <button
+                          onClick={() => handleAddDish(dish.name, cityObj.city)}
+                          style={{
+                            position: "absolute",
+                            top: "5px",
+                            right: "5px",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "1.5rem",
+                            color: wishlist.some(
+                              (w) =>
+                                w.name === dish.name && w.city === cityObj.city
+                            )
+                              ? "red"
+                              : "white",
+                            textShadow: "0 0 2px black"
+                          }}
+                        >
+                          ♥
+                        </button>
+                      </div>
                     ) : null}
 
                     {/* Placeholder div - shown when image doesn't exist or is loading */}
@@ -472,21 +553,6 @@ export const TravelPlanning = () => {
 
       {/* Your Dishes Wishlist Section */}
       <div style={{ marginBottom: "3rem" }}>
-        <h2
-          style={{
-            fontSize: "2rem",
-            fontWeight: "bold",
-            color: "#333",
-            textAlign: "center",
-            marginBottom: "1.5rem",
-            marginTop: "0",
-            display: "block",
-            width: "100%"
-          }}
-        >
-          Your Dishes Wishlist
-        </h2>
-
         <div
           style={{
             display: "flex",
@@ -494,28 +560,72 @@ export const TravelPlanning = () => {
             width: "100%"
           }}
         >
-          <div
-            style={{
-              backgroundColor: "white",
-              border: "2px dashed #b87b45",
-              borderRadius: "12px",
-              padding: "3rem 2rem",
-              textAlign: "center",
-              maxWidth: "600px",
-              width: "100%"
-            }}
-          >
-            <p
+          {/* Your Dishes Wishlist Section */}
+          <div style={{ marginBottom: "3rem" }}>
+            <h2
               style={{
-                color: "#6B7280",
-                fontSize: "1.125rem",
-                fontStyle: "italic",
-                margin: "0"
+                fontSize: "2rem",
+                fontWeight: "bold",
+                textAlign: "center"
               }}
             >
-              Coming soon! This is where you'll be able to save and organize
-              your favorite dishes to try.
-            </p>
+              Your Dishes Wishlist
+            </h2>
+
+            {wishlistLoading ? (
+              <p style={{ textAlign: "center" }}>Loading...</p>
+            ) : wishlist.length > 0 ? (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                  maxWidth: "600px",
+                  margin: "0 auto"
+                }}
+              >
+                {wishlist.map((dish) => (
+                  <div
+                    key={dish._id}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      border: "2px solid #b87b45",
+                      borderRadius: "12px",
+                      padding: "1rem",
+                      backgroundColor: "white"
+                    }}
+                  >
+                    <div>
+                      <h3 style={{ margin: 0 }}>{dish.name}</h3>
+                      <p style={{ margin: 0, color: "#666" }}>{dish.city}</p>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveDish(dish._id!)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        fontSize: "1.25rem",
+                        cursor: "pointer"
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p
+                style={{
+                  textAlign: "center",
+                  color: "#6B7280",
+                  fontSize: "1rem",
+                  fontStyle: "italic"
+                }}
+              >
+                No dishes saved yet
+              </p>
+            )}
           </div>
         </div>
       </div>

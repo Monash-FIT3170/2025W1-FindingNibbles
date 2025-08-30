@@ -2,6 +2,6 @@
     "galaxy.meteor.com": {
       "env": {
         "MONGO_URL": "mongodb+srv://arnavsinghsethi:JsHeX17BBXurzpIq@cluster0.uezwn8w.mongodb.net/"
-      }
     }
   }
+}
