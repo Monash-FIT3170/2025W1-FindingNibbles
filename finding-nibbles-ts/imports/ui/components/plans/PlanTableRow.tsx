@@ -16,60 +16,43 @@ export const PlanTableRow = ({ plan }: { plan: any }) => {
         if (window.confirm("Are you sure you want to delete this plan?")) {
             Meteor.call("plans.remove", planId, (err: any) => {
                 if (err) {
-                    alert("Failed to delete plan: " + err.reason);
+                    alert("Failed to delete plan: "  err.reason);
                 }
             });
         }
     };
 
     return (
-        <tr style={{ borderBottom: "1px solid #eee" }}>
-            <td style={{ padding: "16px 12px", fontSize: 18, fontFamily: "Comic Sans MS, cursive, sans-serif" }}>
-                {plan.title}
-            </td>
-            <td style={{ padding: "16px 12px", fontSize: 16 }}>
-                {first ? getRestaurantName(first) : <span style={{ color: "#aaa" }}>N/A</span>}
-            </td>
-            <td style={{ padding: "16px 12px", fontSize: 16 }}>
-                {last ? getRestaurantName(last) : <span style={{ color: "#aaa" }}>N/A</span>}
-            </td>
-            <td style={{ padding: "16px 12px", fontSize: 16 }}>
-                {plan.restaurants?.length ?? 0}
-            </td>
-            <td style={{ textAlign: "center", padding: "16px 12px", whiteSpace: "nowrap" }}>
-                <Button
-                    component={RouterLink}
-                    to={`/travel-plans/${plan._id}`}
-                    variant="outlined"
-                    style={{
-                        borderColor: "#c17030",
-                        color: "#c17030",
-                        fontWeight: "bold",
-                        borderRadius: 8,
-                        fontFamily: "Comic Sans MS, cursive, sans-serif",
-                        minWidth: 0,
-                        padding: "6px 10px",
-                        marginRight: 8
-                    }}
-                >
-                    <VisibilityIcon />
-                </Button>
-                <Button
-                    variant="outlined"
-                    style={{
-                        borderColor: "#c17030",
-                        color: "#c17030",
-                        fontWeight: "bold",
-                        borderRadius: 8,
-                        fontFamily: "Comic Sans MS, cursive, sans-serif",
-                        minWidth: 0,
-                        padding: "6px 10px"
-                    }}
-                    onClick={() => handleDelete(plan._id)}
-                >
-                    <DeleteIcon />
-                </Button>
-            </td>
-        </tr>
+      <tr className="border-b">
+        <td className="p-3 sm:p-4 text-base font-medium text-[#4b2e19]">
+          {plan.title}
+        </td>
+        <td className="p-3 sm:p-4">
+          {first ? getRestaurantName(first) : <span className="text-[#9ca3af]">N/A</span>}
+        </td>
+        <td className="p-3 sm:p-4">
+          {last ? getRestaurantName(last) : <span className="text-[#9ca3af]">N/A</span>}
+        </td>
+        <td className="p-3 sm:p-4">{plan.restaurants?.length ?? 0}</td>
+        <td className="p-3 sm:p-4 text-center whitespace-nowrap">
+          <Button
+            component={RouterLink}
+            to={`/travel-plans/${plan._id}`}
+            variant="outlined"
+            className="!border-[#c17030] !text-[#c17030] !rounded-lg !min-w-0 !px-2 !py-1 !mr-2"
+            title="View"
+          >
+            <VisibilityIcon fontSize="small" />
+          </Button>
+          <Button
+            variant="outlined"
+            className="!border-[#c17030] !text-[#c17030] !rounded-lg !min-w-0 !px-2 !py-1"
+            onClick={() => handleDelete(plan._id)}
+            title="Delete"
+          >
+            <DeleteIcon fontSize="small" />
+          </Button>
+        </td>
+      </tr>
     );
 };
