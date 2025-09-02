@@ -20,11 +20,11 @@ const initialFoods = [
 }
 ];
 
-Meteor.startup(() => {
-  if (FoodItems.find().count() === 0) {
-    initialFoods.forEach(food => FoodItems.insert(food));
-  }
-});
+// Meteor.startup(() => {
+//   if (FoodItems.find().count() === 0) {
+//     initialFoods.forEach(food => FoodItems.insert(food));
+//   }
+// });
 
 
 
