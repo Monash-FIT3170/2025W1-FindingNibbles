@@ -12,6 +12,8 @@ import { AddToPlanModal } from "../components/plans/AddToPlanModal";
 import { RadarChart } from "recharts";
 import { GenerateContentResponseHandler } from "@google-cloud/vertexai";
 // Add debounce utility
+
+type SaveRestaurantInput = Omit<ISavedRestaurant, 'userId' | '_id' | 'createdAt'>;
 const debounce = (func: Function, delay: number) => {
   
   let timeoutId: NodeJS.Timeout;
@@ -150,6 +152,7 @@ export const Map = () => {
 
 
         setRestaurants(full_restaurant_search.flat());
+        
 
       } catch (error) {
         console.error("Error fetching restaurants:", error);
@@ -160,6 +163,7 @@ export const Map = () => {
     []
   );
 
+  console.log(restaurants);
   // ############### CALCULATING RADIUS
 
   const EARTH_RADIUS = 6378137
@@ -188,7 +192,7 @@ export const Map = () => {
     const lat_change = deltaLat(diameter);
     // Distance to move horizontally for diagonal points (m)
     const lng_distance = Math.ceil(horizontalLngDist(diameter, search_radius));
-    console.log("THIS IS THE LNG DISTANCE", lng_distance);
+
     // Lattitude change for diagonal points (moving up 1/2 the lat change)
     // const diag_lat_change = lat_change/2;
 
@@ -303,40 +307,44 @@ export const Map = () => {
       },
     ],
   };
+  
+  const saveRestaurant = async (restaurant: Restaurant) => {
 
-  const saveRestaurant = (restaurant: Restaurant) => {
     const userId = Meteor.userId();
     if (!userId) {
       alert("You must be logged in to save restaurants");
       return;
     }
 
-    const savedRestaurant: ISavedRestaurant = {
-      userId,
-      placeId: restaurant.id || "",
-      name: restaurant.displayName?.text ?? "Unknown Name",
-      location: restaurant.formattedAddress ?? "Unknown Location",
-      latitude: restaurant.location?.latitude,
-      longitude: restaurant.location?.longitude,
-      rating: restaurant.rating ?? null,
-      cuisine: restaurant.types ? restaurant.types.filter(isCuisineType).map(normalizeCuisineType) : [],
-    };
-
-    Meteor.call('savedRestaurants.save', savedRestaurant, (error: Meteor.Error | null) => {
-      if (error) {
-        if (error.error === 'duplicate-entry') {
-          alert('This restaurant is already in your saved list!');
-        } else {
-          alert(`Failed to save: ${error.reason || error.message || error}`);
-        }
-        console.error('Error saving restaurant:', error);
-      } else {
-        alert('Restaurant saved successfully!');
-        console.log('Restaurant saved successfully');
-      }
-    });
+    const payload: SaveRestaurantInput = {
+    placeId: restaurant.id || "",
+    name: (restaurant.displayName?.text ?? "Unknown Name").trim(),
+    location: (restaurant.formattedAddress ?? "Unknown Location").trim(),
+    latitude: restaurant.location?.latitude,     
+    longitude: restaurant.location?.longitude,   
+    rating: restaurant.rating ?? null,
+    cuisine: restaurant.types
+      ? restaurant.types.filter(isCuisineType).map(normalizeCuisineType)
+      : [],
   };
 
+  try {
+
+    // Replacing with payload as saveRestaurants is also a method
+    await Meteor.callAsync('savedRestaurants.save', payload);
+    alert('Restaurant saved successfully!');
+    console.log('Restaurant saved successfully');
+  } catch (err: any) {
+    const code = err?.error;
+    const reason = err?.reason || err?.message || String(err);
+    if (code === 'duplicate-entry') {
+      alert('This restaurant is already in your saved list!');
+    } else {
+      alert(`Failed to save: ${reason}`);
+    }
+    console.error('Error saving restaurant:', err);
+  }
+};
 
 
   // const isSaved = selectedRestaurant != null && savedIndexes.includes(selectedRestaurant);
@@ -476,7 +484,6 @@ export const Map = () => {
           }
       };
 
-      console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
       try {
           const response = await fetch(URL, {
@@ -489,8 +496,8 @@ export const Map = () => {
               body: JSON.stringify(requestBody)
           });
 
-          console.log('Response status:', response.status);
-          console.log('Response headers:', response.headers);
+          // console.log('Response status:', response.status);
+          // console.log('Response headers:', response.headers);
 
           if (!response.ok) {
               const errorText = await response.text();
@@ -499,7 +506,7 @@ export const Map = () => {
           }
 
           const data = await response.json();
-          console.log('API Response data:', data);
+          // console.log('API Response data:', data);
 
           if (!data.places || data.places.length === 0) {
               console.warn('No restaurants found in the response');
@@ -662,7 +669,7 @@ export const Map = () => {
               }}
             />
 
-            {/* Restore cuisine filtering for map markers */}
+
             {filterRestaurantsByCuisine(restaurants, selectedCusine).filter((restaurant) =>
               haversineDistance(
                 userLocation.lat,
