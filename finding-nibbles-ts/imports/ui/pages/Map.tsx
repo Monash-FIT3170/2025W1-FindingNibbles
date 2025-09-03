@@ -3,10 +3,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Meteor } from 'meteor/meteor';
 import DicePopup from "../components/popups/DicePopup";
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete, InfoWindow } from "@react-google-maps/api";
-import { ISavedRestaurant } from "../api/SavedRestaurants";
+import { ISavedRestaurant } from "../../api/SavedRestaurants";
 // Removed MUI Modal components - using custom modal if needed
 import { useTracker } from 'meteor/react-meteor-data';
-import { Plans, PlanType } from '../api/Plans';
+import { Plans, PlanType } from '../../api/Plans';
 import { AddToPlanModal } from "../components/plans/AddToPlanModal";
 
 import SwipeDishesPopup from "../components/popups/SwipeDishesPopup";

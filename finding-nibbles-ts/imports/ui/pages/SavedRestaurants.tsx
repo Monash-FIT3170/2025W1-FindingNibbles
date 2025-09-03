@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Tracker } from 'meteor/tracker';
-import { SavedRestaurantsCollection, ISavedRestaurant } from '../api/SavedRestaurants';
+import { SavedRestaurantsCollection, ISavedRestaurant } from '../../api/SavedRestaurants';
 
 export const SavedRestaurantsList = () => {
   const [restaurants, setRestaurants] = useState<ISavedRestaurant[]>([]);

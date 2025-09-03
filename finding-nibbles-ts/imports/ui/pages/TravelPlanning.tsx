@@ -3,13 +3,13 @@ import React, { useEffect, useState } from "react";
 import dishesDataJson from "../../data/famous_dishes_by_city.json";
 import { Meteor } from "meteor/meteor";
 import { Tracker } from "meteor/tracker";
-import { DishesJSON } from "../api/dishtypes"; // interface { [city: string]: string[] }
-import { SavedDishesCollection, ISavedDish } from "../api/savedDishes";
+import { DishesJSON } from "../../api/dishtypes"; // interface { [city: string]: string[] }
+import { SavedDishesCollection, ISavedDish } from "../../api/savedDishes";
 
 import {
   SavedRestaurantsCollection,
   ISavedRestaurant
-} from "../api/SavedRestaurants";
+} from "../../api/SavedRestaurants";
 
 interface Dish {
   name: string;
