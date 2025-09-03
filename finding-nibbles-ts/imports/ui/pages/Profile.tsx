@@ -320,38 +320,51 @@ export const Profile = () => {
         
         {/* Change Password Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-[#e2cfc3] p-8 mt-8">
-          <h2 className="text-xl font-semibold mb-4 text-[#4b2e19]">Change Password</h2>
+          <h2 className="text-xl font-semibold mb-4 text-[#4b2e19]">Password Settings</h2>
           <div className="space-y-4">
             <input
               type="password"
               value={currentPassword}
               onChange={e => setCurrentPassword(e.target.value)}
               placeholder="Current Password"
-              className="w-full px-4 py-3 border rounded-lg"
+              className="w-full px-4 py-3 border border-[#e2cfc3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-[#C47B4D] transition-all duration-200 text-[#4b2e19] bg-[#fff9f4]"
             />
             <input
               type="password"
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
               placeholder="New Password"
-              className="w-full px-4 py-3 border rounded-lg"
+              className="w-full px-4 py-3 border border-[#e2cfc3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-[#C47B4D] transition-all duration-200 text-[#4b2e19] bg-[#fff9f4]"
             />
             <input
               type="password"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
               placeholder="Confirm New Password"
-              className="w-full px-4 py-3 border rounded-lg"
+              className="w-full px-4 py-3 border border-[#e2cfc3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-[#C47B4D] transition-all duration-200 text-[#4b2e19] bg-[#fff9f4]"
             />
             {passwordMessage && (
-              <div className="text-red-600">{passwordMessage}</div>
+              <div className={`mt-4 p-3 rounded-lg text-center ${
+                passwordMessage.toLowerCase().includes('success')
+                  ? 'bg-green-100 border border-green-400 text-green-700'
+                  : 'bg-red-100 border border-red-400 text-red-700'
+              }`}>
+                {passwordMessage}
+              </div>
             )}
-            <button
-              onClick={handleChangePassword}
-              className="px-6 py-2 rounded-lg font-semibold text-white bg-[#C47B4D] hover:bg-[#A35F35]"
-            >
-              Change Password
-            </button>
+            {/* Button aligned right and styled like Save Changes */}
+            <div className="mt-8 flex justify-end">
+              <button
+                onClick={handleChangePassword}
+                className={`px-8 py-3 rounded-lg font-semibold text-white transition-all duration-200 ${
+                  false // you can add a loading state if needed
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-[#C47B4D] hover:bg-[#A35F35] focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:ring-offset-2 transform hover:scale-105'
+                }`}
+              >
+                Change Password
+              </button>
+            </div>
           </div>
         </div>
 
