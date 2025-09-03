@@ -49,7 +49,7 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
   req.on('data', chunk => body += chunk);
   req.on('end', async () => {
     try {
-      const { occasion, preferences, mode, feedback, diversity, avoid } = JSON.parse(body);
+      const { occasion, preferences, mode, feedback, diversity, avoid, diningMode, vibe } = JSON.parse(body);
       const parsedPreferences = parsePreferences(preferences);
 
       // Fetch user feedback server-side if not provided
@@ -96,7 +96,9 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
 
       const modeLine = mode === 'tryNew'
         ? 'Emphasize novelty and diversity across cuisines, textures, and cooking methods. Avoid overfitting to prior likes; include at least one surprise pick.'
-        : 'Emphasize alignment with liked dishes and adjacent cuisines; avoid items similar to dislikes.';
+        : (mode === 'recommended'
+          ? 'Emphasize alignment with liked dishes and adjacent cuisines; avoid items similar to dislikes.'
+          : 'Craft a cohesive special-occasion menu tailored to the event.');
 
       const diversityValue = typeof diversity === 'number' ? Math.max(0, Math.min(100, diversity)) : undefined;
       let diversityLine = '';
@@ -110,14 +112,29 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         ? 'Ensure the list spans at least 3 distinct cuisines and varied cooking methods.'
         : '';
 
+      const occasionLine = mode === 'occasion' && occasion
+        ? `Occasion: ${occasion}.`
+        : '';
+      const diningLine = mode === 'occasion' && diningMode
+        ? `Dining mode: ${diningMode === 'out' ? 'Dining out' : 'At home'}.`
+        : '';
+      const vibeLine = mode === 'occasion' && vibe
+        ? `Vibe preference: ${vibe}.`
+        : '';
+
       const finalPrompt = [
         systemPreamble,
         modeLine,
         diversityLine,
         diversityPolicy,
+        occasionLine,
+        diningLine,
+        vibeLine,
         constraints,
         ...contextBlocks,
-        'Output example: [{"name":"Margherita Pizza","description":"A classic Neapolitan pizza..."}]',
+        mode === 'occasion'
+          ? 'Return JSON object: {"centerpiece":{"name":"...","description":"..."},"complements":[{"name":"...","description":"..."},{"name":"...","description":"..."}]}. Cohesive menu; respect dislikes; avoid repeats.'
+          : 'Output example: [{"name":"Margherita Pizza","description":"A classic Neapolitan pizza..."}]',
       ].join('\n');
 
       const result = await model.generateContent({
@@ -132,16 +149,29 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
       const rawText = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || 'No suggestion generated.';
 
       try {
-        // Try parse as array; fallback to cleaned
-        const tryParse = (s: string) => {
-          const cleaned = s.replace(/```json|```/g, '').trim();
-          const data = JSON.parse(cleaned);
-          return Array.isArray(data) ? data : [data];
-        };
-        const items = tryParse(rawText)
+        const cleaned = rawText.replace(/```json|```/g, '').trim();
+        const parsed = JSON.parse(cleaned);
+
+        if (mode === 'occasion') {
+          const centerpieceIn = parsed?.centerpiece;
+          const complementsIn = Array.isArray(parsed?.complements) ? parsed.complements : [];
+          const sanitize = (d: any) => {
+            if (!d || typeof d.name !== 'string' || typeof d.description !== 'string') return null;
+            const cleanedName = String(d.name).trim().replace(/\s*\d{2,}[a-z]{1,3}$/i, '');
+            return { name: cleanedName, description: String(d.description).trim() };
+          };
+          const centerpiece = sanitize(centerpieceIn);
+          const complements = complementsIn.map(sanitize).filter(Boolean).slice(0, 3);
+          if (!centerpiece) throw new Error('Invalid centerpiece');
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ menu: { centerpiece, complements } }));
+          return;
+        }
+
+        // Default modes: tryNew / recommended
+        const items = (Array.isArray(parsed) ? parsed : [parsed])
           .filter((d: any) => d && typeof d.name === 'string' && typeof d.description === 'string')
           .map((d: any) => {
-            // Sanitize accidental token artifacts like trailing "123ep" or similar
             const cleanedName = String(d.name).trim().replace(/\s*\d{2,}[a-z]{1,3}$/i, '');
             return { name: cleanedName, description: String(d.description).trim() };
           })

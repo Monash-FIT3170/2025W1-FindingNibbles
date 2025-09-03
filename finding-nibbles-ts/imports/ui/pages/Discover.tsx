@@ -90,6 +90,22 @@ export const Discover = () => {
   const [currentTryNew, setCurrentTryNew] = useState<Dish | null>(null);
   const [currentRecommended, setCurrentRecommended] = useState<Dish | null>(null);
   const [recommendedAvoid, setRecommendedAvoid] = useState<string[]>([]);
+  const [occasionMenu, setOccasionMenu] = useState<{
+    centerpiece: Dish | null;
+    complements: Dish[];
+  }>({ centerpiece: null, complements: [] });
+  const [occasion, setOccasion] = useState<string>(() => {
+    const s = typeof window !== 'undefined' ? window.localStorage.getItem('discover_occasion') : null;
+    return s || '';
+  });
+  const [diningMode, setDiningMode] = useState<'out' | 'home'>(() => {
+    const s = typeof window !== 'undefined' ? window.localStorage.getItem('discover_diningMode') : null;
+    return (s === 'out' || s === 'home') ? s : 'out';
+  });
+  const [vibe, setVibe] = useState<string>(() => {
+    const s = typeof window !== 'undefined' ? window.localStorage.getItem('discover_vibe') : null;
+    return s || '';
+  });
 
   useEffect(() => {
     const user = Meteor.user() as CustomUser | null;
@@ -113,6 +129,16 @@ export const Discover = () => {
       window.localStorage.setItem('discover_diversity', String(diversity));
     } catch {}
   }, [diversity]);
+
+  useEffect(() => {
+    try { window.localStorage.setItem('discover_occasion', occasion); } catch {}
+  }, [occasion]);
+  useEffect(() => {
+    try { window.localStorage.setItem('discover_diningMode', diningMode); } catch {}
+  }, [diningMode]);
+  useEffect(() => {
+    try { window.localStorage.setItem('discover_vibe', vibe); } catch {}
+  }, [vibe]);
 
   const prefetchSuggestions = async (
     params: Record<string, any>,
@@ -166,6 +192,43 @@ export const Discover = () => {
     } catch (err) {
       console.error(err);
       setError('Failed to get AI-generated dish.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOccasionMenu = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/api/aiSuggestion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'occasion', occasion, diningMode, vibe }),
+      });
+      if (!response.ok) throw new Error('Occasion menu failed');
+      const data = await response.json();
+      const menu = data.menu as { centerpiece: { name: string; description: string }, complements: Array<{ name: string; description: string }> };
+
+      const all = [menu.centerpiece, ...menu.complements];
+      const withImages = await Promise.all(all.map(async (d) => {
+        try {
+          const imageRes = await fetch('/api/generateImage', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: d.name })
+          });
+          const ok = imageRes.ok; const imageData = await imageRes.json();
+          const imageUrl = ok && (imageData.image ? `data:image/png;base64,${imageData.image}` : (imageData.imageUrl || ''));
+          return { id: Date.now() + Math.random(), name: d.name, description: d.description, image: imageUrl || '' } as Dish;
+        } catch {
+          return { id: Date.now() + Math.random(), name: d.name, description: d.description, image: '' } as Dish;
+        }
+      }));
+
+      const [centerpiece, ...complements] = withImages;
+      setOccasionMenu({ centerpiece: centerpiece ?? null, complements });
+    } catch (e) {
+      console.error(e);
+      setError('Failed to get occasion menu.');
     } finally {
       setLoading(false);
     }
@@ -287,6 +350,70 @@ const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
                 <p className="text-lg">Generating a dish recommendation...</p>
               )}
             </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Special Occasion */}
+        <div className="max-w-5xl mx-auto w-full">
+          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Special Occasion</h2>
+          <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl shadow-md p-6 text-[#7a5c43]">
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {['Birthday','Anniversary','Date night','Family dinner','Friends gathering'].map((o) => (
+                <button
+                  key={o}
+                  onClick={() => setOccasion(o)}
+                  className={`px-3 py-1 rounded-full border ${occasion === o ? 'bg-[#c07a45] text-white border-[#c07a45]' : 'border-[#e2cfc3] bg-white text-[#7a5c43]'} text-sm`}
+                >{o}</button>
+              ))}
+              <div className="ml-auto flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setDiningMode('out')}
+                    className={`px-2 py-1 rounded-full text-xs border ${diningMode==='out'?'bg-[#c07a45] text-white border-[#c07a45]':'border-[#e2cfc3] bg-white text-[#7a5c43]'}`}
+                    aria-label="Dining out"
+                  >Dining out</button>
+                  <button
+                    onClick={() => setDiningMode('home')}
+                    className={`px-2 py-1 rounded-full text-xs border ${diningMode==='home'?'bg-[#c07a45] text-white border-[#c07a45]':'border-[#e2cfc3] bg-white text-[#7a5c43]'}`}
+                    aria-label="At home"
+                  >At home</button>
+                </div>
+                <select
+                  value={vibe}
+                  onChange={(e) => setVibe(e.target.value)}
+                  className="text-sm border border-[#e2cfc3] rounded-lg bg-white px-2 py-1"
+                  aria-label="Vibe"
+                >
+                  <option value="">Vibe</option>
+                  <option value="Cozy">Cozy</option>
+                  <option value="Fancy">Fancy</option>
+                  <option value="Fun">Fun</option>
+                </select>
+                <button
+                  onClick={fetchOccasionMenu}
+                  className="px-3 py-2 rounded-lg bg-[#c07a45] text-white text-sm shadow hover:opacity-90"
+                >Get occasion menu</button>
+              </div>
+            </div>
+
+            {occasionMenu.centerpiece ? (
+              <div>
+                <h3 className="text-lg font-semibold text-[#4b2e19] mb-2">Centerpiece</h3>
+                <DishCard dish={occasionMenu.centerpiece} onSwipe={() => {}} />
+                {occasionMenu.complements.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-md font-semibold text-[#4b2e19] mb-2">Complements</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {occasionMenu.complements.map((d) => (
+                        <DishCard key={d.id} dish={d} onSwipe={() => {}} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm">Pick an occasion and tap "Get occasion menu".</p>
+            )}
           </div>
         </div>
       </div>
