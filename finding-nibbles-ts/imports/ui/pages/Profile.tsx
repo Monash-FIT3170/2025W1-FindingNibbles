@@ -4,6 +4,7 @@ import type {CustomUser} from '../types/User';
 import { useNavigate } from 'react-router-dom';
 import AddPreferenceModal from '../components/profile/AddPreferenceModal';
 import { useTracker } from 'meteor/react-meteor-data';
+import { Accounts } from 'meteor/accounts-base';
 
 export const Profile = () => {
   const user = useTracker(() => Meteor.user() as CustomUser);
@@ -22,6 +23,11 @@ export const Profile = () => {
   const [profileImage, setProfileImage] = useState<string>(
     user?.profile?.profileImage || '/images/default-profile-pic.png'
   );
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
 
   useEffect(() => {
     setProfileImage(user?.profile?.profileImage || '/images/default-profile-pic.png');
@@ -114,6 +120,34 @@ export const Profile = () => {
         }
       }
     );
+  };
+
+  const handleChangePassword = () => {
+    setPasswordMessage('');
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordMessage('Please fill in all password fields.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage('New passwords do not match.');
+      return;
+    }
+    Accounts.changePassword(currentPassword, newPassword, (err) => {
+      if (err) {
+        // Prefer Meteor.Error.reason, else fallback to message or default
+        const errorMsg =
+          (typeof (err as any).reason === 'string' && (err as any).reason) ||
+          err.message ||
+          'Failed to change password.';
+        setPasswordMessage(errorMsg);
+      } else {
+        setPasswordMessage('Password changed successfully!');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setTimeout(() => setPasswordMessage(''), 3000);
+      }
+    });
   };
   
   return (
@@ -284,6 +318,43 @@ export const Profile = () => {
           )}
         </div>
         
+        {/* Change Password Section */}
+        <div className="bg-white rounded-2xl shadow-lg border border-[#e2cfc3] p-8 mt-8">
+          <h2 className="text-xl font-semibold mb-4 text-[#4b2e19]">Change Password</h2>
+          <div className="space-y-4">
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={e => setCurrentPassword(e.target.value)}
+              placeholder="Current Password"
+              className="w-full px-4 py-3 border rounded-lg"
+            />
+            <input
+              type="password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              placeholder="New Password"
+              className="w-full px-4 py-3 border rounded-lg"
+            />
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              placeholder="Confirm New Password"
+              className="w-full px-4 py-3 border rounded-lg"
+            />
+            {passwordMessage && (
+              <div className="text-red-600">{passwordMessage}</div>
+            )}
+            <button
+              onClick={handleChangePassword}
+              className="px-6 py-2 rounded-lg font-semibold text-white bg-[#C47B4D] hover:bg-[#A35F35]"
+            >
+              Change Password
+            </button>
+          </div>
+        </div>
+
         {/* Add Preference Modal */}
         <AddPreferenceModal
           open={modalOpen}
