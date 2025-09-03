@@ -1,0 +1,69 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "allowJs": true,
+    "jsx": "react",
+    "baseUrl": ".",
+    "paths": {
+      "/*": [
+        "./*"
+      ],
+      "meteor/mongo": [
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/local_collection_driver.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/collection/collection.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/asynchronous_cursor.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/doc_fetcher.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/mongo_common.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/mongo_connection.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/mongo_driver.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/mongo_utils.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/oplog_observe_driver.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/collection/collection_utils.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/collection/methods_async.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/collection/methods_index.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/collection/methods_replication.js",
+        "/Users/chetan/.meteor/packages/mongo/2.1.1/web.browser/collection/methods_sync.js"
+      ],
+      "meteor/reactive-var": [
+        "/Users/chetan/.meteor/packages/reactive-var/1.0.13/web.browser/reactive-var.js"
+      ],
+      "meteor/es5-shim": [
+        "/Users/chetan/.meteor/packages/es5-shim/4.8.1/web.browser/client.js",
+        "/Users/chetan/.meteor/packages/es5-shim/4.8.1/web.browser/console.js",
+        "/Users/chetan/.meteor/packages/es5-shim/4.8.1/web.browser/cordova.js",
+        "/Users/chetan/.meteor/packages/es5-shim/4.8.1/web.browser/export_globals.js",
+        "/Users/chetan/.meteor/packages/es5-shim/4.8.1/web.browser/import_globals.js"
+      ],
+      "meteor/ecmascript": [
+        "/Users/chetan/.meteor/packages/ecmascript/0.16.10/web.browser/ecmascript.js"
+      ],
+      "meteor/shell-server": [
+        "/Users/chetan/.meteor/packages/shell-server/0.6.1/web.browser/main.js",
+        "/Users/chetan/.meteor/packages/shell-server/0.6.1/web.browser/shell-server.js"
+      ],
+      "meteor/hot-module-replacement": [
+        "/Users/chetan/.meteor/packages/hot-module-replacement/0.5.4/web.browser/hot-api.js",
+        "/Users/chetan/.meteor/packages/hot-module-replacement/0.5.4/web.browser/client.js",
+        "/Users/chetan/.meteor/packages/hot-module-replacement/0.5.4/web.browser/server.js"
+      ],
+      "meteor/react-meteor-data": [
+        "/Users/chetan/.meteor/packages/react-meteor-data/3.0.3/web.browser/index.js",
+        "/Users/chetan/.meteor/packages/react-meteor-data/3.0.3/web.browser/suspense/index.js"
+      ],
+      "meteor/accounts-password": [
+        "/Users/chetan/.meteor/packages/accounts-password/3.1.0/web.browser/password_client.js",
+        "/Users/chetan/.meteor/packages/accounts-password/3.1.0/web.browser/email_templates.js",
+        "/Users/chetan/.meteor/packages/accounts-password/3.1.0/web.browser/password_server.js"
+      ]
+    }
+  },
+  "typeAcquisition": {
+    "include": [
+      "meteor"
+    ]
+  },
+  "exclude": [
+    "node_modules",
+    ".meteor"
+  ]
+}
