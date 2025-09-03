@@ -3,6 +3,7 @@ import { WebApp } from 'meteor/webapp';
 import { parse } from 'url';
 import type { IncomingMessage, ServerResponse } from 'http';
 import { VertexAI } from '@google-cloud/vertexai';
+import { Meteor } from 'meteor/meteor';
 
 
 const project = process.env.PROJECT_ID || 'sacred-vault-469801-f4';
@@ -43,23 +44,59 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
   req.on('data', chunk => body += chunk);
   req.on('end', async () => {
     try {
-      const { occasion, preferences } = JSON.parse(body);
+      const { occasion, preferences, mode, feedback } = JSON.parse(body);
       const parsedPreferences = parsePreferences(preferences);
 
-      let prompt = '';
-      if (occasion) {
-        prompt = `Suggest a dish suitable for a special occasion like ${occasion} with only its name and description in json format with "name" and "description" fields.`;
-      } else if (parsedPreferences.length > 0) {
-        prompt = `Suggest a dish that suits someone with one of the following dietary preferences: ${parsedPreferences.join(', ')}. Respond with only its name and description in json format with "name" and "description" fields.`;
-      } else {
-        prompt = 'Suggest a new dish to recommend to a user to try out with only its name and description in json format with "name" and "description" fields.';
+      // Fetch user feedback server-side if not provided
+      let userFeedback = feedback;
+      try {
+        if (!userFeedback && (req as any).userId) {
+          userFeedback = await (Meteor as any).callAsync?.('dishes.getUserFeedback');
+        }
+      } catch (e) {
+        console.warn('Could not fetch user feedback inline, proceeding with provided params.');
       }
+
+      let legacyPrompt = '';
+      if (occasion) {
+        legacyPrompt = `Suggest a dish suitable for a special occasion like ${occasion} with only its name and description in json format with "name" and "description" fields.`;
+      } else if (parsedPreferences.length > 0) {
+        legacyPrompt = `Suggest a dish that suits someone with one of the following dietary preferences: ${parsedPreferences.join(', ')}. Respond with only its name and description in json format with "name" and "description" fields.`;
+      } else {
+        legacyPrompt = 'Suggest a new dish to recommend to a user to try out with only its name and description in json format with "name" and "description" fields.';
+      }
+
+      const constraints = [
+        'Return ONLY valid JSON array of up to 5 items.',
+        'Each item must have keys "name" and "description".',
+        'No markdown, no code fences, no extra commentary.',
+      ].join(' ');
+
+      const systemPreamble = 'You are a culinary recommender system that personalizes dish suggestions.';
+
+      const contextBlocks: string[] = [];
+      if (userFeedback?.likes?.length) contextBlocks.push(`User liked dishes: ${userFeedback.likes.slice(0, 30).join(', ')}`);
+      if (userFeedback?.dislikes?.length) contextBlocks.push(`User disliked dishes: ${userFeedback.dislikes.slice(0, 30).join(', ')}`);
+      if (userFeedback?.recentSearches?.length) contextBlocks.push(`Recent searches: ${userFeedback.recentSearches.slice(0, 20).join(', ')}`);
+      if (parsedPreferences.length) contextBlocks.push(`Explicit preferences: ${parsedPreferences.join(', ')}`);
+
+      const modeLine = mode === 'tryNew'
+        ? 'Emphasize novelty and diversity across cuisines, textures, and cooking methods. Avoid overfitting to prior likes; include at least one surprise pick.'
+        : 'Emphasize alignment with liked dishes and adjacent cuisines; avoid items similar to dislikes.';
+
+      const finalPrompt = [
+        systemPreamble,
+        modeLine,
+        constraints,
+        ...contextBlocks,
+        'Output example: [{"name":"Margherita Pizza","description":"A classic Neapolitan pizza..."}]',
+      ].join('\n');
 
       const result = await model.generateContent({
         contents: [
           {
             role: 'user',
-            parts: [{ text: prompt }],
+            parts: [{ text: finalPrompt }],
           },
         ],
       });
@@ -67,18 +104,20 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
       const rawText = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || 'No suggestion generated.';
 
       try {
-        // Strip markdown-style code block if accidentally included
-        const cleaned = rawText.replace(/```json|```/g, '').trim();
+        // Try parse as array; fallback to cleaned
+        const tryParse = (s: string) => {
+          const cleaned = s.replace(/```json|```/g, '').trim();
+          const data = JSON.parse(cleaned);
+          return Array.isArray(data) ? data : [data];
+        };
+        const items = tryParse(rawText)
+          .filter((d: any) => d && typeof d.name === 'string' && typeof d.description === 'string')
+          .slice(0, 5);
 
-        const parsed = JSON.parse(cleaned); 
+        if (!items.length) throw new Error('No valid items');
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-          dish: {
-            name: parsed.name,
-            description: parsed.description
-          }
-        }));
+        res.end(JSON.stringify({ dishes: items }));
 
     } catch (error) {
       console.error('Vertex AI Error:', error);

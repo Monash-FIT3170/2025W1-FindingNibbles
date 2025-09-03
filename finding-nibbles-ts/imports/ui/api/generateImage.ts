@@ -65,12 +65,22 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         response_format: 'b64_json',
       }, hfToken);
 
+      if (!imageBase64) {
+        // Explicit rate-limit or empty image fallback
+        res.writeHead(429, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Image generation limit reached.' }));
+        return;
+      }
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ image: imageBase64 }));
     } catch (error) {
       console.error('Generate Image Error:', error);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Failed to generate image.' }));
+      // Attempt to surface rate limit when possible
+      const msg = (error as any)?.message || '';
+      const isRateLimit = msg.includes('rate') || msg.includes('quota') || msg.includes('429');
+      res.writeHead(isRateLimit ? 429 : 500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: isRateLimit ? 'Image generation limit reached.' : 'Failed to generate image.' }));
     }
   });
 });

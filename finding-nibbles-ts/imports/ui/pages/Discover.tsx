@@ -28,6 +28,7 @@ type Dish = {
 // Card component for displaying a dish with thumbs up/down buttons
 const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'dislike') => void }) => {
   const [exitCondition, setExitCondition] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
   const handleSwipe = (action: 'like' | 'dislike') => {
     setExitCondition(action === 'like' ? 200 : -200);
@@ -43,7 +44,18 @@ const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'd
       exit={{ opacity: 0, x: exitCondition }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
 
-      <img src={dish.image} alt={dish.name} className="w-full h-64 object-cover"/>
+      {imageError || !dish.image ? (
+        <div className="w-full h-64 flex items-center justify-center bg-gray-100 text-gray-500">
+          Image unavailable (limit reached)
+        </div>
+      ) : (
+        <img
+          src={dish.image}
+          alt={dish.name}
+          className="w-full h-64 object-cover"
+          onError={() => setImageError(true)}
+        />
+      )}
       <div className="p-4">
         <h3 className="text-xl font-bold text-[#4b2e19]">{dish.name}</h3>
         <p className="mt-2 text-[#4b2e19] text-sm">{dish.description}</p>
@@ -63,9 +75,10 @@ export const Discover = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [preferences, setPreferences] = useState<string[]>([]);
-  const [currentDish, setCurrentDish] = useState<Dish | null>(null);
-  const [recommendedDish, setRecommendedDish] = useState<Dish | null>(null);
-  const [specialDish, setSpecialDish] = useState<Dish | null>(null);
+  const [tryNewQueue, setTryNewQueue] = useState<Dish[]>([]);
+  const [recommendedQueue, setRecommendedQueue] = useState<Dish[]>([]);
+  const [currentTryNew, setCurrentTryNew] = useState<Dish | null>(null);
+  const [currentRecommended, setCurrentRecommended] = useState<Dish | null>(null);
 
   useEffect(() => {
     const user = Meteor.user() as CustomUser | null;
@@ -77,16 +90,16 @@ export const Discover = () => {
         : user?.profile?.preferences || [];
 
       setPreferences(prefs);
-      fetchSuggestion({ preferences: prefs.join(',') }, setRecommendedDish);
+      prefetchSuggestions({ mode: 'recommended', preferences: prefs.join(',') }, setRecommendedQueue, setCurrentRecommended);
     });
 
-    fetchSuggestion({}, setCurrentDish);
-    fetchSuggestion({ occasion: 'birthday' }, setSpecialDish);
+    prefetchSuggestions({ mode: 'tryNew' }, setTryNewQueue, setCurrentTryNew);
   }, []);
 
-  const fetchSuggestion = async (
-    params: Record<string, any> = {},
-    setDish: React.Dispatch<React.SetStateAction<Dish | null>> = setCurrentDish
+  const prefetchSuggestions = async (
+    params: Record<string, any>,
+    setQueue: React.Dispatch<React.SetStateAction<Dish[]>>,
+    setCurrent: React.Dispatch<React.SetStateAction<Dish | null>>
   ) => {
     setLoading(true);
     setError('');
@@ -95,37 +108,39 @@ export const Discover = () => {
       const response = await fetch('/api/aiSuggestion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify( params ),
+        body: JSON.stringify(params),
       });
 
       if (!response.ok) throw new Error('AI suggestion failed');
 
       const data = await response.json();
-      const { name, description } = data.dish;
+      const dishes = (data.dishes || []) as Array<{ name: string; description: string }>;
+      if (!Array.isArray(dishes) || dishes.length === 0) throw new Error('No dishes returned');
 
-      console.log('AI Suggestion Response:', name);
+      // Generate images for all returned dishes in parallel
+      const enriched = await Promise.all(
+        dishes.slice(0, 5).map(async (d) => {
+          try {
+            const imageRes = await fetch('/api/generateImage', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prompt: d.name }),
+            });
+            if (!imageRes.ok) throw new Error('image gen failed');
+            const imageData = await imageRes.json();
+            const imageUrl = imageData.image
+              ? `data:image/png;base64,${imageData.image}`
+              : (imageData.imageUrl || '');
+            return { id: Date.now() + Math.random(), name: d.name, description: d.description, image: imageUrl } as Dish;
+          } catch {
+            // Leave image empty so UI shows a clear placeholder
+            return { id: Date.now() + Math.random(), name: d.name, description: d.description, image: '' } as Dish;
+          }
+        })
+      );
 
-      if (!name || !description) {
-        throw new Error('Invalid dish data received');
-      }
-
-      const imageRes = await fetch('/api/generateImage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: name }),
-      });
-
-      const imageData = await imageRes.json();
-      const imageUrl = imageData.imageUrl || `data:image/png;base64,${imageData.image}`;
-
-      const newDish: Dish = {
-        id: Date.now(),
-        name: name,
-        image: imageUrl,
-        description: description,
-      };
- 
-      setDish(newDish);
+      setQueue(enriched);
+      setCurrent(enriched[0] ?? null);
     } catch (err) {
       console.error(err);
       setError('Failed to get AI-generated dish.');
@@ -148,16 +163,26 @@ const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
     if (!dish) return;
     if (action === 'like') setLiked((prev) => [...prev, dish]);
     if (action === 'dislike') setDisliked((prev) => [...prev, dish]);
+    Meteor.call('dishes.swipe', { name: dish.name, liked: action === 'like' });
   };
 
- const handleSwipe = (
+ const handleSwipeFromQueue = (
     action: 'like' | 'dislike',
-    fetchParams: Record<string, any> = {},
-    setDish: React.Dispatch<React.SetStateAction<Dish | null>>,
-    dish: Dish | null
+    queue: Dish[],
+    setQueue: React.Dispatch<React.SetStateAction<Dish[]>>,
+    current: Dish | null,
+    setCurrent: React.Dispatch<React.SetStateAction<Dish | null>>,
+    prefetchParams: Record<string, any>
   ) => {
-    handlePreference(action, dish);
-    fetchSuggestion(fetchParams, setDish);
+    handlePreference(action, current);
+    const [, ...rest] = queue;
+    if (rest.length === 0) {
+      // Refill queue
+      prefetchSuggestions(prefetchParams, setQueue, setCurrent);
+    } else {
+      setQueue(rest);
+      setCurrent(rest[0]);
+    }
   };
   
   
@@ -172,35 +197,54 @@ const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
 
         {/*try me section*/}
         <div className="max-w-5xl mx-auto w-full">
-          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Try Me!</h2>
+          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Try New</h2>
           <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl shadow-md p-6 min-h-[200px] text-[#7a5c43]">
             <AnimatePresence>
-                {/* shows current dish if available, else msg */}
-              {currentDish ? (<DishCard key={currentDish.id} dish={currentDish}  onSwipe={(action) =>
-                    handleSwipe(action, {}, setCurrentDish, currentDish)
-                  } />) : (<p className="text-lg">Generating a dish recommendation...</p>)}
+              {currentTryNew ? (
+                <DishCard
+                  key={currentTryNew.id}
+                  dish={currentTryNew}
+                  onSwipe={(action) =>
+                    handleSwipeFromQueue(
+                      action,
+                      tryNewQueue,
+                      setTryNewQueue,
+                      currentTryNew,
+                      setCurrentTryNew,
+                      { mode: 'tryNew' }
+                    )
+                  }
+                />
+              ) : (
+                <p className="text-lg">Generating a dish recommendation...</p>
+              )}
             </AnimatePresence>
           </div>
         </div>
 
         {/* Recommended Dish placeholder */}
         <div className="max-w-5xl mx-auto w-full">
-          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Recommended Dish</h2>
+          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Recommended for You</h2>
           <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl shadow-md p-6 min-h-[200px] text-[#7a5c43]">
             <AnimatePresence>
-                {/* shows current dish if available, else msg */}
-              {recommendedDish ? (<DishCard key={recommendedDish.id} dish={recommendedDish}  onSwipe={(action) => handleSwipe(action, { preferences: preferences.join(',') }, setRecommendedDish, recommendedDish)} />) : (<p className="text-lg">Generating a dish recommendation...</p>)}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Specials placeholder */}
-        <div className="max-w-5xl mx-auto w-full">
-          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Special dish for ...</h2>
-          <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl shadow-md p-6 min-h-[200px] text-[#7a5c43]">
-            <AnimatePresence>
-                {/* shows current dish if available, else msg */}
-              {specialDish ? (<DishCard key={specialDish.id} dish={specialDish} onSwipe={(action) => handleSwipe(action, { "occasion": "birthday" }, setSpecialDish, specialDish)}  />) : (<p className="text-lg">Generating a dish recommendation...</p>)}
+              {currentRecommended ? (
+                <DishCard
+                  key={currentRecommended.id}
+                  dish={currentRecommended}
+                  onSwipe={(action) =>
+                    handleSwipeFromQueue(
+                      action,
+                      recommendedQueue,
+                      setRecommendedQueue,
+                      currentRecommended,
+                      setCurrentRecommended,
+                      { mode: 'recommended', preferences: preferences.join(',') }
+                    )
+                  }
+                />
+              ) : (
+                <p className="text-lg">Generating a dish recommendation...</p>
+              )}
             </AnimatePresence>
           </div>
         </div>
