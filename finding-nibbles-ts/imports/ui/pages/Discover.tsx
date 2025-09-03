@@ -56,6 +56,7 @@ const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'd
   );
 };
 
+
 export const Discover = () => {
   const [liked, setLiked] = useState<Dish[]>([]);
   const [disliked, setDisliked] = useState<Dish[]>([]);
@@ -66,14 +67,20 @@ export const Discover = () => {
   const [recommendedDish, setRecommendedDish] = useState<Dish | null>(null);
   const [specialDish, setSpecialDish] = useState<Dish | null>(null);
 
-
   useEffect(() => {
     const user = Meteor.user() as CustomUser | null;
-    if (user?.profile?.preferences) {
-      setPreferences(user.profile.preferences);
-    }
+
+    // Fetch liked dishes from the database and use as preferences for AI
+    Meteor.call("dishes.getUserPreferences", (err, likedDishes: string[]) => {
+      const prefs = likedDishes && likedDishes.length > 0
+        ? likedDishes
+        : user?.profile?.preferences || [];
+
+      setPreferences(prefs);
+      fetchSuggestion({ preferences: prefs.join(',') }, setRecommendedDish);
+    });
+
     fetchSuggestion({}, setCurrentDish);
-    fetchSuggestion({ preferences: user?.profile?.preferences?.join(',') || '' }, setRecommendedDish);
     fetchSuggestion({ occasion: 'birthday' }, setSpecialDish);
   }, []);
 
