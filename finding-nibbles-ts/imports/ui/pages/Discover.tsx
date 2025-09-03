@@ -26,7 +26,7 @@ type Dish = {
 
 
 // Card component for displaying a dish with thumbs up/down buttons
-const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'dislike') => void }) => {
+const DishCard = ({ dish, onSwipe, badge }: { dish: Dish; onSwipe: (action: 'like' | 'dislike') => void; badge?: 'liked' | 'disliked' }) => {
   const [exitCondition, setExitCondition] = useState(0);
   const [imageError, setImageError] = useState(false);
 
@@ -59,6 +59,11 @@ const DishCard = ({ dish, onSwipe }: { dish: Dish; onSwipe: (action: 'like' | 'd
       <div className="p-4">
         <h3 className="text-xl font-bold text-[#4b2e19]">{dish.name}</h3>
         <p className="mt-2 text-[#4b2e19] text-sm">{dish.description}</p>
+        {badge && (
+          <span className={`inline-block mt-2 text-xs font-semibold px-2 py-1 rounded-full ${badge === 'liked' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            {badge === 'liked' ? 'Liked' : 'Disliked'}
+          </span>
+        )}
       </div>
       <div className="flex justify-around pb-4">
         <button onClick={() => handleSwipe('dislike')} className="w-1/2 mx-2 h-20 bg-red-200 hover:bg-red-300 text-red-800 rounded-xl shadow-lg flex items-center justify-center text-3xl transition-transform transform hover:scale-105 cursor-pointer" aria-label="Dislike"><ThumbDownIcon /></button>
@@ -75,10 +80,16 @@ export const Discover = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [preferences, setPreferences] = useState<string[]>([]);
+  const [diversity, setDiversity] = useState<number>(() => {
+    const stored = typeof window !== 'undefined' ? window.localStorage.getItem('discover_diversity') : null;
+    const parsed = stored != null ? Number(stored) : NaN;
+    return Number.isFinite(parsed) ? parsed : 50;
+  });
   const [tryNewQueue, setTryNewQueue] = useState<Dish[]>([]);
   const [recommendedQueue, setRecommendedQueue] = useState<Dish[]>([]);
   const [currentTryNew, setCurrentTryNew] = useState<Dish | null>(null);
   const [currentRecommended, setCurrentRecommended] = useState<Dish | null>(null);
+  const [recommendedAvoid, setRecommendedAvoid] = useState<string[]>([]);
 
   useEffect(() => {
     const user = Meteor.user() as CustomUser | null;
@@ -90,11 +101,18 @@ export const Discover = () => {
         : user?.profile?.preferences || [];
 
       setPreferences(prefs);
-      prefetchSuggestions({ mode: 'recommended', preferences: prefs.join(',') }, setRecommendedQueue, setCurrentRecommended);
+      prefetchSuggestions({ mode: 'recommended', preferences: prefs.join(','), avoid: recommendedAvoid }, setRecommendedQueue, setCurrentRecommended);
     });
 
-    prefetchSuggestions({ mode: 'tryNew' }, setTryNewQueue, setCurrentTryNew);
+    prefetchSuggestions({ mode: 'tryNew', diversity }, setTryNewQueue, setCurrentTryNew);
   }, []);
+
+  // Persist diversity slider changes across sessions
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('discover_diversity', String(diversity));
+    } catch {}
+  }, [diversity]);
 
   const prefetchSuggestions = async (
     params: Record<string, any>,
@@ -141,6 +159,10 @@ export const Discover = () => {
 
       setQueue(enriched);
       setCurrent(enriched[0] ?? null);
+      if (params.mode === 'recommended') {
+        const newAvoid = [...recommendedAvoid, ...enriched.map(d => d.name)].slice(-50);
+        setRecommendedAvoid(newAvoid);
+      }
     } catch (err) {
       console.error(err);
       setError('Failed to get AI-generated dish.');
@@ -197,13 +219,31 @@ const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
 
         {/*try me section*/}
         <div className="max-w-5xl mx-auto w-full">
-          <h2 className="text-2xl font-bold text-[#4b2e19] mb-4">Try New</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-2xl font-bold text-[#4b2e19]">Try New</h2>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-[#7a5c43]">Classic</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={diversity}
+                onChange={(e) => setDiversity(Number(e.target.value))}
+                className="w-40 accent-[#c07a45]"
+                aria-label="Diversity slider"
+              />
+              <span className="text-sm text-[#7a5c43]">Adventurous</span>
+              <span className="text-sm text-[#7a5c43] ml-1">{diversity}</span>
+            </div>
+          </div>
           <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl shadow-md p-6 min-h-[200px] text-[#7a5c43]">
             <AnimatePresence>
               {currentTryNew ? (
                 <DishCard
                   key={currentTryNew.id}
                   dish={currentTryNew}
+                  badge={liked.some(d => d.name === currentTryNew.name) ? 'liked' : (disliked.some(d => d.name === currentTryNew.name) ? 'disliked' : undefined)}
                   onSwipe={(action) =>
                     handleSwipeFromQueue(
                       action,
@@ -211,7 +251,7 @@ const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
                       setTryNewQueue,
                       currentTryNew,
                       setCurrentTryNew,
-                      { mode: 'tryNew' }
+                      { mode: 'tryNew', diversity }
                     )
                   }
                 />
@@ -231,6 +271,7 @@ const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
                 <DishCard
                   key={currentRecommended.id}
                   dish={currentRecommended}
+                  badge={liked.some(d => d.name === currentRecommended.name) ? 'liked' : (disliked.some(d => d.name === currentRecommended.name) ? 'disliked' : undefined)}
                   onSwipe={(action) =>
                     handleSwipeFromQueue(
                       action,
@@ -238,7 +279,7 @@ const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
                       setRecommendedQueue,
                       currentRecommended,
                       setCurrentRecommended,
-                      { mode: 'recommended', preferences: preferences.join(',') }
+                      { mode: 'recommended', preferences: preferences.join(','), avoid: recommendedAvoid }
                     )
                   }
                 />

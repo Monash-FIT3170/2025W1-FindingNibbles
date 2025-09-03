@@ -15,6 +15,11 @@ const vertexAI = new VertexAI({ project, location });
 
 const model = vertexAI.getGenerativeModel({
   model: 'gemini-2.0-flash-001',
+  generationConfig: {
+    temperature: Number(process.env.AI_TEMPERATURE ?? 0.5),
+    topP: 0.9,
+    maxOutputTokens: 256,
+  },
 });
 
 function parsePreferences(preferences?: string | string[]): string[] {
@@ -44,7 +49,7 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
   req.on('data', chunk => body += chunk);
   req.on('end', async () => {
     try {
-      const { occasion, preferences, mode, feedback } = JSON.parse(body);
+      const { occasion, preferences, mode, feedback, diversity, avoid } = JSON.parse(body);
       const parsedPreferences = parsePreferences(preferences);
 
       // Fetch user feedback server-side if not provided
@@ -70,23 +75,46 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         'Return ONLY valid JSON array of up to 5 items.',
         'Each item must have keys "name" and "description".',
         'No markdown, no code fences, no extra commentary.',
+        'Do NOT include tokens, IDs, counters, tags, or suffixes in names; names must be plain dish names.',
       ].join(' ');
 
       const systemPreamble = 'You are a culinary recommender system that personalizes dish suggestions.';
 
       const contextBlocks: string[] = [];
-      if (userFeedback?.likes?.length) contextBlocks.push(`User liked dishes: ${userFeedback.likes.slice(0, 30).join(', ')}`);
-      if (userFeedback?.dislikes?.length) contextBlocks.push(`User disliked dishes: ${userFeedback.dislikes.slice(0, 30).join(', ')}`);
-      if (userFeedback?.recentSearches?.length) contextBlocks.push(`Recent searches: ${userFeedback.recentSearches.slice(0, 20).join(', ')}`);
+      const likesList = userFeedback?.likes?.slice(0, 30) || [];
+      const dislikesList = userFeedback?.dislikes?.slice(0, 30) || [];
+      const searchesList = userFeedback?.recentSearches?.slice(0, 20) || [];
+      if (likesList.length) contextBlocks.push(`User liked dishes: ${likesList.join(', ')}`);
+      if (dislikesList.length) contextBlocks.push(`User disliked dishes: ${dislikesList.join(', ')}`);
+      if (searchesList.length) contextBlocks.push(`Recent searches: ${searchesList.join(', ')}`);
       if (parsedPreferences.length) contextBlocks.push(`Explicit preferences: ${parsedPreferences.join(', ')}`);
+      // Provide a machine-readable summary Gemini can easily parse
+      const labeledFeedbackJson = JSON.stringify({ liked: likesList, disliked: dislikesList });
+      contextBlocks.push(`User feedback (JSON): ${labeledFeedbackJson}`);
+      const avoidList: string[] = Array.isArray(avoid) ? avoid.slice(0, 50) : [];
+      if (avoidList.length) contextBlocks.push(`Avoid recommending these dishes (already suggested/seen): ${avoidList.join(', ')}`);
 
       const modeLine = mode === 'tryNew'
         ? 'Emphasize novelty and diversity across cuisines, textures, and cooking methods. Avoid overfitting to prior likes; include at least one surprise pick.'
         : 'Emphasize alignment with liked dishes and adjacent cuisines; avoid items similar to dislikes.';
 
+      const diversityValue = typeof diversity === 'number' ? Math.max(0, Math.min(100, diversity)) : undefined;
+      let diversityLine = '';
+      if (diversityValue !== undefined) {
+        if (diversityValue <= 30) diversityLine = 'Diversity=LOW (0-30): Minimize novelty; prefer close neighbors to liked dishes and familiar cuisines.';
+        else if (diversityValue <= 70) diversityLine = 'Diversity=MEDIUM (31-70): Balance alignment with 1-2 novel picks; include adjacent cuisines and styles.';
+        else diversityLine = 'Diversity=HIGH (71-100): Maximize novelty and variety; include 2-3 surprising picks dissimilar to recent likes across multiple cuisines and methods.';
+      }
+
+      const diversityPolicy = diversityValue && diversityValue >= 60
+        ? 'Ensure the list spans at least 3 distinct cuisines and varied cooking methods.'
+        : '';
+
       const finalPrompt = [
         systemPreamble,
         modeLine,
+        diversityLine,
+        diversityPolicy,
         constraints,
         ...contextBlocks,
         'Output example: [{"name":"Margherita Pizza","description":"A classic Neapolitan pizza..."}]',
@@ -112,6 +140,11 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         };
         const items = tryParse(rawText)
           .filter((d: any) => d && typeof d.name === 'string' && typeof d.description === 'string')
+          .map((d: any) => {
+            // Sanitize accidental token artifacts like trailing "123ep" or similar
+            const cleanedName = String(d.name).trim().replace(/\s*\d{2,}[a-z]{1,3}$/i, '');
+            return { name: cleanedName, description: String(d.description).trim() };
+          })
           .slice(0, 5);
 
         if (!items.length) throw new Error('No valid items');
