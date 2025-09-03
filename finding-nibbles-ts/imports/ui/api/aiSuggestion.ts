@@ -52,7 +52,7 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
       } else if (parsedPreferences.length > 0) {
         prompt = `Suggest a dish that suits someone with one of the following dietary preferences: ${parsedPreferences.join(', ')}. Respond with only its name and description in json format with "name" and "description" fields.`;
       } else {
-        prompt = 'Suggest a japanese dish with only its name and description in json format with "name" and "description" fields.';
+        prompt = 'Suggest a new dish to recommend to a user to try out with only its name and description in json format with "name" and "description" fields.';
       }
 
       const result = await model.generateContent({
