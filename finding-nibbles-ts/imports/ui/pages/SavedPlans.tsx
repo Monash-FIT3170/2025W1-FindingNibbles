@@ -1,6 +1,6 @@
 import React from "react";
 import { useTracker } from "meteor/react-meteor-data";
-import { Plans } from "../api/Plans";
+import { Plans } from "../../api/Plans";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 import { PlanTable } from "../components/plans/PlanTable";

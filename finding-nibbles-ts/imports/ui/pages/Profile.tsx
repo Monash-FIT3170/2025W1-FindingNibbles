@@ -4,6 +4,7 @@ import type {CustomUser} from '../types/User';
 import { useNavigate } from 'react-router-dom';
 import AddPreferenceModal from '../components/profile/AddPreferenceModal';
 import { useTracker } from 'meteor/react-meteor-data';
+import { Accounts } from 'meteor/accounts-base';
 
 export const Profile = () => {
   const user = useTracker(() => Meteor.user() as CustomUser);
@@ -22,6 +23,16 @@ export const Profile = () => {
   const [profileImage, setProfileImage] = useState<string>(
     user?.profile?.profileImage || '/images/default-profile-pic.png'
   );
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
+
+  // Add these to your Profile component's state
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     setProfileImage(user?.profile?.profileImage || '/images/default-profile-pic.png');
@@ -115,7 +126,41 @@ export const Profile = () => {
       }
     );
   };
+
+  const handleChangePassword = () => {
+    setPasswordMessage('');
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordMessage('Please fill in all password fields.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage('New passwords do not match.');
+      return;
+    }
+    Accounts.changePassword(currentPassword, newPassword, (err) => {
+      if (err) {
+        // Prefer Meteor.Error.reason, else fallback to message or default
+        const errorMsg =
+          (typeof (err as any).reason === 'string' && (err as any).reason) ||
+          err.message ||
+          'Failed to change password.';
+        setPasswordMessage(errorMsg);
+      } else {
+        setPasswordMessage('Password changed successfully!');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setTimeout(() => setPasswordMessage(''), 3000);
+      }
+    });
+  };
   
+  // Password validation
+  const hasUppercase = /[A-Z]/.test(newPassword);
+  const hasNumber = /\d/.test(newPassword);
+  const hasLength = newPassword.length >= 8;
+  const isStrong = hasUppercase && hasNumber && hasLength;
+
   return (
     <div className="min-h-screen pt-20 bg-[#fdfaf7] p-6" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
       <div className="max-w-2xl mx-auto">
@@ -202,17 +247,6 @@ export const Profile = () => {
                 placeholder="Enter your email"
               />
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-[#4b2e19] mb-2">New Password (optional)</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-[#e2cfc3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-[#C47B4D] transition-all duration-200 text-[#4b2e19] bg-[#fff9f4]"
-                placeholder="Leave blank to keep current password"
-              />
-            </div>
 
             {/* Food Preferences */}
             <div>
@@ -284,6 +318,154 @@ export const Profile = () => {
           )}
         </div>
         
+        {/* Change Password Section */}
+        <div className="bg-white rounded-2xl shadow-lg border border-[#e2cfc3] p-8 mt-8">
+          <h2 className="text-xl font-semibold mb-2 text-[#4b2e19]">Change Password</h2>
+          <br></br>
+          <div className="space-y-4">
+            {/* Current Password */}
+            <div className="relative">
+              <input
+                type={showCurrent ? "text" : "password"}
+                value={currentPassword}
+                onChange={e => setCurrentPassword(e.target.value)}
+                placeholder="Current Password"
+                className="w-full px-4 py-3 border border-[#e2cfc3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-[#C47B4D] transition-all duration-200 text-[#4b2e19] bg-[#fff9f4] pr-12"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#C47B4D] hover:text-[#A35F35]"
+                onClick={() => setShowCurrent(v => !v)}
+                tabIndex={-1}
+              >
+                {showCurrent ? (
+                  // Eye open
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                ) : (
+                  // Eye closed
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-1.657.336-3.234.938-4.675M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            {/* New Password */}
+            <div className="relative">
+              <input
+                type={showNew ? "text" : "password"}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="New Password"
+                className="w-full px-4 py-3 border border-[#e2cfc3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-[#C47B4D] transition-all duration-200 text-[#4b2e19] bg-[#fff9f4] pr-12"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#C47B4D] hover:text-[#A35F35]"
+                onClick={() => setShowNew(v => !v)}
+                tabIndex={-1}
+              >
+                {showNew ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-1.657.336-3.234.938-4.675M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            {/* Confirm New Password */}
+            <div className="relative">
+              <input
+                type={showConfirm ? "text" : "password"}
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                placeholder="Confirm New Password"
+                className="w-full px-4 py-3 border border-[#e2cfc3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-[#C47B4D] transition-all duration-200 text-[#4b2e19] bg-[#fff9f4] pr-12"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#C47B4D] hover:text-[#A35F35]"
+                onClick={() => setShowConfirm(v => !v)}
+                tabIndex={-1}
+              >
+                {showConfirm ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-1.657.336-3.234.938-4.675M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            {/* Password Strength */}
+            <div className="flex flex-col gap-1 text-xs mt-2">
+              <span className={hasUppercase ? "text-green-600" : "text-red-600"}>
+                <span className="mr-1">{hasUppercase ? "✔" : "✖"}</span>
+                At least 1 uppercase
+              </span>
+              <span className={hasNumber ? "text-green-600" : "text-red-600"}>
+                <span className="mr-1">{hasNumber ? "✔" : "✖"}</span>
+                At least 1 number
+              </span>
+              <span className={hasLength ? "text-green-600" : "text-red-600"}>
+                <span className="mr-1">{hasLength ? "✔" : "✖"}</span>
+                At least 8 characters
+              </span>
+            </div>
+
+            {/* Feedback Message */}
+            {passwordMessage && (
+              <div className={`mt-4 p-3 rounded-lg text-center ${
+                passwordMessage.toLowerCase().includes('success')
+                  ? 'bg-green-100 border border-green-400 text-green-700'
+                  : 'bg-red-100 border border-red-400 text-red-700'
+              }`}>
+                {passwordMessage}
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="mt-8 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentPassword('');
+                  setNewPassword('');
+                  setConfirmPassword('');
+                  setPasswordMessage('');
+                }}
+                className="px-8 py-3 rounded-lg font-semibold text-[#C47B4D] border border-[#C47B4D] bg-white hover:bg-[#fff9f4] transition-all duration-200"
+              >
+                Discard
+              </button>
+              <button
+                onClick={handleChangePassword}
+                disabled={!isStrong}
+                className={`px-8 py-3 rounded-lg font-semibold text-white transition-all duration-200 ${
+                  !isStrong
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-[#C47B4D] hover:bg-[#A35F35] focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:ring-offset-2 transform hover:scale-105'
+                }`}
+              >
+                Apply Changes
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Add Preference Modal */}
         <AddPreferenceModal
           open={modalOpen}

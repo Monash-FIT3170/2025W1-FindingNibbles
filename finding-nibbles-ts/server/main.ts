@@ -1,16 +1,16 @@
 import { Meteor } from 'meteor/meteor';
 import { Accounts } from 'meteor/accounts-base';
 import { MOCK_DATA } from './config';
-import '../imports/ui/api/user.methods.ts';
-import '../imports/ui/api/aiSuggestion.ts';
-import '../imports/ui/api/generateImage.ts';
-import '../imports/ui/api/searchHistory.ts';
-import '../imports/ui/api/SavedRestaurants';
-import '../imports/ui/api/Plans';
-import '../imports/ui/api/meals.ts';
-import "/imports/ui/api/savedDishes";
+import '../imports/api/users/methods';
+import '../imports/api/aiSuggestion';
+import '../imports/api/generateImage';
+import '../imports/api/searchHistory';
+import '../imports/api/SavedRestaurants';
+import '../imports/api/Plans';
+import '../imports/api/meals';
+import "../imports/api/savedDishes";
 import { Mongo } from "meteor/mongo";
-import { SearchHistory } from "../imports/ui/api/searchHistory";
+import { SearchHistory } from "../imports/api/searchHistory";
 
 export const DishSwipes = new Mongo.Collection("dishSwipes");
 
