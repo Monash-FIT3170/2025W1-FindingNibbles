@@ -31,12 +31,12 @@ if (Meteor.isServer) {
         {
           unique: true,
           name: 'userId_1_placeId_1',
-          // Make the index ignore non-string placeId docs (extra safety)
+
           partialFilterExpression: { placeId: { $type: 'string' } }
         }
       );
 
-      // For publication sort performance
+
       await raw.createIndex(
         { userId: 1, createdAt: -1 },
         { name: 'userId_1_createdAt_-1' }
@@ -50,8 +50,6 @@ if (Meteor.isServer) {
     // NOTE: not an arrow function; we need `this.userId`
     async 'savedRestaurants.save'(restaurant: Partial<ISavedRestaurant>) {
       // Validate payload: do NOT require userId; allow rating null
-
-      console.log("111111111111111111111111111111111111111")
       check(restaurant, {
         placeId: String,
         name: String,
@@ -86,12 +84,6 @@ if (Meteor.isServer) {
       };
 
       try {
-
-        console.log("22222222222222222222222")
-        console.log('[savedRestaurants.save] userId=', userId, 'payload=', {
-  placeId, name: restaurant.name, location: restaurant.location
-});
-
         const res = await SavedRestaurantsCollection
           .rawCollection()
           .updateOne({ userId, placeId }, update, { upsert: true });
@@ -130,7 +122,6 @@ if (Meteor.isServer) {
       return removed;
     }
   });
-
 
 
   Meteor.publish('savedRestaurants', function () {
