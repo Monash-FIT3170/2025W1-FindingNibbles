@@ -10,7 +10,7 @@ import '../imports/api/Plans';
 import '../imports/api/meals';
 import "../imports/api/savedDishes";
 import { Mongo } from "meteor/mongo";
-import { SearchHistory } from "../imports/ui/api/searchHistory";
+import { SearchHistory } from "../imports/api/searchHistory";
 
 export const DishSwipes = new Mongo.Collection("dishSwipes");
 
