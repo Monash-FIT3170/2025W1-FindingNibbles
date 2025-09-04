@@ -10,3 +10,6 @@ settings.json
 *credentials*.json
 *service*.json
 findingnibbles-*.json
+
+finding-nibbles-ts/sacred-vault-*.json
+sacred-vault-*.json

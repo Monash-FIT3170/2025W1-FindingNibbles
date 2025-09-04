@@ -24,7 +24,7 @@ const originalDishes = [
   { name: "Pho", image: "/images/Pho.png", cuisine: "Vietnamese" },
 ];
 
-function shuffleArray(array) {
+function shuffleArray<T>(array: T[]): T[] {
   const arr = array.slice();
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -34,7 +34,9 @@ function shuffleArray(array) {
 }
 
 
-const SwipeDishesPopup = ({ onClose }) => {
+type SwipeDishesPopupProps = { onClose: () => void };
+
+const SwipeDishesPopup = ({ onClose }: SwipeDishesPopupProps) => {
   const [dishes, setDishes] = useState(originalDishes);
   const [index, setIndex] = useState(0);
 
@@ -43,7 +45,7 @@ const SwipeDishesPopup = ({ onClose }) => {
     setDishes(shuffleArray(originalDishes));
   }, []);
 
-  const handleSwipe = (liked) => {
+  const handleSwipe = (liked: boolean) => {
     const dish = dishes[index];
     Meteor.call("dishes.swipe", { name: dish.name, liked });
     if (index < dishes.length - 1) setIndex(index + 1);

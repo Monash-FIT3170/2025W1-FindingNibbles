@@ -10,6 +10,7 @@ import '../imports/api/Plans';
 import '../imports/api/meals';
 import "../imports/api/savedDishes";
 import { Mongo } from "meteor/mongo";
+import { SearchHistory } from "../imports/ui/api/searchHistory";
 
 export const DishSwipes = new Mongo.Collection("dishSwipes");
 
@@ -22,6 +23,34 @@ Meteor.methods({
       liked,
       createdAt: new Date(),
     });
+  },
+
+  async "dishes.getUserPreferences"() {
+    if (!this.userId) throw new Meteor.Error("Not authorized");
+    const likes = await DishSwipes.rawCollection().aggregate([
+      { $match: { userId: this.userId, liked: true } },
+      { $group: { _id: "$name", lastLikedAt: { $max: "$createdAt" } } },
+      { $sort: { lastLikedAt: -1 } },
+      { $limit: 50 },
+      { $project: { _id: 0, name: "$_id" } }
+    ]).toArray();
+    return likes.map((d: any) => d.name);
+  },
+
+  async "dishes.getUserFeedback"() {
+    if (!this.userId) throw new Meteor.Error("Not authorized");
+
+    const [likes, dislikes, searches] = await Promise.all([
+      DishSwipes.find({ userId: this.userId, liked: true }, { sort: { createdAt: -1 }, limit: 100 }).fetchAsync(),
+      DishSwipes.find({ userId: this.userId, liked: false }, { sort: { createdAt: -1 }, limit: 100 }).fetchAsync(),
+      SearchHistory.find({ userId: this.userId }, { sort: { timestamp: -1 }, limit: 50 }).fetchAsync(),
+    ]);
+
+    return {
+      likes: [...new Set(likes.map((d: any) => d.name))],
+      dislikes: [...new Set(dislikes.map((d: any) => d.name))],
+      recentSearches: [...new Set(searches.map((s: any) => s.searchTerm))],
+    };
   },
 });
 
