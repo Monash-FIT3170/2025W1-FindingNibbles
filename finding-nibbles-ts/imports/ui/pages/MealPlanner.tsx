@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Meals } from '../api/meals';
-import type { MealType } from '../api/meals';
+import { Meals } from '../../api/meals';
+import type { MealType } from '../../api/meals';
 import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';

@@ -1,4 +1,4 @@
-import {FoodItems} from '../../../server/FoodItems';
+import {FoodItems} from '../../server/FoodItems';
 
 const initialFoods = [
     {

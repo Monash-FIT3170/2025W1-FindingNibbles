@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useTracker } from "meteor/react-meteor-data";
-import { Plans } from "../api/Plans";
+import { Plans } from "../../api/Plans";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";

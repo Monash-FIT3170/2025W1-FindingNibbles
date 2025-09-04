@@ -3,13 +3,14 @@ import { WebApp } from 'meteor/webapp';
 import { parse } from 'url';
 import type { IncomingMessage, ServerResponse } from 'http';
 import fetch from 'node-fetch';
+import { Meteor } from 'meteor/meteor';
 
-async function querySDXL(data: any): Promise<string> {
+async function querySDXL(data: any, token: string): Promise<string> {
   const response = await fetch(
     'https://router.huggingface.co/nscale/v1/images/generations',
     {
       headers: {
-        Authorization: `Bearer ${process.env.HF_TOKEN}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       method: 'POST',
@@ -47,18 +48,39 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         return;
       }
 
+      // Prefer private settings, fall back to env, then public (not recommended)
+      const hfToken = (Meteor.settings?.private as any)?.HuggingFaceAccessToken
+        || process.env.HF_TOKEN
+        || (Meteor.settings?.public as any)?.HuggingFaceAccessToken;
+
+      if (!hfToken) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Hugging Face token not configured.' }));
+        return;
+      }
+
       const imageBase64 = await querySDXL({
         prompt,
         model: 'stabilityai/stable-diffusion-xl-base-1.0',
         response_format: 'b64_json',
-      });
+      }, hfToken);
+
+      if (!imageBase64) {
+        // Explicit rate-limit or empty image fallback
+        res.writeHead(429, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Image generation limit reached.' }));
+        return;
+      }
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ image: imageBase64 }));
     } catch (error) {
-      console.error(error);
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ imageUrl: 'https://media.istockphoto.com/id/1007786322/photo/is-it-delicious.jpg?s=612x612&w=0&k=20&c=pC5bVK9uKAEYDwPDs07g8eyL3Rtin0SJ8HGYysGfNTE=' }));
+      console.error('Generate Image Error:', error);
+      // Attempt to surface rate limit when possible
+      const msg = (error as any)?.message || '';
+      const isRateLimit = msg.includes('rate') || msg.includes('quota') || msg.includes('429');
+      res.writeHead(isRateLimit ? 429 : 500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: isRateLimit ? 'Image generation limit reached.' : 'Failed to generate image.' }));
     }
   });
 });
