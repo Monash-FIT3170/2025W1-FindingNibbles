@@ -74,7 +74,7 @@ Meteor.startup(async () => {
     });
 
     // Store globally for use in your app
-    globalThis.googleAuth = auth;
+    (globalThis as any).googleAuth = auth;
   }
 
   // Seed user if not present
