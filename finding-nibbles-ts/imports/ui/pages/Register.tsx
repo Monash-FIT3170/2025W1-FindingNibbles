@@ -2,6 +2,7 @@ import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { Accounts } from 'meteor/accounts-base';
 import { Link, useNavigate } from 'react-router-dom';
 import { RegisterFormData } from '../types/User';
+import { toast } from 'react-toastify';
 
 export const Register = () => {
   const [formData, setFormData] = useState<RegisterFormData>({
@@ -23,21 +24,21 @@ export const Register = () => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     const { username, email, password, confirmPassword } = formData;
 
     if (!username || !email || !password || !confirmPassword) {
-      setError('Please fill out all fields');
+      toast.error('Please fill out all fields');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      toast.error('Password must be at least 6 characters long');
       return;
     }
 
@@ -49,24 +50,26 @@ export const Register = () => {
       email,
       password,
       profile: {
-        name: username, 
-        preferences: [], 
+        name: username,
+        preferences: [],
       }
     }, (err) => {
       setLoading(false);
       if (err) {
-        setError(`Registration failed: ${err.reason || err.message}`);
+        console.log(err);
+        toast.error('Duplicate email/username found in the system');
       } else {
         console.log('User registered and logged in!');
-        navigate('/');
+        toast.success('Registered successfully');
+        navigate('/login');
       }
     });
   };
 
   return (
-    <div 
-      className="min-h-screen pt-20 w-screen bg-cover bg-center flex items-center justify-center p-5" 
-      style={{ 
+    <div
+      className="min-h-screen pt-20 w-screen bg-cover bg-center flex items-center justify-center p-5"
+      style={{
         backgroundImage: "url('/images/login.png')",
         fontFamily: '"Comic Sans MS", cursive, sans-serif'
       }}
@@ -89,7 +92,7 @@ export const Register = () => {
               required
             />
           </div>
-          
+
           <div>
             <input
               type="email"
@@ -101,7 +104,7 @@ export const Register = () => {
               required
             />
           </div>
-          
+
           <div>
             <input
               type="password"
@@ -114,7 +117,7 @@ export const Register = () => {
               minLength={6}
             />
           </div>
-          
+
           <div>
             <input
               type="password"
@@ -126,15 +129,14 @@ export const Register = () => {
               required
             />
           </div>
-          
+
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
-              loading 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-[#C47B4D] hover:bg-[#A35F35] focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:ring-offset-2 transform hover:scale-105'
-            }`}
+            className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${loading
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-[#C47B4D] hover:bg-[#A35F35] focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:ring-offset-2 transform hover:scale-105'
+              }`}
           >
             {loading ? (
               <div className="flex items-center justify-center">
@@ -145,17 +147,17 @@ export const Register = () => {
               'Register'
             )}
           </button>
-          
+
           {error && (
             <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-center">
               {error}
             </div>
           )}
-          
+
           <p className="text-white text-center">
             Already have an account?{' '}
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               className="text-blue-300 hover:text-blue-100 hover:underline font-semibold transition-colors"
             >
               Login here
