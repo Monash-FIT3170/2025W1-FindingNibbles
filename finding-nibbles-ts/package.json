@@ -32,13 +32,13 @@
     "@types/meteor": "^2.9.8",
     "@types/mocha": "^8.2.3",
     "@types/node": "^18.13.0",
-    "@types/react": "^18.3.21",
+    "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
     "@types/react-router-dom": "^5.3.3",
     "postcss": "^8.5.3",
     "postcss-load-config": "^6.0.1",
     "tailwindcss": "^4.1.4",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.5"
   },
   "meteor": {
     "mainModule": {
