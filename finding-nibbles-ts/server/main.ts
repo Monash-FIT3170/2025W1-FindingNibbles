@@ -11,13 +11,16 @@ import '../imports/api/meals';
 import "../imports/api/savedDishes";
 import { Mongo } from "meteor/mongo";
 import { SearchHistory } from "../imports/api/searchHistory";
+import { GoogleAuth } from "google-auth-library";
 
 export const DishSwipes = new Mongo.Collection("dishSwipes");
 
 Meteor.methods({
-  "dishes.swipe"({ name, liked }) {
+  // Server-side async insert
+  "dishes.swipe": async function ({ name, liked }) {
     if (!this.userId) throw new Meteor.Error("Not authorized");
-    DishSwipes.insert({
+
+    await DishSwipes.insertAsync({
       userId: this.userId,
       name,
       liked,
@@ -25,18 +28,24 @@ Meteor.methods({
     });
   },
 
+  // Get recent liked dishes
   async "dishes.getUserPreferences"() {
     if (!this.userId) throw new Meteor.Error("Not authorized");
-    const likes = await DishSwipes.rawCollection().aggregate([
-      { $match: { userId: this.userId, liked: true } },
-      { $group: { _id: "$name", lastLikedAt: { $max: "$createdAt" } } },
-      { $sort: { lastLikedAt: -1 } },
-      { $limit: 50 },
-      { $project: { _id: 0, name: "$_id" } }
-    ]).toArray();
+
+    const likes = await DishSwipes.rawCollection()
+      .aggregate([
+        { $match: { userId: this.userId, liked: true } },
+        { $group: { _id: "$name", lastLikedAt: { $max: "$createdAt" } } },
+        { $sort: { lastLikedAt: -1 } },
+        { $limit: 50 },
+        { $project: { _id: 0, name: "$_id" } },
+      ])
+      .toArray();
+
     return likes.map((d: any) => d.name);
   },
 
+  // Get user feedback
   async "dishes.getUserFeedback"() {
     if (!this.userId) throw new Meteor.Error("Not authorized");
 
@@ -55,26 +64,31 @@ Meteor.methods({
 });
 
 Meteor.startup(async () => {
-  // Debug: Check if settings are loaded
-
   const p = Meteor.settings.private;
-  if (p?.googleServiceAccountPath) {
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = p.googleServiceAccountPath;
+
+  // Setup Google Auth using embedded JSON for Galaxy/local
+  if (p?.googleServiceAccount) {
+    const auth = new GoogleAuth({
+      credentials: p.googleServiceAccount,
+      scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+    });
+
+    // Store globally for use in your app
+    globalThis.googleAuth = auth;
   }
 
-  // Create seed user if it doesn't exist
+  // Seed user if not present
   if (!(await Accounts.findUserByUsername(MOCK_DATA.SEED_USERNAME))) {
     await Accounts.createUser({
       username: MOCK_DATA.SEED_USERNAME,
       password: MOCK_DATA.SEED_PASSWORD,
       profile: {
-        name: 'Test User',
-        preferences: ['Vegetarian'],
+        name: "Test User",
+        preferences: ["Vegetarian"],
       },
     });
-    console.log('Seed user created');
+    console.log("Seed user created");
   } else {
-    console.log('Seed user already exists');
+    console.log("Seed user already exists");
   }
 });
-
