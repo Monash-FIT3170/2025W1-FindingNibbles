@@ -1,6 +1,6 @@
 import React from "react";
 import { useTracker } from "meteor/react-meteor-data";
-import { Plans } from "../api/Plans";
+import { Plans } from "../../api/Plans";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 import { PlanTable } from "../components/plans/PlanTable";
@@ -32,31 +32,28 @@ export const SavedPlans = () => {
   };
 
   return (
-    <div style={{ paddingTop: "5rem", minHeight: "100vh", background: "#fdfaf7" }}>
-      <div style={{ maxWidth: "1200px", margin: "40px auto", background: "#fff", borderRadius: 16, padding: 32, minHeight: 500 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-        <h2 style={{ fontFamily: "Comic Sans MS, cursive, sans-serif", color: "#c17030", fontSize: 32, margin: 0 }}>
-          Saved Plans
-        </h2>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          style={{
-            background: "#c17030",
-            color: "#fff",
-            fontWeight: "bold",
-            borderRadius: 8,
-            fontFamily: "Comic Sans MS, cursive, sans-serif",
-            fontSize: 18,
-            padding: "8px 24px"
-          }}
-          onClick={handleCreateNewPlan}
-        >
-          Create New Plan
-        </Button>
-      </div>
-      <PlanTable plans={plans} />
-      </div>
+    <div className="flex min-h-screen pt-20 bg-[#fdfaf7]">
+      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 pb-12">
+       <div className="bg-white border border-[#e2cfc3] rounded-2xl shadow-md p-6 sm:p-8">
+         <div className="flex items-center justify-between mb-8">
+           <div>
+             <h2 className="text-3xl font-bold text-[#4b2e19] mb-1">Saved Plans</h2>
+             <p className="text-sm text-[#7a5c43]">Create, review, and manage your travel food plans</p>
+           </div>
+           <Button
+             variant="contained"
+             startIcon={<AddIcon />}
+             className="!bg-[#b87b45] hover:!bg-[#a36e3d] !text-white !font-semibold !rounded-xl !px-5 !py-2"
+             onClick={handleCreateNewPlan}
+           >
+             Create New Plan
+           </Button>
+         </div>
+         <div className="overflow-x-auto">
+           <PlanTable plans={plans} />
+         </div>
+       </div>
+     </div>
     </div>
   );
 };

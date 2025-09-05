@@ -2,20 +2,20 @@ import React from "react";
 import { PlanTableRow } from "./PlanTableRow";
 
 export const PlanTable = ({ plans }: { plans: any[] }) => (
-  <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
-    <thead>
-      <tr style={{ background: "#f5e6dc" }}>
-        <th style={{ textAlign: "left", padding: "16px 12px", fontSize: 20, color: "#c17030", fontFamily: "Comic Sans MS, cursive, sans-serif" }}>Plan Name</th>
-        <th style={{ textAlign: "left", padding: "16px 12px", fontSize: 20, color: "#c17030", fontFamily: "Comic Sans MS, cursive, sans-serif" }}>Starting Point</th>
-        <th style={{ textAlign: "left", padding: "16px 12px", fontSize: 20, color: "#c17030", fontFamily: "Comic Sans MS, cursive, sans-serif" }}>Destination</th>
-        <th style={{ textAlign: "left", padding: "16px 12px", fontSize: 20, color: "#c17030", fontFamily: "Comic Sans MS, cursive, sans-serif" }}># of Restaurants</th>
-        <th style={{ textAlign: "center", padding: "16px 12px", fontSize: 20, color: "#c17030", fontFamily: "Comic Sans MS, cursive, sans-serif" }}></th>
+  <table className="w-full border border-[#e2cfc3] rounded-xl overflow-hidden text-sm">
+    <thead className="bg-[#d5a16e] text-white">
+      <tr>
+        <th className="text-left p-3 sm:p-4">Plan Name</th>
+        <th className="text-left p-3 sm:p-4">Starting Point</th>
+        <th className="text-left p-3 sm:p-4">Destination</th>
+        <th className="text-left p-3 sm:p-4"># of Restaurants</th>
+        <th className="text-center p-3 sm:p-4"></th>
       </tr>
     </thead>
-    <tbody>
+    <tbody className="bg-white">
       {plans.length === 0 ? (
         <tr>
-          <td colSpan={5} style={{ textAlign: "center", padding: 32, color: "#c17030", fontSize: 18 }}>
+          <td colSpan={5} className="text-center p-8 text-[#7a5c43] italic">
             No plans saved yet.
           </td>
         </tr>

@@ -13,7 +13,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: 'Meal Manager', path: '/meal-planner' },
   { label: 'Search History', path: '/search-history' },
-  { label: 'Saved Restaurants', path: '/saved-restaurants' },
+  // { label: 'Saved Restaurants', path: '/travel-planning' },
 ];
 
 export const Sidebar: React.FC = () => {

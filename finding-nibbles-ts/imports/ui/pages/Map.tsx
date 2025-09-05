@@ -3,15 +3,31 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Meteor } from 'meteor/meteor';
 import DicePopup from "../components/popups/DicePopup";
 import { GoogleMap, LoadScript, Marker, Circle, Autocomplete, InfoWindow } from "@react-google-maps/api";
-import { ISavedRestaurant } from "../api/SavedRestaurants";
+import { ISavedRestaurant } from "../../api/SavedRestaurants";
 // Removed MUI Modal components - using custom modal if needed
 import { useTracker } from 'meteor/react-meteor-data';
-import { Plans, PlanType } from '../api/Plans';
+import { Plans, PlanType } from '../../api/Plans';
 import { AddToPlanModal } from "../components/plans/AddToPlanModal";
 
-import { RadarChart } from "recharts";
-import { GenerateContentResponseHandler } from "@google-cloud/vertexai";
+import SwipeDishesPopup from "../components/popups/SwipeDishesPopup";
+
+const NavigationScreen = () => {
+  const [showPopup, setShowPopup] = useState(false);
+
+  return (
+    <>
+      <button onClick={() => setShowPopup(true)}>Swipe Dishes</button>
+      {showPopup && <SwipeDishesPopup onClose={() => setShowPopup(false)} />}
+    </>
+  );
+};
+
+export default NavigationScreen;
+
+
 // Add debounce utility
+
+type SaveRestaurantInput = Omit<ISavedRestaurant, 'userId' | '_id' | 'createdAt'>;
 const debounce = (func: Function, delay: number) => {
   
   let timeoutId: NodeJS.Timeout;
@@ -50,6 +66,7 @@ interface Restaurant {
 }
 export const Map = () => {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
+  const [showSwipePopup, setShowSwipePopup] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [availableCuisines, setAvailableCuisines] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -77,6 +94,15 @@ export const Map = () => {
   const [addingToPlanId, setAddingToPlanId] = useState<number | null>(null); // plan index being added to
 
   const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
+
+  // Show swipe popup on login (when Map loads), only once per session
+  useEffect(() => {
+    const hasSeenSwipe = sessionStorage.getItem('hasSeenSwipePopup');
+    if (!hasSeenSwipe) {
+      setShowSwipePopup(true);
+      sessionStorage.setItem('hasSeenSwipePopup', 'true');
+    }
+  }, []);
 
   const userPlans = useTracker(() => {
     Meteor.subscribe('plans');
@@ -150,6 +176,7 @@ export const Map = () => {
 
 
         setRestaurants(full_restaurant_search.flat());
+        
 
       } catch (error) {
         console.error("Error fetching restaurants:", error);
@@ -160,6 +187,7 @@ export const Map = () => {
     []
   );
 
+  console.log(restaurants);
   // ############### CALCULATING RADIUS
 
   const EARTH_RADIUS = 6378137
@@ -188,7 +216,7 @@ export const Map = () => {
     const lat_change = deltaLat(diameter);
     // Distance to move horizontally for diagonal points (m)
     const lng_distance = Math.ceil(horizontalLngDist(diameter, search_radius));
-    console.log("THIS IS THE LNG DISTANCE", lng_distance);
+
     // Lattitude change for diagonal points (moving up 1/2 the lat change)
     // const diag_lat_change = lat_change/2;
 
@@ -279,6 +307,17 @@ export const Map = () => {
     setSortedRestaurants(sorted);
   }, [restaurants]);
 
+  useEffect(() => {
+  const cuisineTypes = new Set<string>();
+  restaurants.forEach((r) => {
+    r.types?.forEach((t) => {
+      if (isCuisineType(t)) cuisineTypes.add(normalizeCuisineType(t));
+    });
+  });
+  setAvailableCuisines([...cuisineTypes].sort());
+}, [restaurants]);
+
+
   const mapContainerStyle: google.maps.MapOptions = {
     fullscreenControl: false,
     mapTypeControl: false,
@@ -292,40 +331,44 @@ export const Map = () => {
       },
     ],
   };
+  
+  const saveRestaurant = async (restaurant: Restaurant) => {
 
-  const saveRestaurant = (restaurant: Restaurant) => {
     const userId = Meteor.userId();
     if (!userId) {
       alert("You must be logged in to save restaurants");
       return;
     }
 
-    const savedRestaurant: ISavedRestaurant = {
-      userId,
-      placeId: restaurant.id || "",
-      name: restaurant.displayName?.text ?? "Unknown Name",
-      location: restaurant.formattedAddress ?? "Unknown Location",
-      latitude: restaurant.location?.latitude,
-      longitude: restaurant.location?.longitude,
-      rating: restaurant.rating ?? null,
-      cuisine: restaurant.types ? restaurant.types.filter(isCuisineType).map(normalizeCuisineType) : [],
-    };
-
-    Meteor.call('savedRestaurants.save', savedRestaurant, (error: Meteor.Error | null) => {
-      if (error) {
-        if (error.error === 'duplicate-entry') {
-          alert('This restaurant is already in your saved list!');
-        } else {
-          alert(`Failed to save: ${error.reason || error.message || error}`);
-        }
-        console.error('Error saving restaurant:', error);
-      } else {
-        alert('Restaurant saved successfully!');
-        console.log('Restaurant saved successfully');
-      }
-    });
+    const payload: SaveRestaurantInput = {
+    placeId: restaurant.id || "",
+    name: (restaurant.displayName?.text ?? "Unknown Name").trim(),
+    location: (restaurant.formattedAddress ?? "Unknown Location").trim(),
+    latitude: restaurant.location?.latitude,     
+    longitude: restaurant.location?.longitude,   
+    rating: restaurant.rating ?? null,
+    cuisine: restaurant.types
+      ? restaurant.types.filter(isCuisineType).map(normalizeCuisineType)
+      : [],
   };
 
+  try {
+
+    // Replacing with payload as saveRestaurants is also a method
+    await Meteor.callAsync('savedRestaurants.save', payload);
+    alert('Restaurant saved successfully!');
+    console.log('Restaurant saved successfully');
+  } catch (err: any) {
+    const code = err?.error;
+    const reason = err?.reason || err?.message || String(err);
+    if (code === 'duplicate-entry') {
+      alert('This restaurant is already in your saved list!');
+    } else {
+      alert(`Failed to save: ${reason}`);
+    }
+    console.error('Error saving restaurant:', err);
+  }
+};
 
 
   // const isSaved = selectedRestaurant != null && savedIndexes.includes(selectedRestaurant);
@@ -465,7 +508,6 @@ export const Map = () => {
           }
       };
 
-      console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
       try {
           const response = await fetch(URL, {
@@ -478,8 +520,8 @@ export const Map = () => {
               body: JSON.stringify(requestBody)
           });
 
-          console.log('Response status:', response.status);
-          console.log('Response headers:', response.headers);
+          // console.log('Response status:', response.status);
+          // console.log('Response headers:', response.headers);
 
           if (!response.ok) {
               const errorText = await response.text();
@@ -488,14 +530,13 @@ export const Map = () => {
           }
 
           const data = await response.json();
-          console.log('API Response data:', data);
+          // console.log('API Response data:', data);
 
           if (!data.places || data.places.length === 0) {
               console.warn('No restaurants found in the response');
               return [];
           }
 
-                    console.log(`Found ${data.places.length} restaurants`);
           
           // Fetch reviews for each restaurant
           const restaurantsWithReviews = await Promise.all(
@@ -588,6 +629,8 @@ export const Map = () => {
   useEffect(() => {
     getUserLocation();
   }, []);
+
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -624,7 +667,11 @@ export const Map = () => {
     }) ?? false;
   };
   return (
-    <LoadScript googleMapsApiKey={API_KEY} libraries={["places"]}>
+    <>
+      {showSwipePopup && (
+        <SwipeDishesPopup onClose={() => setShowSwipePopup(false)} />
+      )}
+      <LoadScript googleMapsApiKey={API_KEY} libraries={["places"]}>
       <div style={{ position: "relative", height: "100vh" }}>
         {userLocation && (
           <GoogleMap
@@ -650,7 +697,7 @@ export const Map = () => {
               }}
             />
 
-            {/* Restore cuisine filtering for map markers */}
+
             {filterRestaurantsByCuisine(restaurants, selectedCusine).filter((restaurant) =>
               haversineDistance(
                 userLocation.lat,
@@ -740,7 +787,7 @@ export const Map = () => {
           </GoogleMap>
         )}
 
-        <div className="absolute top-[70px] left-5 bg-white p-3 rounded-lg shadow-lg z-[1500] w-80">
+        <div className="absolute top-[70px] left-5 bg-white rounded-lg shadow-lg z-[1500] w-80">
           <form onSubmit={handleSearchSubmit}>
             <Autocomplete
               onLoad={onLoadAutocomplete}
@@ -760,7 +807,7 @@ export const Map = () => {
           )}
         </div>
 
-        <div className="absolute top-[150px] left-5 bg-white p-3 rounded-lg shadow-lg z-[1300] w-52">
+        <div className="absolute top-[150px] left-5 bg-white p-3 rounded-lg shadow-lg z-[900] w-52">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Filter by Cuisine
           </label>
@@ -903,7 +950,7 @@ export const Map = () => {
           onClose={() => {
             setIsDicePopupOpen(false);
           }}
-          availableCuisines={availableCuisines}
+          availableCuisines={availableCuisines} 
           onRoll={handleDiceRoll}
         />
 
@@ -916,6 +963,7 @@ export const Map = () => {
         />
       </div>
     </LoadScript>
+    </>
   );
 };
 

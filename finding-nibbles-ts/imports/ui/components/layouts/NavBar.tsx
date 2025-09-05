@@ -8,6 +8,16 @@ import { toast } from "react-toastify";
 const bunnyIcon = "./images/bunnyIcon.png";
 
 // SVG Icons as components
+
+// Heart/Favorites for Saved Restaurants
+const SavedIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
+  </svg>
+);
+
+
 const MapIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -63,8 +73,9 @@ export const NavBar = () => {
   const navItems = [
     { label: "Map", path: "/map", icon: <MapIcon /> },
     { label: "Discover", path: "/discover", icon: <DiscoverIcon /> },
-    { label: "Meal Manager", path: "/meal-planner", icon: <MealIcon /> },
+    { label: "Meal Planner", path: "/meal-planner", icon: <MealIcon /> },
     { label: "Travel Plans", path: "/travel-plans", icon: <TravelIcon /> },
+    { label: "Saved Restaurants", path: "/travel-planning", icon: <SavedIcon /> },
   ];
 
   const isCurrentPage = (path: string) => {
@@ -75,7 +86,7 @@ export const NavBar = () => {
     if (path === "/meal-planner" && (
       currentPath === "/meal-planner" ||
       currentPath === "/search-history" ||
-      currentPath === "/saved-restaurants"
+      currentPath === "/travel_planning"
     )) return true;
     
     return currentPath === path;
@@ -242,7 +253,7 @@ export const NavBar = () => {
                 <div className="space-y-2">
                   {[
                     { label: "Profile", path: "/profile" },
-                    { label: "Saved Restaurants", path: "/saved-restaurants" },
+                    // { label: "Saved Restaurants", path: "/travel-planning" },
                     { label: "Search History", path: "/search-history" },
                   ].map((item) => (
                     <RouterLink
