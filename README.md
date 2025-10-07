@@ -97,7 +97,7 @@ meteor run --settings settings.json
 
 Then open **http://localhost:3000**
 
-## 🔐 Security & Configuration
+## Security & Configuration
 
 Never commit real API keys or credentials.
 
