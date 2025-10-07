@@ -94,6 +94,7 @@ meteor npm install
 ### Run
 ```bash
 meteor run --settings settings.json
+```
 
 Then open **http://localhost:3000**
 
