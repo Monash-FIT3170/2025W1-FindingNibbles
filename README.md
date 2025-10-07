@@ -9,7 +9,7 @@
 3. [Contributors](#contributors)  
 4. [Tech Stack](#tech-stack)  
 5. [Installation & Execution](#installation--execution)  
-6. [Security & Configuration](#security-configuration)
+6. [Security & Configuration](#security--configuration)
 7. [Architecture & Modules](#️-architecture--modules)  
 8. [Versioning Strategy](#-versioning-strategy)  
 9. [Contribution & PR Strategy](#-contribution--pr-strategy)  
