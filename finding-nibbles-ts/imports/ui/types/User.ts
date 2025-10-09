@@ -12,7 +12,7 @@ export interface CustomUserProfile {
   profileImage?: string;
 }
 
-export interface CustomUser extends Meteor.User {
+export interface CustomUser  {
   profile?: CustomUserProfile;
   emails?: { address: string; verified: boolean }[];
 }

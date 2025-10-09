@@ -31,7 +31,6 @@ export const TravelPlanning = () => {
 
   const dishesData: DishesJSON = dishesDataJson;
 
-  // Helper function to convert dish name to filename format
   const dishNameToFilename = (dishName: string): string => {
     return dishName
       .replace(/[^a-zA-Z0-9\s\-_]/g, "") // Remove special characters except spaces, hyphens, underscores
@@ -39,10 +38,14 @@ export const TravelPlanning = () => {
       .replace(/[()]/g, ""); // Remove parentheses
   };
 
-  // Helper function to get image path
+  // Updated helper function to get image path from GitHub CDN
   const getImagePath = (cityName: string, dishName: string): string => {
     const filename = dishNameToFilename(dishName);
-    return `/images/dishes/${cityName}/${filename}.png`;
+    const baseURL =
+      "https://cdn.jsdelivr.net/gh/ArnavSingh04/finding-nibbles-images@main/dishes/";
+    return `${baseURL}${encodeURIComponent(cityName)}/${encodeURIComponent(
+      filename
+    )}.png`;
   };
 
   // Function to check if image exists

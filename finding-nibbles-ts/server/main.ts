@@ -12,6 +12,9 @@ import "../imports/api/savedDishes";
 import { Mongo } from "meteor/mongo";
 import { SearchHistory } from "../imports/api/searchHistory";
 import { GoogleAuth } from "google-auth-library";
+import fs from "fs";
+import os from "os";
+import path from "path";
 
 export const DishSwipes = new Mongo.Collection("dishSwipes");
 
@@ -66,18 +69,43 @@ Meteor.methods({
 
 
 Meteor.startup(async () => {
-  const p = Meteor.settings.private;
+const p = Meteor.settings.private;
+  if (!p?.googleServiceAccount) {
+    console.warn("No googleServiceAccount in settings");
+    return;
+  }
 
-  // Setup Google Auth using embedded JSON for Galaxy/local
-  if (p?.googleServiceAccount) {
-    const auth = new GoogleAuth({
-      credentials: p.googleServiceAccount,
+  let auth: GoogleAuth;
+
+  if (typeof p.googleServiceAccount === "string") {
+    // Local dev: path to a JSON key file
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = p.googleServiceAccount;
+
+    auth = new GoogleAuth({
+      keyFile: p.googleServiceAccount,
       scopes: ["https://www.googleapis.com/auth/cloud-platform"],
     });
 
-    // Store globally for use in your app
-    globalThis.googleAuth = auth;
+    console.log("GoogleAuth initialised with key file path");
+  } else {
+    // Prod: JSON object embedded in settings → write to a secure temp file
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "gcp-"));
+    const keyPath = path.join(tmpDir, "serviceAccount.json");
+    fs.writeFileSync(keyPath, JSON.stringify(p.googleServiceAccount));
+
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
+
+    auth = new GoogleAuth({
+      keyFile: keyPath,
+      scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+    });
+
+    console.log("GoogleAuth initialised with temp file at:", keyPath);
   }
+
+  // Make available globally
+  (globalThis as any).googleAuth = auth;
+
 
   // Seed user if not present
   if (!(await Accounts.findUserByUsername(MOCK_DATA.SEED_USERNAME))) {
