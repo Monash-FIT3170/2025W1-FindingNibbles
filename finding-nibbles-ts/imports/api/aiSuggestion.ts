@@ -61,11 +61,12 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         // Prefer explicit userId from request body; fall back to framework-provided context if available
         const resolvedUserId: string | undefined = userId || (req as any).userId;
 
-        if (!userFeedback && resolvedUserId) {
+        if (resolvedUserId) {
           // Read persisted likes/dislikes and searches directly from Mongo
-          const [likesDocs, dislikesDocs, searches] = await Promise.all([
+          const [likesDocs, dislikesDocs, recentSwipesDocs, searches] = await Promise.all([
             DishSwipes.find({ userId: resolvedUserId, liked: true }, { sort: { createdAt: -1 }, limit: 100 }).fetchAsync(),
             DishSwipes.find({ userId: resolvedUserId, liked: false }, { sort: { createdAt: -1 }, limit: 100 }).fetchAsync(),
+            DishSwipes.find({ userId: resolvedUserId }, { sort: { createdAt: -1 }, limit: 200 }).fetchAsync(),
             SearchHistory.find({ userId: resolvedUserId }, { sort: { timestamp: -1 }, limit: 50 }).fetchAsync(),
           ]);
 
@@ -73,7 +74,13 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
           const dislikes = Array.from(new Set(dislikesDocs.map((d: any) => d.name)));
           const recentSearches = Array.from(new Set(searches.map((s: any) => s.searchTerm)));
 
-          userFeedback = { likes, dislikes, recentSearches };
+          if (!userFeedback) userFeedback = { likes, dislikes, recentSearches };
+
+          // Build server-side avoid list from recent swipes (most recent first)
+          const recentSwipeNames = Array.from(new Set(recentSwipesDocs.map((d: any) => d.name)));
+          const incomingAvoid = Array.isArray(avoid) ? avoid : [];
+          const mergedAvoid = Array.from(new Set([...incomingAvoid, ...recentSwipeNames])).slice(0, 100);
+          (req as any)._serverAvoidList = mergedAvoid; // attach for later use in prompt context merge
         }
       } catch (e) {
         console.warn('Could not fetch user feedback inline, proceeding with provided params.');
@@ -93,11 +100,14 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
       const systemPreamble = 'You are a culinary recommender system that personalizes dish suggestionsf for users based on their preferences and feedback.';
 
       const contextBlocks: string[] = [];
-      const likesList = userFeedback?.likes?.slice(0, 30) || [];
-      const dislikesList = userFeedback?.dislikes?.slice(0, 30) || [];
-      const searchesList = userFeedback?.recentSearches?.slice(0, 20) || [];
+      const likesListAll = userFeedback?.likes || [];
+      const dislikesListAll = userFeedback?.dislikes || [];
+      const searchesListAll = userFeedback?.recentSearches || [];
+      const likesList = likesListAll.slice(0, 30);
+      const dislikesList = dislikesListAll.slice(0, 30);
+      const searchesList = searchesListAll.slice(0, 20);
       if (process.env.NODE_ENV !== 'production') {
-        console.log('[aiSuggestion] Using feedback counts => likes:', likesList.length, 'dislikes:', dislikesList.length, 'searches:', searchesList.length);
+        console.log('[aiSuggestion] Using feedback counts => likes:', likesListAll.length, 'dislikes:', dislikesListAll.length, 'searches:', searchesListAll.length);
       }
       if (likesList.length) contextBlocks.push(`User liked dishes: ${likesList.join(', ')}`);
       if (dislikesList.length) contextBlocks.push(`User disliked dishes: ${dislikesList.join(', ')}`);
@@ -106,7 +116,9 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
       // Provide a machine-readable summary Gemini can easily parse
       const labeledFeedbackJson = JSON.stringify({ liked: likesList, disliked: dislikesList });
       contextBlocks.push(`User feedback (JSON): ${labeledFeedbackJson}`);
-      const avoidList: string[] = Array.isArray(avoid) ? avoid.slice(0, 50) : [];
+      // Merge client-provided avoid with server-side avoid built from recent swipes
+      const avoidFromServer: string[] = Array.isArray((req as any)._serverAvoidList) ? (req as any)._serverAvoidList : [];
+      const avoidList: string[] = Array.from(new Set([...(Array.isArray(avoid) ? avoid : []), ...avoidFromServer])).slice(0, 100);
       if (avoidList.length) contextBlocks.push(`Avoid recommending these dishes (already suggested/seen): ${avoidList.join(', ')}`);
 
       const modeLine = mode === 'tryNew'

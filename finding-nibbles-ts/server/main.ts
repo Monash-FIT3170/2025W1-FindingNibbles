@@ -66,6 +66,13 @@ Meteor.methods({
     };
   },
 
+  // Clear all liked/disliked swipes for current user
+  async "dishes.clearHistory"() {
+    if (!this.userId) throw new Meteor.Error("Not authorized");
+    const result = await DishSwipes.removeAsync({ userId: this.userId });
+    return { deletedCount: result };
+  },
+
   // Onboarding: track if user has completed the swipe intro once
   async "onboarding.getSwipeCompleted"() {
     if (!this.userId) throw new Meteor.Error("Not authorized");
