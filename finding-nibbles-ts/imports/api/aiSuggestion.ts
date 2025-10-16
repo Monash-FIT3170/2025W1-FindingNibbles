@@ -66,9 +66,9 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
       if (occasion) {
         legacyPrompt = `Suggest a dish suitable for a special occasion like ${occasion} with only its name and description in json format with "name" and "description" fields.`;
       } else if (parsedPreferences.length > 0) {
-        legacyPrompt = `Suggest a dish that suits someone with one of the following dietary preferences: ${parsedPreferences.join(', ')}. Respond with only its name and description in json format with "name" and "description" fields.`;
+        legacyPrompt = `Suggest a dish that suits someone with one of the following dietary preferences: ${parsedPreferences.join(', ')}. Respond with only its name and description in json format with "name" and "description" fields.If enough context is not available, suggest any randomised dish.`;
       } else {
-        legacyPrompt = 'Suggest a new dish to recommend to a user to try out with only its name and description in json format with "name" and "description" fields.';
+        legacyPrompt = 'Suggest a new dish to recommend to a user to try out with only its name and description in json format with "name" and "description" fields. If enough context is not available, suggest any randomised dish.';
       }
 
       const constraints = [
@@ -78,7 +78,7 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         'Do NOT include tokens, IDs, counters, tags, or suffixes in names; names must be plain dish names.',
       ].join(' ');
 
-      const systemPreamble = 'You are a culinary recommender system that personalizes dish suggestions.';
+      const systemPreamble = 'You are a culinary recommender system that personalizes dish suggestionsf for users based on their preferences and feedback.';
 
       const contextBlocks: string[] = [];
       const likesList = userFeedback?.likes?.slice(0, 30) || [];
