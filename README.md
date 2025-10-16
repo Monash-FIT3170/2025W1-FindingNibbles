@@ -158,10 +158,33 @@ The app follows a client–server Meteor architecture.
 ---
 
 ## 🧩 Versioning Strategy
-- **Semantic Versioning:** `MAJOR.MINOR.PATCH`
-- **Initial Stable:** `v1.0.0` (Milestone 4 handover)
-- **Pre-release Tags:** `v0.9.0-rc.1`, etc.
-- Maintain `CHANGELOG.md` (sections: Added / Changed / Fixed / Deprecated / Security).
+
+This helps developers know what kind of update has been made and whether it may affect existing code.
+
+### Version Format
+**MAJOR.MINOR.PATCH**
+
+- **MAJOR** – Used for large or breaking changes that are not compatible with older versions.  
+- **MINOR** – Used when new features or improvements are added that still work with previous versions.  
+- **PATCH** – Used for small fixes or performance updates that don’t change existing functionality.  
+
+### Examples
+- **v1.0.0** – First stable release (Milestone 4 handover).  
+- **v1.1.0** – Added new feature or improvement.  
+- **v1.1.1** – Fixed a small issue or bug.  
+
+### Pre-release Versions
+Pre-release versions (testing or release candidate versions) can use labels such as **-alpha**, **-beta**, or **-rc**.  
+Example: **v0.9.0-rc.1**
+
+### Changelog
+A `CHANGELOG.md` file should be updated every time a new version is released. It should briefly list:  
+- What was **added**  
+- What was **changed**  
+- What was **fixed**  
+- Any **security** or important updates  
+
+This system keeps the project organised, makes updates easy to follow, and helps new developers understand what has changed over time.
 
 ---
 
