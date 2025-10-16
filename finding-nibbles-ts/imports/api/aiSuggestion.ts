@@ -17,9 +17,9 @@ const vertexAI = new VertexAI({ project, location });
 const model = vertexAI.getGenerativeModel({
   model: 'gemini-2.0-flash-001',
   generationConfig: {
-    temperature: Number(process.env.AI_TEMPERATURE ?? 0.5),
-    topP: 0.9,
-    maxOutputTokens: 256,
+    temperature: Number(process.env.AI_TEMPERATURE ?? 0.8), // nudge randomness
+    topP: 0.95,
+    maxOutputTokens: 320,
   },
 });
 
@@ -86,6 +86,8 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         'Each item must have keys "name" and "description".',
         'No markdown, no code fences, no extra commentary.',
         'Do NOT include tokens, IDs, counters, tags, or suffixes in names; names must be plain dish names.',
+        'Prefer variety: cuisines, cooking methods, proteins, and flavor profiles should vary.',
+        'Avoid near-duplicates, generic names, or overused classics unless expressly aligned with likes.',
       ].join(' ');
 
       const systemPreamble = 'You are a culinary recommender system that personalizes dish suggestionsf for users based on their preferences and feedback.';
@@ -94,6 +96,9 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
       const likesList = userFeedback?.likes?.slice(0, 30) || [];
       const dislikesList = userFeedback?.dislikes?.slice(0, 30) || [];
       const searchesList = userFeedback?.recentSearches?.slice(0, 20) || [];
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[aiSuggestion] Using feedback counts => likes:', likesList.length, 'dislikes:', dislikesList.length, 'searches:', searchesList.length);
+      }
       if (likesList.length) contextBlocks.push(`User liked dishes: ${likesList.join(', ')}`);
       if (dislikesList.length) contextBlocks.push(`User disliked dishes: ${dislikesList.join(', ')}`);
       if (searchesList.length) contextBlocks.push(`Recent searches: ${searchesList.join(', ')}`);
@@ -119,8 +124,8 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
       }
 
       const diversityPolicy = diversityValue && diversityValue >= 60
-        ? 'Ensure the list spans at least 3 distinct cuisines and varied cooking methods.'
-        : '';
+        ? 'Ensure the list spans at least 3 distinct cuisines and varied cooking methods. Include at least one regional specialty.'
+        : 'Ensure at least 2 distinct cuisines and avoid repeating the same core ingredient more than twice.';
 
       const occasionLine = mode === 'occasion' && occasion
         ? `Occasion: ${occasion}.`
@@ -144,7 +149,7 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         ...contextBlocks,
         mode === 'occasion'
           ? 'Return JSON object: {"centerpiece":{"name":"...","description":"..."},"complements":[{"name":"...","description":"..."},{"name":"...","description":"..."}]}. Cohesive menu; respect dislikes; avoid repeats.'
-          : 'Output example: [{"name":"Margherita Pizza","description":"A classic Neapolitan pizza..."}]',
+          : 'Output example: [{"name":"Margherita Pizza","description":"A classic Neapolitan pizza..."}]. Prefer common but authentic dishes where appropriate.',
       ].join('\n');
 
       const result = await model.generateContent({
@@ -179,13 +184,29 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         }
 
         // Default modes: tryNew / recommended
-        const items = (Array.isArray(parsed) ? parsed : [parsed])
+        // Dedupe and shuffle to reduce repetition across calls
+        const baseItems = (Array.isArray(parsed) ? parsed : [parsed])
           .filter((d: any) => d && typeof d.name === 'string' && typeof d.description === 'string')
           .map((d: any) => {
             const cleanedName = String(d.name).trim().replace(/\s*\d{2,}[a-z]{1,3}$/i, '');
             return { name: cleanedName, description: String(d.description).trim() };
-          })
-          .slice(0, 5);
+          });
+
+        const seen = new Set<string>();
+        const deduped = baseItems.filter((d) => {
+          const key = d.name.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        // Fisher–Yates shuffle
+        for (let i = deduped.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [deduped[i], deduped[j]] = [deduped[j], deduped[i]];
+        }
+
+        const items = deduped.slice(0, 5);
 
         if (!items.length) throw new Error('No valid items');
 

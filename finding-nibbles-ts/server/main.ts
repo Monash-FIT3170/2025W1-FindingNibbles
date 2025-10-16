@@ -65,6 +65,25 @@ Meteor.methods({
       recentSearches: [...new Set(searches.map((s: any) => s.searchTerm))],
     };
   },
+
+  // Onboarding: track if user has completed the swipe intro once
+  async "onboarding.getSwipeCompleted"() {
+    if (!this.userId) throw new Meteor.Error("Not authorized");
+    const user = await Meteor.users.findOneAsync(
+      { _id: this.userId },
+      { fields: { profile: 1 } }
+    );
+    return Boolean((user as any)?.profile?.swipeOnboardingCompleted);
+  },
+
+  async "onboarding.setSwipeCompleted"() {
+    if (!this.userId) throw new Meteor.Error("Not authorized");
+    await Meteor.users.updateAsync(
+      { _id: this.userId },
+      { $set: { "profile.swipeOnboardingCompleted": true } }
+    );
+    return { ok: 1 };
+  },
 });
 
 
