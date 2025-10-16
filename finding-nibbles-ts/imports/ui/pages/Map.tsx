@@ -93,7 +93,13 @@ export const Map = () => {
   const [newPlanTitle, setNewPlanTitle] = useState("");
   const [addingToPlanId, setAddingToPlanId] = useState<number | null>(null); // plan index being added to
 
+
+
+
+
   const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
+  
+
 
   // Show swipe popup on login (when Map loads), only once per session
   useEffect(() => {
