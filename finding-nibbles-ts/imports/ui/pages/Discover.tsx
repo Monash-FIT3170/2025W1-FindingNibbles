@@ -152,7 +152,7 @@ export const Discover = () => {
       const response = await fetch('/api/aiSuggestion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
+        body: JSON.stringify({ ...params, userId: Meteor.userId?.() }),
       });
 
       if (!response.ok) throw new Error('AI suggestion failed');
@@ -204,7 +204,7 @@ export const Discover = () => {
       const response = await fetch('/api/aiSuggestion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'occasion', occasion, diningMode, vibe }),
+        body: JSON.stringify({ mode: 'occasion', occasion, diningMode, vibe, userId: Meteor.userId?.() }),
       });
       if (!response.ok) throw new Error('Occasion menu failed');
       const data = await response.json();

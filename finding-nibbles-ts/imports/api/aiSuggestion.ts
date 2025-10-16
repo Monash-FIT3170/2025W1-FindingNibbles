@@ -3,7 +3,8 @@ import { WebApp } from 'meteor/webapp';
 import { parse } from 'url';
 import type { IncomingMessage, ServerResponse } from 'http';
 import { VertexAI } from '@google-cloud/vertexai';
-import { Meteor } from 'meteor/meteor';
+import { SearchHistory } from './searchHistory';
+import { DishSwipes } from './dishSwipes';
 
 
 const project = process.env.PROJECT_ID || 'sacred-vault-469801-f4';
@@ -21,6 +22,8 @@ const model = vertexAI.getGenerativeModel({
     maxOutputTokens: 256,
   },
 });
+
+// Use shared collection handle to avoid duplicate collection definitions
 
 function parsePreferences(preferences?: string | string[]): string[] {
   if (!preferences) return [];
@@ -49,27 +52,34 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
   req.on('data', chunk => body += chunk);
   req.on('end', async () => {
     try {
-      const { occasion, preferences, mode, feedback, diversity, avoid, diningMode, vibe } = JSON.parse(body);
+      const { occasion, preferences, mode, feedback, diversity, avoid, diningMode, vibe, userId } = JSON.parse(body);
       const parsedPreferences = parsePreferences(preferences);
 
       // Fetch user feedback server-side if not provided
       let userFeedback = feedback;
       try {
-        if (!userFeedback && (req as any).userId) {
-          userFeedback = await (Meteor as any).callAsync?.('dishes.getUserFeedback');
+        // Prefer explicit userId from request body; fall back to framework-provided context if available
+        const resolvedUserId: string | undefined = userId || (req as any).userId;
+
+        if (!userFeedback && resolvedUserId) {
+          // Read persisted likes/dislikes and searches directly from Mongo
+          const [likesDocs, dislikesDocs, searches] = await Promise.all([
+            DishSwipes.find({ userId: resolvedUserId, liked: true }, { sort: { createdAt: -1 }, limit: 100 }).fetchAsync(),
+            DishSwipes.find({ userId: resolvedUserId, liked: false }, { sort: { createdAt: -1 }, limit: 100 }).fetchAsync(),
+            SearchHistory.find({ userId: resolvedUserId }, { sort: { timestamp: -1 }, limit: 50 }).fetchAsync(),
+          ]);
+
+          const likes = Array.from(new Set(likesDocs.map((d: any) => d.name)));
+          const dislikes = Array.from(new Set(dislikesDocs.map((d: any) => d.name)));
+          const recentSearches = Array.from(new Set(searches.map((s: any) => s.searchTerm)));
+
+          userFeedback = { likes, dislikes, recentSearches };
         }
       } catch (e) {
         console.warn('Could not fetch user feedback inline, proceeding with provided params.');
       }
 
-      let legacyPrompt = '';
-      if (occasion) {
-        legacyPrompt = `Suggest a dish suitable for a special occasion like ${occasion} with only its name and description in json format with "name" and "description" fields.`;
-      } else if (parsedPreferences.length > 0) {
-        legacyPrompt = `Suggest a dish that suits someone with one of the following dietary preferences: ${parsedPreferences.join(', ')}. Respond with only its name and description in json format with "name" and "description" fields.If enough context is not available, suggest any randomised dish.`;
-      } else {
-        legacyPrompt = 'Suggest a new dish to recommend to a user to try out with only its name and description in json format with "name" and "description" fields. If enough context is not available, suggest any randomised dish.';
-      }
+      // legacy prompt removed
 
       const constraints = [
         'Return ONLY valid JSON array of up to 5 items.',

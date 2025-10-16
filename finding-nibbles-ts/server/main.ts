@@ -9,14 +9,15 @@ import '../imports/api/SavedRestaurants';
 import '../imports/api/Plans';
 import '../imports/api/meals';
 import "../imports/api/savedDishes";
-import { Mongo } from "meteor/mongo";
 import { SearchHistory } from "../imports/api/searchHistory";
+import { DishSwipes as DishSwipesShared } from "../imports/api/dishSwipes";
 import { GoogleAuth } from "google-auth-library";
 import fs from "fs";
 import os from "os";
 import path from "path";
 
-export const DishSwipes = new Mongo.Collection("dishSwipes");
+// Use shared collection handle to avoid re-defining it and causing duplicate collection errors
+export const DishSwipes = DishSwipesShared;
 
 Meteor.methods({
   // Server-side async insert
