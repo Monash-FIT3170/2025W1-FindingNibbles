@@ -78,7 +78,7 @@ export const Discover = () => {
   const [liked, setLiked] = useState<Dish[]>([]);
   const [disliked, setDisliked] = useState<Dish[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
   const [preferences, setPreferences] = useState<string[]>([]);
   const [diversity, setDiversity] = useState<number>(() => {
     const stored = typeof window !== 'undefined' ? window.localStorage.getItem('discover_diversity') : null;
@@ -90,6 +90,9 @@ export const Discover = () => {
   const [currentTryNew, setCurrentTryNew] = useState<Dish | null>(null);
   const [currentRecommended, setCurrentRecommended] = useState<Dish | null>(null);
   const [recommendedAvoid, setRecommendedAvoid] = useState<string[]>([]);
+  const [tryNewAvoid, setTryNewAvoid] = useState<string[]>([]);
+  const [clearing, setClearing] = useState(false);
+  const [clearMessage, setClearMessage] = useState<string>('');
   const [occasionMenu, setOccasionMenu] = useState<{
     centerpiece: Dish | null;
     complements: Dish[];
@@ -111,7 +114,7 @@ export const Discover = () => {
     const user = Meteor.user() as CustomUser | null;
 
     // Fetch liked dishes from the database and use as preferences for AI
-    Meteor.call("dishes.getUserPreferences", (err, likedDishes: string[]) => {
+    Meteor.call("dishes.getUserPreferences", (_err: unknown, likedDishes: string[]) => {
       const prefs = likedDishes && likedDishes.length > 0
         ? likedDishes
         : user?.profile?.preferences || [];
@@ -152,7 +155,7 @@ export const Discover = () => {
       const response = await fetch('/api/aiSuggestion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
+        body: JSON.stringify({ ...params, avoid: params.mode === 'tryNew' ? tryNewAvoid : recommendedAvoid, userId: Meteor.userId?.() }),
       });
 
       if (!response.ok) throw new Error('AI suggestion failed');
@@ -185,9 +188,11 @@ export const Discover = () => {
 
       setQueue(enriched);
       setCurrent(enriched[0] ?? null);
+      const newlySeenNames = enriched.map(d => d.name);
       if (params.mode === 'recommended') {
-        const newAvoid = [...recommendedAvoid, ...enriched.map(d => d.name)].slice(-50);
-        setRecommendedAvoid(newAvoid);
+        setRecommendedAvoid(prev => [...prev, ...newlySeenNames].slice(-100));
+      } else if (params.mode === 'tryNew') {
+        setTryNewAvoid(prev => [...prev, ...newlySeenNames].slice(-100));
       }
     } catch (err) {
       console.error(err);
@@ -204,7 +209,7 @@ export const Discover = () => {
       const response = await fetch('/api/aiSuggestion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'occasion', occasion, diningMode, vibe }),
+        body: JSON.stringify({ mode: 'occasion', occasion, diningMode, vibe, userId: Meteor.userId?.() }),
       });
       if (!response.ok) throw new Error('Occasion menu failed');
       const data = await response.json();
@@ -234,6 +239,25 @@ export const Discover = () => {
     }
   };
 
+  const clearHistory = () => {
+    if (clearing) return;
+    setClearing(true);
+    setClearMessage('');
+    Meteor.call('dishes.clearHistory', (err: unknown, res: { deletedCount: number }) => {
+      setClearing(false);
+      if (err) {
+        console.error('Failed to clear history', err);
+        setClearMessage('Could not clear history. Please try again.');
+        return;
+      }
+      setLiked([]);
+      setDisliked([]);
+      setRecommendedAvoid([]);
+      setTryNewAvoid([]);
+      setClearMessage(`Cleared history (${res?.deletedCount ?? 0} items removed).`);
+    });
+  };
+
   //function to handle preferences and update lists
   // const handlePreference = (action: 'like' | 'dislike') => {
   //   const dish = sampleDishes[currentIndex];
@@ -248,7 +272,9 @@ const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
     if (!dish) return;
     if (action === 'like') setLiked((prev) => [...prev, dish]);
     if (action === 'dislike') setDisliked((prev) => [...prev, dish]);
-    Meteor.call('dishes.swipe', { name: dish.name, liked: action === 'like' });
+    Meteor.call('dishes.swipe', { name: dish.name, liked: action === 'like' }, (err: unknown) => {
+      if (err) console.error('Swipe save failed', err);
+    });
   };
 
  const handleSwipeFromQueue = (
@@ -298,9 +324,18 @@ const handlePreference = (action: 'like' | 'dislike', dish: Dish | null) => {
               />
               <span className="text-sm text-[#7a5c43]">Adventurous</span>
               <span className="text-sm text-[#7a5c43] ml-1">{diversity}</span>
+              <button
+                onClick={clearHistory}
+                disabled={clearing}
+                className={`ml-4 px-3 py-1 rounded-lg text-xs border ${clearing ? 'opacity-60 cursor-not-allowed bg-[#f3ebe5] text-[#a08a78] border-[#e2cfc3]' : 'bg-[#f0e0d6] text-[#7a5c43] border-[#e2cfc3] hover:bg-[#e8d6c9]'}`}
+                aria-label="Clear liked/disliked history"
+              >{clearing ? 'Clearing…' : 'Clear history'}</button>
             </div>
           </div>
           <div className="bg-[#fff9f4] border border-[#e2cfc3] rounded-2xl shadow-md p-6 min-h-[200px] text-[#7a5c43]">
+            {clearMessage && (
+              <div className="mb-3 text-xs text-[#6b4e38]" aria-live="polite">{clearMessage}</div>
+            )}
             <AnimatePresence>
               {currentTryNew ? (
                 <DishCard

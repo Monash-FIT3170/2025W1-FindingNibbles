@@ -10,6 +10,7 @@ export interface CustomUserProfile {
     carbs: number;
   };
   profileImage?: string;
+  swipeOnboardingCompleted?: boolean;
 }
 
 export interface CustomUser  {
