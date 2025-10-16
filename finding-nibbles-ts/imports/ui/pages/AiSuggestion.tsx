@@ -41,15 +41,42 @@ const AiSuggestion: React.FC = () => {
         throw new Error(`Server returned ${response.status}`);
       }
 
-      const data: { suggestion?: string } = await response.json();
-      setSuggestion(data.suggestion || "No suggestion received.");
+      const data: { suggestion?: string; dishes?: any[]; menu?: any } = await response.json();
+      
+      // Handle different response formats based on mode
+      if (data.menu) {
+        // Occasion mode response - display centerpiece and complements
+        const { centerpiece, complements } = data.menu;
+        let menuText = `**${centerpiece.name}** - ${centerpiece.description}`;
+        if (complements && complements.length > 0) {
+          menuText += "\n\nComplementary dishes:\n";
+          complements.forEach((complement: any) => {
+            menuText += `• **${complement.name}** - ${complement.description}\n`;
+          });
+        }
+        setSuggestion(menuText);
+      } else if (data.dishes && data.dishes.length > 0) {
+        // Regular mode response - display first dish
+        const firstDish = data.dishes[0];
+        setSuggestion(`**${firstDish.name}** - ${firstDish.description}`);
+      } else {
+        setSuggestion(data.suggestion || "No suggestion received.");
+      }
 
-      const dish = extractSuggestedDish(data.suggestion ?? "");
+      // Extract dish name for image generation
+      let dishName = "";
+      if (data.menu) {
+        dishName = data.menu.centerpiece.name;
+      } else if (data.dishes && data.dishes.length > 0) {
+        dishName = data.dishes[0].name;
+      } else {
+        dishName = extractSuggestedDish(data.suggestion ?? "") || "";
+      }
 
       const imageRes = await fetch("/api/generateImage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: dish }),
+        body: JSON.stringify({ prompt: dishName }),
       });
 
       // if (!imageRes.ok) {
@@ -162,7 +189,7 @@ const AiSuggestion: React.FC = () => {
 
           <button
             className="w-full bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 text-white py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105"
-            onClick={() => fetchSuggestion({ occasion: selectedOccasion })}
+            onClick={() => fetchSuggestion({ occasion: selectedOccasion, mode: 'occasion' })}
             disabled={loading}
           >
             Get Dish for Occasion

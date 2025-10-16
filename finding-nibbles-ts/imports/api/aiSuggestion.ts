@@ -160,7 +160,7 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         constraints,
         ...contextBlocks,
         mode === 'occasion'
-          ? 'Return JSON object: {"centerpiece":{"name":"...","description":"..."},"complements":[{"name":"...","description":"..."},{"name":"...","description":"..."}]}. Cohesive menu; respect dislikes; avoid repeats.'
+          ? 'Return JSON object with EXACT structure: {"centerpiece":{"name":"Dish Name","description":"Dish description"},"complements":[{"name":"Complement 1","description":"Description 1"},{"name":"Complement 2","description":"Description 2"}]}. The centerpiece is the main dish for the occasion. Complements are supporting dishes. All name and description fields are REQUIRED strings. Cohesive menu; respect dislikes; avoid repeats.'
           : 'Output example: [{"name":"Margherita Pizza","description":"A classic Neapolitan pizza..."}]. Prefer common but authentic dishes where appropriate.',
       ].join('\n');
 
@@ -189,7 +189,10 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
           };
           const centerpiece = sanitize(centerpieceIn);
           const complements = complementsIn.map(sanitize).filter(Boolean).slice(0, 3);
-          if (!centerpiece) throw new Error('Invalid centerpiece');
+          if (!centerpiece) {
+            console.error('Invalid centerpiece received:', centerpieceIn);
+            throw new Error(`Invalid centerpiece: ${JSON.stringify(centerpieceIn)}`);
+          }
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ menu: { centerpiece, complements } }));
           return;
