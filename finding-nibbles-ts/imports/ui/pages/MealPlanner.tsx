@@ -249,7 +249,7 @@ export const MealPlanner = () => {
           
           {/* Page Title */}
           <div className="w-full max-w-4xl mx-auto px-4 sm:px-6">
-            <h1 className="text-3xl font-bold text-[#4b2e19] mb-4">Meal Manager</h1>
+            <h1 className="text-3xl font-bold text-[#4b2e19] mb-4">Meal Planner</h1>
             <p className="text-sm text-[#7a5c43]">Track your meals and set your nutritional goals</p>
           </div>
 
