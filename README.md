@@ -35,11 +35,16 @@
 ---
 
 ## Change Log Since Milestone 3
-- Completed full documentation structure and finalised handover format.  
-- Added **Contribution & Versioning Strategy** sections for maintainability.  
-- Expanded **Troubleshooting** with detailed causes and resolutions.  
-- Introduced **Future Roadmap** &  **Security & Configuration** sections.  
-- Improved readability, grammar and formatting consistency across the README.
+The following sections are new compared to the old handover documentation:
+- Change Log Since Milestone 3
+- Security and Configuration
+- Architecture and Modules
+- Versioning Strategy
+- Contribution and Pull Request Strategy
+- Deployment
+- Expanded Troubleshooting section
+- Future Roadmap
+
 
 ---
 
@@ -163,15 +168,28 @@ The app follows a client–server Meteor architecture.
 ## 🤝 Contribution & PR Strategy
 
 ### Branching
-- `main` – stable, deployable.
-- `feature/<feature-name>`
-- `fix/<issue-id>`
-- `chore/<task>`
+- `main` – stable, deployable
+- `develop` - merge multiple branches together initially
+- `feature/<user-story-id>` – for developing new features or functionality
+- `fix/<issue-id>` – for resolving bugs or issues identified during testing
 
-### Commit Convention (Conventional Commits)
-- `feat: add new map filtering`
-- `fix: resolve minimongo write issue`
-- `docs: update README`
+### Commit Convention 
+All commit messages must follow a consistent and descriptive format to ensure clarity and traceability across the repository.
+
+Commit messages must follow this template:
+[Issue/User Story ID][Developer Name] [Description]
+
+Example:
+[US12345][John] Implemented new validation checks for incorrect password and email format.
+
+
+**Guidelines:**
+
+The brief heading should summarise the main purpose of the change.
+
+The description should provide additional detail if necessary, explaining what was modified or why the change was made.
+
+Keep the message concise but informative to assist reviewers and future contributors.
 
 ### PR Process
 1. Branch from `main`.
