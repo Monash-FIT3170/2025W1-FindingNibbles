@@ -1,16 +1,18 @@
 import React, { useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useTracker } from "meteor/react-meteor-data";
 import { Plans } from "../../api/Plans";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Meteor } from "meteor/meteor";
 import { TextField, Button, IconButton } from "@mui/material";
 import { LoadScript, Autocomplete } from "@react-google-maps/api";
 
 export const PlanDetails = () => {
   const { planId } = useParams();
+  const navigate = useNavigate();
 
   const isReady = useTracker(() => {
     const handle = Meteor.subscribe("plans");
@@ -125,6 +127,16 @@ export const PlanDetails = () => {
             transition: "background 0.2s, border 0.2s"
           }}
         >
+        {/* Back Button */}
+        <div className="mb-2 flex justify-end">
+          <button
+            onClick={() => navigate("/travel-plans")}
+            className="flex items-center gap-2 px-3 py-1 rounded-md bg-[#c17030] text-white hover:bg-[#a65c27] transition-shadow shadow-sm cursor-pointer"
+            aria-label="Back to travel plans"
+          >
+            <ArrowBackIcon />
+          </button>
+        </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h2 style={{ fontFamily: "Comic Sans MS, cursive, sans-serif", color: "#c17030", paddingBottom: 15 }}>
             {isEditing ? "Editing" : "Plan Details"}
