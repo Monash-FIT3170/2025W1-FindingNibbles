@@ -230,28 +230,28 @@ export const Map = () => {
 
     // NE
     {
-      const lat_NE = central_lat + lat_change / 2;
-      const lng_NE = central_lng + deltaLng(lat_NE, lng_distance);
-      output.push({ lat: lat_NE, lng: lng_NE, radius: search_radius });
+    const lat_NE = central_lat + lat_change / 2;
+    const lng_NE = central_lng + deltaLng(lat_NE, lng_distance);
+    output.push({ lat: lat_NE, lng: lng_NE, radius: search_radius });
     }
 
     // //SE
     {
-      const lat_SE = central_lat - lat_change / 2;
-      const lng_SE = central_lng + deltaLng(lat_SE, lng_distance);
-      output.push({ lat: lat_SE, lng: lng_SE, radius: search_radius });
+    const lat_SE = central_lat - lat_change / 2;
+    const lng_SE = central_lng + deltaLng(lat_SE, lng_distance);
+    output.push({ lat: lat_SE, lng: lng_SE, radius: search_radius });
     }
     // //NW
     {
-      const lat_NW = central_lat + lat_change / 2;
-      const lng_NW = central_lng - deltaLng(lat_NW, lng_distance);
-      output.push({ lat: lat_NW, lng: lng_NW, radius: search_radius });
+    const lat_NW = central_lat + lat_change / 2;
+    const lng_NW = central_lng - deltaLng(lat_NW, lng_distance);
+    output.push({ lat: lat_NW, lng: lng_NW, radius: search_radius });
     }
     // //SW
     {
-      const lat_SW = central_lat - lat_change / 2;
-      const lng_SW = central_lng - deltaLng(lat_SW, lng_distance);
-      output.push({ lat: lat_SW, lng: lng_SW, radius: search_radius });
+    const lat_SW = central_lat - lat_change / 2;
+    const lng_SW = central_lng - deltaLng(lat_SW, lng_distance);
+    output.push({ lat: lat_SW, lng: lng_SW, radius: search_radius });
     }
 
     return output;
@@ -308,14 +308,14 @@ export const Map = () => {
   }, [restaurants]);
 
   useEffect(() => {
-  const cuisineTypes = new Set<string>();
-  restaurants.forEach((r) => {
-    r.types?.forEach((t) => {
-      if (isCuisineType(t)) cuisineTypes.add(normalizeCuisineType(t));
+    const cuisineTypes = new Set<string>();
+    restaurants.forEach((r) => {
+      r.types?.forEach((t) => {
+        if (isCuisineType(t)) cuisineTypes.add(normalizeCuisineType(t));
+      });
     });
-  });
-  setAvailableCuisines([...cuisineTypes].sort());
-}, [restaurants]);
+    setAvailableCuisines([...cuisineTypes].sort());
+  }, [restaurants]);
 
 
   const mapContainerStyle: google.maps.MapOptions = {
@@ -331,7 +331,7 @@ export const Map = () => {
       },
     ],
   };
-  
+
   const saveRestaurant = async (restaurant: Restaurant) => {
 
     const userId = Meteor.userId();
@@ -341,34 +341,34 @@ export const Map = () => {
     }
 
     const payload: SaveRestaurantInput = {
-    placeId: restaurant.id || "",
-    name: (restaurant.displayName?.text ?? "Unknown Name").trim(),
-    location: (restaurant.formattedAddress ?? "Unknown Location").trim(),
-    latitude: restaurant.location?.latitude,     
-    longitude: restaurant.location?.longitude,   
-    rating: restaurant.rating ?? null,
-    cuisine: restaurant.types
-      ? restaurant.types.filter(isCuisineType).map(normalizeCuisineType)
-      : [],
-  };
+      placeId: restaurant.id || "",
+      name: (restaurant.displayName?.text ?? "Unknown Name").trim(),
+      location: (restaurant.formattedAddress ?? "Unknown Location").trim(),
+      latitude: restaurant.location?.latitude,
+      longitude: restaurant.location?.longitude,
+      rating: restaurant.rating ?? null,
+      cuisine: restaurant.types
+        ? restaurant.types.filter(isCuisineType).map(normalizeCuisineType)
+        : [],
+    };
 
-  try {
+    try {
 
     // Replacing with payload as saveRestaurants is also a method
-    await Meteor.callAsync('savedRestaurants.save', payload);
-    alert('Restaurant saved successfully!');
+      await Meteor.callAsync('savedRestaurants.save', payload);
+      alert('Restaurant saved successfully!');
     console.log('Restaurant saved successfully');
-  } catch (err: any) {
-    const code = err?.error;
-    const reason = err?.reason || err?.message || String(err);
-    if (code === 'duplicate-entry') {
-      alert('This restaurant is already in your saved list!');
-    } else {
-      alert(`Failed to save: ${reason}`);
-    }
+    } catch (err: any) {
+      const code = err?.error;
+      const reason = err?.reason || err?.message || String(err);
+      if (code === 'duplicate-entry') {
+        alert('This restaurant is already in your saved list!');
+      } else {
+        alert(`Failed to save: ${reason}`);
+      }
     console.error('Error saving restaurant:', err);
-  }
-};
+    }
+  };
 
 
   // const isSaved = selectedRestaurant != null && savedIndexes.includes(selectedRestaurant);
@@ -480,11 +480,11 @@ export const Map = () => {
   };
   async function fetchRestaurants(latitude: number, longitude: number, searchRadius: number = radius): Promise<Restaurant[]> {
       //const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
-      
-      if (!API_KEY) {
-          console.error('Google Places API key not found in settings');
-          throw new Error('Google Places API key not configured');
-      }
+
+    if (!API_KEY) {
+      console.error('Google Places API key not found in settings');
+      throw new Error('Google Places API key not configured');
+    }
       
       // console.log('=== FETCHING RESTAURANTS DEBUG ===');
       // console.log('API Key:', API_KEY);
@@ -492,99 +492,99 @@ export const Map = () => {
       // console.log('Longitude:', longitude);
       // console.log('Search Radius:', searchRadius);
       
-      const URL = "https://places.googleapis.com/v1/places:searchNearby";
+    const URL = "https://places.googleapis.com/v1/places:searchNearby";
 
-      const requestBody = {
-          includedTypes: ["restaurant"],
-          maxResultCount: 10,
-          locationRestriction: {
-              circle: {
-                  center: {
-                      latitude: latitude,
-                      longitude: longitude
-                  },
-                  radius: searchRadius
-              }
-          }
-      };
+    const requestBody = {
+      includedTypes: ["restaurant"],
+      maxResultCount: 10,
+      locationRestriction: {
+        circle: {
+          center: {
+            latitude: latitude,
+            longitude: longitude
+          },
+          radius: searchRadius
+        }
+      }
+    };
 
 
-      try {
-          const response = await fetch(URL, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'X-Goog-Api-Key': API_KEY,
-                  'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.rating,places.types,places.id,places.location'
-              },
-              body: JSON.stringify(requestBody)
-          });
+    try {
+      const response = await fetch(URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': API_KEY,
+          'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.rating,places.types,places.id,places.location'
+        },
+        body: JSON.stringify(requestBody)
+      });
 
           // console.log('Response status:', response.status);
           // console.log('Response headers:', response.headers);
 
-          if (!response.ok) {
-              const errorText = await response.text();
+      if (!response.ok) {
+        const errorText = await response.text();
               console.error('API Error Response:', errorText);
-              throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-          }
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
 
-          const data = await response.json();
+      const data = await response.json();
           // console.log('API Response data:', data);
 
-          if (!data.places || data.places.length === 0) {
+      if (!data.places || data.places.length === 0) {
               console.warn('No restaurants found in the response');
-              return [];
-          }
+        return [];
+      }
 
           
           // Fetch reviews for each restaurant
-          const restaurantsWithReviews = await Promise.all(
-            data.places.map(async (restaurant: any) => {
-              try {
-                const detailsUrl = `https://places.googleapis.com/v1/places/${restaurant.id}`;
-                const reviewsResponse = await fetch(detailsUrl, {
-                  headers: {
-                    'X-Goog-Api-Key': API_KEY,
-                    'X-Goog-FieldMask': [
-                      'reviews.rating',
-                      'reviews.text',
-                      'reviews.publishTime',
-                      'reviews.relativePublishTimeDescription',
-                      'reviews.authorAttribution.displayName'
-                    ].join(','),
-                  },
-                });
-                if (reviewsResponse.ok) {
-                  const reviewsData = await reviewsResponse.json();
-                  const normalizedReviews: Review[] = (reviewsData.reviews || []).map((rev: any) => ({
-                    authorName: rev.authorAttribution?.displayName ?? 'Anonymous',
-                    rating: rev.rating ?? 0,
-                    relativeTimeDescription: rev.relativePublishTimeDescription ?? '',
-                    text: rev.text?.text ?? '',
-                    time: rev.publishTime ? Date.parse(rev.publishTime) : 0,
-                  }));
-                  return {
-                    ...restaurant,
-                    reviews: normalizedReviews,
-                  };
-                }
-              } catch (error) {
-                console.error(`Error fetching reviews for ${restaurant.id}:`, error);
-              }
+      const restaurantsWithReviews = await Promise.all(
+        data.places.map(async (restaurant: any) => {
+          try {
+            const detailsUrl = `https://places.googleapis.com/v1/places/${restaurant.id}`;
+            const reviewsResponse = await fetch(detailsUrl, {
+              headers: {
+                'X-Goog-Api-Key': API_KEY,
+                'X-Goog-FieldMask': [
+                  'reviews.rating',
+                  'reviews.text',
+                  'reviews.publishTime',
+                  'reviews.relativePublishTimeDescription',
+                  'reviews.authorAttribution.displayName'
+                ].join(','),
+              },
+            });
+            if (reviewsResponse.ok) {
+              const reviewsData = await reviewsResponse.json();
+              const normalizedReviews: Review[] = (reviewsData.reviews || []).map((rev: any) => ({
+                authorName: rev.authorAttribution?.displayName ?? 'Anonymous',
+                rating: rev.rating ?? 0,
+                relativeTimeDescription: rev.relativePublishTimeDescription ?? '',
+                text: rev.text?.text ?? '',
+                time: rev.publishTime ? Date.parse(rev.publishTime) : 0,
+              }));
               return {
                 ...restaurant,
-                reviews: [],
+                reviews: normalizedReviews,
               };
-            })
-          );
+            }
+          } catch (error) {
+            console.error(`Error fetching reviews for ${restaurant.id}:`, error);
+          }
+          return {
+            ...restaurant,
+            reviews: [],
+          };
+        })
+      );
           
-          return restaurantsWithReviews;
+      return restaurantsWithReviews;
           
-      } catch (error) {
-          console.error('Error fetching restaurants:', error);
-          throw error;
-      }
+    } catch (error) {
+      console.error('Error fetching restaurants:', error);
+      throw error;
+    }
   }
 
   const cuisineIcons: Record<string, string> = {
@@ -672,297 +672,312 @@ export const Map = () => {
         <SwipeDishesPopup onClose={() => setShowSwipePopup(false)} />
       )}
       <LoadScript googleMapsApiKey={API_KEY} libraries={["places"]}>
-      <div style={{ position: "relative", height: "100vh" }}>
-        {userLocation && (
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={userLocation}
-            zoom={14}
-            options={{
-              ...mapContainerStyle,
-              scrollwheel: false,
-            }}
-            onLoad={(mapInstance) => setMap(mapInstance)}
-          >
-            <Marker position={userLocation} />
-
-            <Circle
+        <div style={{ position: "relative", height: "100vh" }}>
+          {userLocation && (
+            <GoogleMap
+              mapContainerStyle={containerStyle}
               center={userLocation}
-              radius={radius}
+              zoom={14}
               options={{
-                fillColor: "rgba(100, 158, 255, 0.2)",
-                strokeColor: "#4285F4",
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
+                ...mapContainerStyle,
+                scrollwheel: false,
               }}
-            />
+              onLoad={(mapInstance) => setMap(mapInstance)}
+            >
+              <Marker position={userLocation} />
 
-
-            {filterRestaurantsByCuisine(restaurants, selectedCusine).filter((restaurant) =>
-              haversineDistance(
-                userLocation.lat,
-                userLocation.lng,
-                restaurant.location.latitude,
-                restaurant.location.longitude
-              ) <= radius
-            ).map((restaurant, index) => {
-              const isHovered = hoveredMarkerIndex === index;
-              const isHighlighted = isRestaurantHighlighted(restaurant);
-              const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
-
-              return (
-                <Marker
-                  key={index}
-                  position={{
-                    lat: restaurant.location.latitude,
-                    lng: restaurant.location.longitude,
-                  }}
-                  icon={{
-                    url: iconUrl,
-                    scaledSize: new window.google.maps.Size(
-                      isHovered ? 50 : (isHighlighted ? 45 : 40),
-                      isHovered ? 50 : (isHighlighted ? 45 : 40)
-                    ),
-                  }}
-                  animation={isHighlighted ? google.maps.Animation.BOUNCE : undefined}
-                  onMouseOver={() => setHoveredMarkerIndex(index)}
-                  onMouseOut={() => setHoveredMarkerIndex(null)}
-                  onClick={() => setSelectedRestaurant(restaurant)}
-                />
-              );
-
-            })}
-
-            {selectedRestaurant && (
-              <InfoWindow
-                position={{
-                  lat: selectedRestaurant.location.latitude,
-                  lng: selectedRestaurant.location.longitude,
+              <Circle
+                center={userLocation}
+                radius={radius}
+                options={{
+                  fillColor: "rgba(100, 158, 255, 0.2)",
+                  strokeColor: "#4285F4",
+                  strokeOpacity: 0.8,
+                  strokeWeight: 2,
                 }}
-                onCloseClick={() => setSelectedRestaurant(null)}
-              >
-                <div style={{ maxWidth: "200px" }}>
-                  <h3 style={{ margin: "0" }}>{selectedRestaurant.displayName?.text || "N/A"}</h3>
-                  <p style={{ margin: "0" }}>{selectedRestaurant.formattedAddress || "N/A"}</p>
-                  <p style={{ margin: "0" }}>Rating: {selectedRestaurant.rating ?? "N/A"}</p>
-                  <p style={{ margin: "0" }}>
-                    Cuisine:{" "}
-                    {selectedRestaurant.types
-                      ?.filter((type) => type.includes("restaurant"))
-                      .map(normalizeCuisineType)
-                      .join(", ") || "N/A"}
-                  </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "8px" }}>
-                    <button
-                      onClick={() => saveRestaurant(selectedRestaurant)}
-                      style={{
-                        padding: "6px 12px",
-                        backgroundColor: "#6200ea",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer"
-                      }}
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setIsAddToPlanOpen(true)}
-                      style={{
-                        padding: "6px 12px",
-                        backgroundColor: "#C47B4D",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer"
-                      }}
-                    >
-                      Add to Plan
-                    </button>
-                  </div>
-                </div>
-              </InfoWindow>
-            )}
-
-          </GoogleMap>
-        )}
-
-        <div className="absolute top-[70px] left-5 bg-white rounded-lg shadow-lg z-[1500] w-80">
-          <form onSubmit={handleSearchSubmit}>
-            <Autocomplete
-              onLoad={onLoadAutocomplete}
-              onPlaceChanged={onPlaceChanged}
-            >
-              <input
-                type="text"
-                placeholder="Search location"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-transparent text-sm"
-                value={searchValue}
-                onChange={handleSearchInputChange}
               />
-            </Autocomplete>
-          </form>
-          {searchSaved && (
-            <div className="mt-2 text-xs text-green-600 font-medium">Search saved!</div>
-          )}
-        </div>
 
-        <div className="absolute top-[150px] left-5 bg-white p-3 rounded-lg shadow-lg z-[900] w-52">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Filter by Cuisine
-          </label>
-          <select
-            value={selectedCusine}
-            onChange={(e) => setSelectedCusine(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-transparent text-sm bg-white"
-          >
-            <option value="All">All Cuisines</option>
-            {availableCuisines.map((cuisine) => (
-              <option key={cuisine} value={cuisine}>
-                {cuisine}
-              </option>
-            ))}
-          </select>
-        </div>
-        {userLocation && (
-          <>
 
-            {isMapLoading && (
-              <div className="absolute top-4 right-4 flex items-center bg-white p-3 rounded-lg shadow-md z-[1001]">
-                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mr-2"></div>
-                <span className="text-sm font-medium">Updating restaurants...</span>
-              </div>
-            )}
-          </>
-        )}
-        {!userLocation && (
-          <div className="flex flex-col justify-center items-center h-screen w-full bg-gray-100">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-            <h6 className="mt-2 text-lg font-medium">Getting your location...</h6>
-          </div>
-        )}
-        <div className="absolute bottom-[70px] left-[11%] transform -translate-x-1/2 w-[300px] bg-white p-4 rounded-lg shadow-md z-[1000]">
-          <p className="mb-2">Search Radius: {formatRadius(radius)}</p>
-          <div className="w-full">
-            <input
-              type="range"
-              value={radius}
-              onChange={handleRadiusChange}
-              min="500"
-              max="6000"
-              step="100"
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            />
-            <div className="flex justify-between text-xs text-gray-500 px-1">
-              <span>500m</span>
-              <span>6km</span>
-            </div>
-          </div>
-        </div>
-        <div className="absolute bottom-1/4 left-[7%] z-[2000] flex flex-col gap-2.5">
-          <button
-            className="bg-[#C47B4D] hover:bg-[#A35F35] text-white py-2 px-4 rounded shadow transition-colors"
-            onClick={toggleSidebar}
-          >
-            {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-          </button>
-          <button
-            className="bg-[#C47B4D] hover:bg-[#A35F35] text-white py-2 px-4 rounded shadow transition-colors"
-            onClick={() => setIsDicePopupOpen(true)}
-          >
-            Roll the Dice
-          </button>
-          {highlightedCuisine && (
-            <button
-              className="bg-[#F4E1D2] hover:bg-[#EED3BB] text-[#C47B4D] py-2 px-4 rounded shadow transition-colors"
-              onClick={() => setHighlightedCuisine(null)}
-            >
-              Clear Highlight
-            </button>
-          )}
-        </div>
-        {isSidebarOpen && (
-          <div className="absolute top-0 right-0 w-[300px] h-[calc(100vh-60px)] bg-white overflow-y-auto z-[999] p-5 shadow-md">
-            <div className="mb-4">
-              <h6 className="text-lg font-medium">
-                Showing restaurants within {formatRadius(radius)}
-              </h6>
-              {highlightedCuisine && (
-                <p className="text-sm text-[#C47B4D] font-medium">
-                  Highlighting {highlightedCuisine} restaurants
-                </p>
-              )}
-            </div>
-            {sortedRestaurants.length > 0 ? (
-              sortedRestaurants.map((restaurant, index) => (
-                <div
-                  key={index}
-                  className={`mb-5 p-3 rounded-lg shadow-sm transition-all duration-300 ${isRestaurantHighlighted(restaurant)
-                    ? 'bg-[#F4E1D2] border-2 border-[#C47B4D]'
-                    : 'bg-gray-50'
-                    }`}
+              {filterRestaurantsByCuisine(restaurants, selectedCusine).filter((restaurant) =>
+                haversineDistance(
+                  userLocation.lat,
+                  userLocation.lng,
+                  restaurant.location.latitude,
+                  restaurant.location.longitude
+                ) <= radius
+              ).map((restaurant, index) => {
+                const isHovered = hoveredMarkerIndex === index;
+                const isHighlighted = isRestaurantHighlighted(restaurant);
+                const iconUrl = getCuisineIcon(restaurant.types) || "/images/default.png";
+
+                return (
+                  <Marker
+                    key={index}
+                    position={{
+                      lat: restaurant.location.latitude,
+                      lng: restaurant.location.longitude,
+                    }}
+                    icon={{
+                      url: iconUrl,
+                      scaledSize: new window.google.maps.Size(
+                        isHovered ? 50 : (isHighlighted ? 45 : 40),
+                        isHovered ? 50 : (isHighlighted ? 45 : 40)
+                      ),
+                    }}
+                    animation={isHighlighted ? google.maps.Animation.BOUNCE : undefined}
+                    onMouseOver={() => setHoveredMarkerIndex(index)}
+                    onMouseOut={() => setHoveredMarkerIndex(null)}
+                    onClick={() => setSelectedRestaurant(restaurant)}
+                  />
+                );
+
+              })}
+
+              {selectedRestaurant && (
+                <InfoWindow
+                  position={{
+                    lat: selectedRestaurant.location.latitude,
+                    lng: selectedRestaurant.location.longitude,
+                  }}
+                  onCloseClick={() => setSelectedRestaurant(null)}
                 >
-                  <h3 className="font-bold text-lg">{restaurant.displayName?.text || "N/A"}</h3>
-                  <p className="text-gray-600 mt-1">{restaurant.formattedAddress || "N/A"}</p>
-                  <p className="mt-1">Rating: {restaurant.rating || "N/A"}</p>
-                  <p className="mt-1">
-                    Cuisine:{" "}
-                    {restaurant.types?.filter((type) => type.includes("restaurant")).map(normalizeCuisineType).join(", ") ||
-                      "N/A"}
+                  <div className="map-info-window max-w-[200px] max-[768px]:scale-[0.8] max-[768px]:origin-center max-[480px]:scale-[0.6] max-[480px]:origin-center">
+                    <h3 style={{ margin: "0" }}>{selectedRestaurant.displayName?.text || "N/A"}</h3>
+                    <p style={{ margin: "0" }}>{selectedRestaurant.formattedAddress || "N/A"}</p>
+                    <p style={{ margin: "0" }}>Rating: {selectedRestaurant.rating ?? "N/A"}</p>
+                    <p style={{ margin: "0" }}>
+                      Cuisine:{" "}
+                      {selectedRestaurant.types
+                        ?.filter((type) => type.includes("restaurant"))
+                        .map(normalizeCuisineType)
+                        .join(", ") || "N/A"}
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "8px" }}>
+                      <button
+                        onClick={() => saveRestaurant(selectedRestaurant)}
+                        style={{
+                          padding: "6px 12px",
+                          backgroundColor: "#6200ea",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer"
+                        }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setIsAddToPlanOpen(true)}
+                        style={{
+                          padding: "6px 12px",
+                          backgroundColor: "#C47B4D",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer"
+                        }}
+                      >
+                        Add to Plan
+                      </button>
+                    </div>
+                  </div>
+                </InfoWindow>
+              )}
+
+            </GoogleMap>
+          )}
+
+          <div className="map-controls absolute top-[70px] left-[1%] bg-white rounded-lg shadow-lg z-[1500] 
+            w-[300px] max-[768px]:scale-[0.8] max-[768px]:origin-top-left max-[480px]:scale-[0.6] 
+            max-[480px]:origin-top-left">
+            <form onSubmit={handleSearchSubmit}>
+              <Autocomplete
+                onLoad={onLoadAutocomplete}
+                onPlaceChanged={onPlaceChanged}
+              >
+                <input
+                  type="text"
+                  placeholder="Search location"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-transparent text-sm"
+                  value={searchValue}
+                  onChange={handleSearchInputChange}
+                />
+              </Autocomplete>
+            </form>
+            {searchSaved && (
+              <div className="mt-2 text-xs text-green-600 font-medium">Search saved!</div>
+            )}
+          </div>
+
+          <div className="map-controls absolute top-[150px] left-[1%] bg-white p-3 rounded-lg shadow-lg 
+          z-[900] w-[200px] max-[768px]:scale-[0.8] max-[768px]:origin-top-left max-[480px]:scale-[0.6] 
+          max-[480px]:origin-top-left">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Filter by Cuisine
+            </label>
+            <select
+              value={selectedCusine}
+              onChange={(e) => setSelectedCusine(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C47B4D] focus:border-transparent text-sm bg-white"
+            >
+              <option value="All">All Cuisines</option>
+              {availableCuisines.map((cuisine) => (
+                <option key={cuisine} value={cuisine}>
+                  {cuisine}
+                </option>
+              ))}
+            </select>
+          </div>
+          {userLocation && (
+            <>
+
+              {isMapLoading && (
+                <div className="map-controls absolute top-[1%] right-[1%] flex items-center bg-white p-3 rounded-lg shadow-md z-[1001]">
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+                  <span className="text-sm font-medium">Updating restaurants...</span>
+                </div>
+              )}
+            </>
+          )}
+          {!userLocation && (
+            <div className="flex flex-col justify-center items-center h-screen w-full bg-gray-100">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+              <h6 className="mt-2 text-lg font-medium">Getting your location...</h6>
+            </div>
+          )}
+          <div className="map-radius absolute bottom-[70px] left-[50%] transform 
+            -translate-x-1/2 w-[300px] bg-white p-4 rounded-lg shadow-md z-[1000] 
+            max-[768px]:w-[200px] max-[768px]:scale-[0.8] max-[768px]:origin-bottom-left 
+            max-[768px]:left-[55%] max-[768px]:-translate-x-1/2 max-[600px]:left-[50%] 
+            max-[600px]:translate-x-0 max-[600px]:-translate-x-0 max-[600px]:bottom-[30px] 
+            max-[600px]:w-[180px] max-[480px]:left-[2%] max-[480px]:translate-x-0 
+            max-[480px]:bottom-[20px] max-[480px]:w-[160px] max-[480px]:scale-[0.65] 
+            max-[480px]:origin-bottom-left">
+            <p className="mb-2 text-sm">Search Radius: {formatRadius(radius)}</p>
+            <div className="w-full">
+              <input
+                type="range"
+                value={radius}
+                onChange={handleRadiusChange}
+                min="500"
+                max="6000"
+                step="100"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+              <div className="flex justify-between text-xs text-gray-500 px-1">
+                <span>500m</span>
+                <span>6km</span>
+              </div>
+            </div>
+          </div>
+          <div className="map-buttons absolute bottom-[1%] left-[1%] z-[2000] flex 
+            flex-col gap-2 max-[768px]:scale-[0.8] max-[768px]:origin-bottom-left 
+            max-[480px]:scale-[0.6] max-[480px]:origin-bottom-left">
+            <button
+              className="bg-[#C47B4D] hover:bg-[#A35F35] text-white py-1.5 px-3 rounded shadow transition-colors text-sm"
+              onClick={toggleSidebar}
+            >
+              {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+            </button>
+            <button
+              className="bg-[#C47B4D] hover:bg-[#A35F35] text-white py-1.5 px-3 rounded shadow transition-colors text-sm"
+              onClick={() => setIsDicePopupOpen(true)}
+            >
+              Roll the Dice
+            </button>
+            {highlightedCuisine && (
+              <button
+                className="bg-[#F4E1D2] hover:bg-[#EED3BB] text-[#C47B4D] py-1.5 px-3 rounded shadow transition-colors text-sm"
+                onClick={() => setHighlightedCuisine(null)}
+              >
+                Clear Highlight
+              </button>
+            )}
+          </div>
+          {isSidebarOpen && (
+            <div className="map-sidebar absolute top-[4rem] right-0 w-[300px] h-[calc(100vh-4rem)]
+              bg-white overflow-y-auto z-[999] p-4 shadow-md max-[768px]:w-[200px] max-[768px]:scale-[0.8] 
+              max-[768px]:origin-top-right max-[480px]:w-[150px] max-[480px]:scale-[0.6] max-[480px]:origin-top-right">
+              <div className="mb-4">
+                <h6 className="text-base font-medium">
+                  Showing restaurants within {formatRadius(radius)}
+                </h6>
+                {highlightedCuisine && (
+                  <p className="text-sm text-[#C47B4D] font-medium">
+                    Highlighting {highlightedCuisine} restaurants
                   </p>
+                )}
+              </div>
+              {sortedRestaurants.length > 0 ? (
+                sortedRestaurants.map((restaurant, index) => (
+                  <div
+                    key={index}
+                    className={`mb-4 p-3 rounded-lg shadow-sm transition-all duration-300 ${isRestaurantHighlighted(restaurant)
+                      ? 'bg-[#F4E1D2] border-2 border-[#C47B4D]'
+                      : 'bg-gray-50'
+                      }`}
+                  >
+                    <h3 className="font-bold text-base">{restaurant.displayName?.text || "N/A"}</h3>
+                    <p className="text-gray-600 mt-1 text-sm">{restaurant.formattedAddress || "N/A"}</p>
+                    <p className="mt-1 text-sm">Rating: {restaurant.rating || "N/A"}</p>
+                    <p className="mt-1 text-sm">
+                      Cuisine:{" "}
+                      {restaurant.types?.filter((type) => type.includes("restaurant")).map(normalizeCuisineType).join(", ") ||
+                        "N/A"}
+                    </p>
                   
                   {/* Reviews Section */}
-                  {restaurant.reviews && restaurant.reviews.length > 0 && (
-                    <div className="mt-3">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Recent Google Reviews</h4>
-                      <div className="max-h-40 overflow-y-auto">
-                        {restaurant.reviews.slice(0, 3).map((review, reviewIndex) => (
-                          <div key={reviewIndex} className="text-xs bg-white p-2 rounded border mb-2 shadow-sm">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium text-gray-800">{review.authorName}</span>
-                              <span className="text-yellow-500">⭐ {review.rating}/5</span>
+                    {restaurant.reviews && restaurant.reviews.length > 0 && (
+                      <div className="mt-3">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Recent Google Reviews</h4>
+                        <div className="max-h-40 overflow-y-auto">
+                          {restaurant.reviews.slice(0, 3).map((review, reviewIndex) => (
+                            <div key={reviewIndex} className="text-xs bg-white p-2 rounded border mb-2 shadow-sm">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium text-gray-800">{review.authorName}</span>
+                                <span className="text-yellow-500">⭐ {review.rating}/5</span>
+                              </div>
+                              <p className="text-gray-600 text-xs leading-relaxed">
+                                {review.text.length > 120
+                                  ? `${review.text.substring(0, 120)}...`
+                                  : review.text
+                                }
+                              </p>
+                              <div className="text-right mt-1">
+                                <span className="text-gray-400 text-xs">
+                                  {review.relativeTimeDescription}
+                                </span>
+                              </div>
                             </div>
-                            <p className="text-gray-600 text-xs leading-relaxed">
-                              {review.text.length > 120 
-                                ? `${review.text.substring(0, 120)}...` 
-                                : review.text
-                              }
-                            </p>
-                            <div className="text-right mt-1">
-                              <span className="text-gray-400 text-xs">
-                                {review.relativeTimeDescription}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500">Loading restaurants...</p>
-            )}
-          </div>
-        )}
-        <DicePopup
-          open={isDicePopupOpen}
-          onClose={() => {
-            setIsDicePopupOpen(false);
-          }}
-          availableCuisines={availableCuisines} 
-          onRoll={handleDiceRoll}
-        />
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-sm">Loading restaurants...</p>
+              )}
+            </div>
+          )}
+          <DicePopup
+            open={isDicePopupOpen}
+            onClose={() => {
+              setIsDicePopupOpen(false);
+            }}
+            availableCuisines={availableCuisines}
+            onRoll={handleDiceRoll}
+          />
 
         {/* Add to Plan Modal */}
-        <AddToPlanModal
-          open={isAddToPlanOpen}
-          onClose={() => setIsAddToPlanOpen(false)}
-          userPlans={userPlans}
-          selectedRestaurant={selectedRestaurant}
-        />
-      </div>
-    </LoadScript>
+          <AddToPlanModal
+            open={isAddToPlanOpen}
+            onClose={() => setIsAddToPlanOpen(false)}
+            userPlans={userPlans}
+            selectedRestaurant={selectedRestaurant}
+          />
+        </div>
+      </LoadScript>
     </>
   );
 };
