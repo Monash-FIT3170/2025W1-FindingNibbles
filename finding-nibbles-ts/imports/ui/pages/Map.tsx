@@ -492,7 +492,8 @@ export const Map = () => {
       // console.log('Longitude:', longitude);
       // console.log('Search Radius:', searchRadius);
       
-    const URL = "https://places.googleapis.com/v1/places:searchNearby";
+    const URL =
+      "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${searchRadius}&type=restaurant&key=${API_KEY}";
 
     const requestBody = {
       includedTypes: ["restaurant"],
