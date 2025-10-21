@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 
 const originalDishes = [
@@ -40,14 +40,21 @@ const SwipeDishesPopup = ({ onClose }: SwipeDishesPopupProps) => {
   const [dishes, setDishes] = useState(originalDishes);
   const [index, setIndex] = useState(0);
 
-  // Shuffle dishes on mount
-  React.useEffect(() => {
+  // Shuffle dishes on mount and auto-close if onboarding already completed
+  useEffect(() => {
     setDishes(shuffleArray(originalDishes));
+    Meteor.call("onboarding.getSwipeCompleted", (err: any, completed: boolean) => {
+      if (!err && completed) onClose();
+    });
   }, []);
 
   const handleSwipe = (liked: boolean) => {
     const dish = dishes[index];
     Meteor.call("dishes.swipe", { name: dish.name, liked });
+    // First successful swipe marks onboarding completed
+    if (index === 0) {
+      Meteor.call("onboarding.setSwipeCompleted");
+    }
     if (index < dishes.length - 1) setIndex(index + 1);
     else onClose();
   };

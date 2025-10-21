@@ -1,16 +1,41 @@
 import React, { useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useTracker } from "meteor/react-meteor-data";
 import { Plans } from "../../api/Plans";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Meteor } from "meteor/meteor";
 import { TextField, Button, IconButton } from "@mui/material";
 import { LoadScript, Autocomplete } from "@react-google-maps/api";
 
+// Load multiple Google API keys from settings.json
+const apiKeys: string[] = Meteor.settings.public?.googlePlacesApiKeys || [];
+
+const keyIndexRef = React.useRef(0);
+
+function getCurrentKey(): string {
+  const key = apiKeys[keyIndexRef.current];
+  console.log(
+    `Using Google API key #${keyIndexRef.current + 1}: ${key?.slice(0, 10)}...`
+  );
+  return key;
+}
+
+function rotateKey(): void {
+  if (apiKeys.length > 1) {
+    keyIndexRef.current = (keyIndexRef.current + 1) % apiKeys.length;
+    console.warn(`Switched to backup Google API key #${keyIndexRef.current + 1}`);
+  } else {
+    console.error(" No backup Google API keys available");
+  }
+}
+
+
 export const PlanDetails = () => {
   const { planId } = useParams();
+  const navigate = useNavigate();
 
   const isReady = useTracker(() => {
     const handle = Meteor.subscribe("plans");
@@ -109,11 +134,23 @@ export const PlanDetails = () => {
     }
   };
 
-  const API_KEY = Meteor.settings.public?.googlePlacesApiKey;
 
   return (
-    <LoadScript googleMapsApiKey={API_KEY} libraries={["places"]}>
-      <div style={{ paddingTop: "5rem", minHeight: "100vh", background: "#fdfaf7" }}>
+    <LoadScript
+      googleMapsApiKey={getCurrentKey()}
+      libraries={["places"]}
+      onError={() => {
+        console.error("Google Maps load failed. Rotating key...");
+        rotateKey();
+      }}
+    >
+      <div
+        style={{
+          paddingTop: "5rem",
+          minHeight: "100vh",
+          background: "#fdfaf7"
+        }}
+      >
         <div
           style={{
             maxWidth: 600,
@@ -125,150 +162,178 @@ export const PlanDetails = () => {
             transition: "background 0.2s, border 0.2s"
           }}
         >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ fontFamily: "Comic Sans MS, cursive, sans-serif", color: "#c17030", paddingBottom: 15 }}>
-            {isEditing ? "Editing" : "Plan Details"}
-          </h2>
-          {isEditing ? (
-            <span>
-              <IconButton onClick={handleSave} color="primary">
-                <SaveIcon />
-              </IconButton>
-              <IconButton onClick={handleCancel} color="error">
-                <CloseIcon />
-              </IconButton>
-            </span>
-          ) : (
-            <IconButton onClick={() => setIsEditing(true)}>
-              <EditIcon />
-            </IconButton>
-          )}
-        </div>
-        <form>
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            <TextField
-              label="Plan Name"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              fullWidth
-              InputProps={{ readOnly: !isEditing }}
-              style={{ margin: 0 }}
-            />
-            {/* Start Date Field */}
-            <TextField
-              label="Start Date"
-              type="date"
-              value={tripStartDate}
-              onChange={e => setTripStartDate(e.target.value)}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ readOnly: !isEditing }}
-              style={{ margin: 0 }}
-            />
-            {/* Starting Point Autocomplete */}
-            <Autocomplete
-              onLoad={onLoadStartAutocomplete}
-              onPlaceChanged={onPlaceChangedStart}
+          {/* Back Button */}
+          <div className="mb-2 flex justify-end">
+            <button
+              onClick={() => navigate("/travel-plans")}
+              className="flex items-center gap-2 px-3 py-1 rounded-md bg-[#c17030] text-white hover:bg-[#a65c27] transition-shadow shadow-sm cursor-pointer"
+              aria-label="Back to travel plans"
             >
+              <ArrowBackIcon />
+            </button>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}
+          >
+            <h2
+              style={{
+                fontFamily: "Comic Sans MS, cursive, sans-serif",
+                color: "#c17030",
+                paddingBottom: 15
+              }}
+            >
+              {isEditing ? "Editing" : "Plan Details"}
+            </h2>
+            {isEditing ? (
+              <span>
+                <IconButton onClick={handleSave} color="primary">
+                  <SaveIcon />
+                </IconButton>
+                <IconButton onClick={handleCancel} color="error">
+                  <CloseIcon />
+                </IconButton>
+              </span>
+            ) : (
+              <IconButton onClick={() => setIsEditing(true)}>
+                <EditIcon />
+              </IconButton>
+            )}
+          </div>
+          <form>
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <TextField
-                size="small"
-                label="Starting Point"
-                variant="outlined"
+                label="Plan Name"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 fullWidth
-                placeholder="Type a location"
-                value={startSearchValue}
-                onChange={e => setStartSearchValue(e.target.value)}
                 InputProps={{ readOnly: !isEditing }}
+                style={{ margin: 0 }}
               />
-            </Autocomplete>
+              {/* Start Date Field */}
+              <TextField
+                label="Start Date"
+                type="date"
+                value={tripStartDate}
+                onChange={(e) => setTripStartDate(e.target.value)}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ readOnly: !isEditing }}
+                style={{ margin: 0 }}
+              />
+              {/* Starting Point Autocomplete */}
+              <Autocomplete
+                onLoad={onLoadStartAutocomplete}
+                onPlaceChanged={onPlaceChangedStart}
+              >
+                <TextField
+                  size="small"
+                  label="Starting Point"
+                  variant="outlined"
+                  fullWidth
+                  placeholder="Type a location"
+                  value={startSearchValue}
+                  onChange={(e) => setStartSearchValue(e.target.value)}
+                  InputProps={{ readOnly: !isEditing }}
+                />
+              </Autocomplete>
 
-            <div>
-              <div style={{ fontWeight: "bold", marginBottom: 4 }}>Restaurants</div>
-              <div style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
-                padding: "12px 0"
-              }}>
-                {(restaurants == null || restaurants.length === 0) ? (
-                  <div
-                    style={{
-                      padding: "24px 18px",
-                      background: "#f7f7f7",
-                      borderRadius: 10,
-                      border: "1px solid #e0e0e0",
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                      color: "#888",
-                      textAlign: "center",
-                      fontStyle: "italic",
-                      fontSize: 18
-                    }}
-                  >
-                    No restaurants added yet.
-                  </div>
-                ) : (
-                  restaurants.map((r, idx) => (
+              <div>
+                <div style={{ fontWeight: "bold", marginBottom: 4 }}>
+                  Restaurants
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    padding: "12px 0"
+                  }}
+                >
+                  {restaurants == null || restaurants.length === 0 ? (
                     <div
-                      key={idx}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        padding: "14px 18px",
+                        padding: "24px 18px",
                         background: "#f7f7f7",
                         borderRadius: 10,
                         border: "1px solid #e0e0e0",
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                        color: "#888",
+                        textAlign: "center",
+                        fontStyle: "italic",
+                        fontSize: 18
                       }}
                     >
-                      <span style={{ flex: 1 }}>
-                        {r?.displayName?.text || r?.name || "Unnamed Restaurant"}
-                        {idx === 0 && " (Start)"}
-                        {idx === restaurants.length - 1 && " (End)"}
-                      </span>
-                      {isEditing && (
-                        <>
-                          <Button
-                            size="small"
-                            onClick={() => moveUp(idx)}
-                            disabled={idx === 0}
-                            sx={{ minWidth: 32, fontWeight: "bold" }}
-                          >
-                            ↑
-                          </Button>
-                          <Button
-                            size="small"
-                            onClick={() => moveDown(idx)}
-                            disabled={idx === restaurants.length - 1}
-                            sx={{ minWidth: 32, fontWeight: "bold" }}
-                          >
-                            ↓
-                          </Button>
-                        </>
-                      )}
+                      No restaurants added yet.
                     </div>
-                  ))
-                )}
+                  ) : (
+                    restaurants.map((r, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          padding: "14px 18px",
+                          background: "#f7f7f7",
+                          borderRadius: 10,
+                          border: "1px solid #e0e0e0",
+                          boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
+                        }}
+                      >
+                        <span style={{ flex: 1 }}>
+                          {r?.displayName?.text ||
+                            r?.name ||
+                            "Unnamed Restaurant"}
+                          {idx === 0 && " (Start)"}
+                          {idx === restaurants.length - 1 && " (End)"}
+                        </span>
+                        {isEditing && (
+                          <>
+                            <Button
+                              size="small"
+                              onClick={() => moveUp(idx)}
+                              disabled={idx === 0}
+                              sx={{ minWidth: 32, fontWeight: "bold" }}
+                            >
+                              ↑
+                            </Button>
+                            <Button
+                              size="small"
+                              onClick={() => moveDown(idx)}
+                              disabled={idx === restaurants.length - 1}
+                              sx={{ minWidth: 32, fontWeight: "bold" }}
+                            >
+                              ↓
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
+              {/* Destination Autocomplete */}
+              <Autocomplete
+                onLoad={onLoadDestAutocomplete}
+                onPlaceChanged={onPlaceChangedDest}
+              >
+                <TextField
+                  size="small"
+                  label="Final Destination"
+                  variant="outlined"
+                  fullWidth
+                  placeholder="Type a location"
+                  value={destSearchValue}
+                  onChange={(e) => setDestSearchValue(e.target.value)}
+                  InputProps={{ readOnly: !isEditing }}
+                />
+              </Autocomplete>
             </div>
-            {/* Destination Autocomplete */}
-            <Autocomplete
-              onLoad={onLoadDestAutocomplete}
-              onPlaceChanged={onPlaceChangedDest}
-            >
-              <TextField
-                size="small"
-                label="Final Destination"
-                variant="outlined"
-                fullWidth
-                placeholder="Type a location"
-                value={destSearchValue}
-                onChange={e => setDestSearchValue(e.target.value)}
-                InputProps={{ readOnly: !isEditing }}
-              />
-            </Autocomplete>
-          </div>
-        </form>
+          </form>
         </div>
       </div>
     </LoadScript>

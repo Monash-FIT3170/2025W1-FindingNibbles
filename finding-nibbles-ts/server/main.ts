@@ -9,14 +9,15 @@ import '../imports/api/SavedRestaurants';
 import '../imports/api/Plans';
 import '../imports/api/meals';
 import "../imports/api/savedDishes";
-import { Mongo } from "meteor/mongo";
 import { SearchHistory } from "../imports/api/searchHistory";
+import { DishSwipes as DishSwipesShared } from "../imports/api/dishSwipes";
 import { GoogleAuth } from "google-auth-library";
 import fs from "fs";
 import os from "os";
 import path from "path";
 
-export const DishSwipes = new Mongo.Collection("dishSwipes");
+// Use shared collection handle to avoid re-defining it and causing duplicate collection errors
+export const DishSwipes = DishSwipesShared;
 
 Meteor.methods({
   // Server-side async insert
@@ -63,6 +64,32 @@ Meteor.methods({
       dislikes: [...new Set(dislikes.map((d: any) => d.name))],
       recentSearches: [...new Set(searches.map((s: any) => s.searchTerm))],
     };
+  },
+
+  // Clear all liked/disliked swipes for current user
+  async "dishes.clearHistory"() {
+    if (!this.userId) throw new Meteor.Error("Not authorized");
+    const result = await DishSwipes.removeAsync({ userId: this.userId });
+    return { deletedCount: result };
+  },
+
+  // Onboarding: track if user has completed the swipe intro once
+  async "onboarding.getSwipeCompleted"() {
+    if (!this.userId) throw new Meteor.Error("Not authorized");
+    const user = await Meteor.users.findOneAsync(
+      { _id: this.userId },
+      { fields: { profile: 1 } }
+    );
+    return Boolean((user as any)?.profile?.swipeOnboardingCompleted);
+  },
+
+  async "onboarding.setSwipeCompleted"() {
+    if (!this.userId) throw new Meteor.Error("Not authorized");
+    await Meteor.users.updateAsync(
+      { _id: this.userId },
+      { $set: { "profile.swipeOnboardingCompleted": true } }
+    );
+    return { ok: 1 };
   },
 });
 
