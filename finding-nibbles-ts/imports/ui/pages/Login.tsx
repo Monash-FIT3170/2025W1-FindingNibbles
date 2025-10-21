@@ -86,18 +86,6 @@ export const Login = () => {
             />
           </div>
           
-          <div className="flex items-center justify-between">
-            <label className="flex items-center text-white text-sm cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="mr-2 rounded focus:ring-[#C47B4D] focus:ring-2" 
-              />
-              Remember me
-            </label>
-            <a href="#" className="text-sm text-blue-300 hover:text-blue-100 hover:underline transition-colors">
-              Forgot password?
-            </a>
-          </div>
           
           <button
             onClick={handleLogin}

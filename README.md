@@ -35,11 +35,16 @@
 ---
 
 ## Change Log Since Milestone 3
-- Completed full documentation structure and finalised handover format.  
-- Added **Contribution & Versioning Strategy** sections for maintainability.  
-- Expanded **Troubleshooting** with detailed causes and resolutions.  
-- Introduced **Future Roadmap** &  **Security & Configuration** sections.  
-- Improved readability, grammar and formatting consistency across the README.
+The following sections are new compared to the old handover documentation:
+- Change Log Since Milestone 3
+- Security and Configuration
+- Architecture and Modules
+- Versioning Strategy
+- Contribution and Pull Request Strategy
+- Deployment
+- Expanded Troubleshooting section
+- Future Roadmap
+
 
 ---
 
@@ -153,25 +158,61 @@ The app follows a client–server Meteor architecture.
 ---
 
 ## 🧩 Versioning Strategy
-- **Semantic Versioning:** `MAJOR.MINOR.PATCH`
-- **Initial Stable:** `v1.0.0` (Milestone 4 handover)
-- **Pre-release Tags:** `v0.9.0-rc.1`, etc.
-- Maintain `CHANGELOG.md` (sections: Added / Changed / Fixed / Deprecated / Security).
+
+This helps developers know what kind of update has been made and whether it may affect existing code.
+
+### Version Format
+**MAJOR.MINOR.PATCH**
+
+- **MAJOR** – Used for large or breaking changes that are not compatible with older versions.  
+- **MINOR** – Used when new features or improvements are added that still work with previous versions.  
+- **PATCH** – Used for small fixes or performance updates that don’t change existing functionality.  
+
+### Examples
+- **v1.0.0** – First stable release (Milestone 4 handover).  
+- **v1.1.0** – Added new feature or improvement.  
+- **v1.1.1** – Fixed a small issue or bug.  
+
+### Pre-release Versions
+Pre-release versions (testing or release candidate versions) can use labels such as **-alpha**, **-beta**, or **-rc**.  
+Example: **v0.9.0-rc.1**
+
+### Changelog
+A `CHANGELOG.md` file should be updated every time a new version is released. It should briefly list:  
+- What was **added**  
+- What was **changed**  
+- What was **fixed**  
+- Any **security** or important updates  
+
+This system keeps the project organised, makes updates easy to follow, and helps new developers understand what has changed over time.
 
 ---
 
 ## 🤝 Contribution & PR Strategy
 
 ### Branching
-- `main` – stable, deployable.
-- `feature/<feature-name>`
-- `fix/<issue-id>`
-- `chore/<task>`
+- `main` – stable, deployable
+- `develop` - merge multiple branches together initially
+- `feature/<user-story-id>` – for developing new features or functionality
+- `fix/<issue-id>` – for resolving bugs or issues identified during testing
 
-### Commit Convention (Conventional Commits)
-- `feat: add new map filtering`
-- `fix: resolve minimongo write issue`
-- `docs: update README`
+### Commit Convention 
+All commit messages must follow a consistent and descriptive format to ensure clarity and traceability across the repository.
+
+Commit messages must follow this template:
+[Issue/User Story ID][Developer Name] [Description]
+
+Example:
+[US12345][John] Implemented new validation checks for incorrect password and email format.
+
+
+**Guidelines:**
+
+The brief heading should summarise the main purpose of the change.
+
+The description should provide additional detail if necessary, explaining what was modified or why the change was made.
+
+Keep the message concise but informative to assist reviewers and future contributors.
 
 ### PR Process
 1. Branch from `main`.
