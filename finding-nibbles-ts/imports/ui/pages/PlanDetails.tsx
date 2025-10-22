@@ -13,6 +13,12 @@ import { LoadScript, Autocomplete } from "@react-google-maps/api";
 // Load multiple Google API keys from settings.json
 const apiKeys: string[] = Meteor.settings.public?.googlePlacesApiKeys || [];
 
+
+
+
+export const PlanDetails = () => {
+
+// keyIndexRef moved inside PlanDetails to remove bug
 const keyIndexRef = React.useRef(0);
 
 function getCurrentKey(): string {
@@ -23,6 +29,7 @@ function getCurrentKey(): string {
   return key;
 }
 
+// ISSUE HERE. UseRef being called outside
 function rotateKey(): void {
   if (apiKeys.length > 1) {
     keyIndexRef.current = (keyIndexRef.current + 1) % apiKeys.length;
@@ -33,7 +40,6 @@ function rotateKey(): void {
 }
 
 
-export const PlanDetails = () => {
   const { planId } = useParams();
   const navigate = useNavigate();
 
