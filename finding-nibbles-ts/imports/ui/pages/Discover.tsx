@@ -2,6 +2,7 @@ import React, { useState, useEffect} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Meteor } from 'meteor/meteor';
 import type { CustomUser } from "../types/User"; 
+import {MOCK_DISHES} from "../../api/mockData.ts";
 
 // Custom SVG Icons
 const ThumbUpIcon = () => (
@@ -86,6 +87,7 @@ export const Discover = () => {
     return Number.isFinite(parsed) ? parsed : 50;
   });
   const [tryNewQueue, setTryNewQueue] = useState<Dish[]>([]);
+  const [usedMockFirst, setUsedMockFirst] = useState(false);
   const [recommendedQueue, setRecommendedQueue] = useState<Dish[]>([]);
   const [currentTryNew, setCurrentTryNew] = useState<Dish | null>(null);
   const [currentRecommended, setCurrentRecommended] = useState<Dish | null>(null);
@@ -151,6 +153,21 @@ export const Discover = () => {
     setLoading(true);
     setError('');
 
+  if (params.mode === 'tryNew' && !usedMockFirst) {
+    const seeded = MOCK_DISHES.map((d) => ({
+      id: Date.now() + Math.random(),
+      name: d.name,
+      description: d.description,
+      image: d.imageUrl,
+    }));
+
+    setQueue(seeded);
+    setCurrent(seeded[0] ?? null);
+    setUsedMockFirst(true);
+    setLoading(false);
+    return; 
+  }
+
     try {
       const response = await fetch('/api/aiSuggestion', {
         method: 'POST',
@@ -196,7 +213,7 @@ export const Discover = () => {
       }
     } catch (err) {
       console.error(err);
-      setError('Failed to get AI-generated dish.');
+      setError('Failed to get AI-generated dish. Showing sample dishes');
     } finally {
       setLoading(false);
     }

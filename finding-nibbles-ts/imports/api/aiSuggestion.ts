@@ -5,7 +5,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import { VertexAI } from '@google-cloud/vertexai';
 import { SearchHistory } from './searchHistory';
 import { DishSwipes } from './dishSwipes';
-
+import {MOCK_DISHES, MOCK_OCCASION_MENU} from './mockData';
 
 const project = process.env.PROJECT_ID || 'sacred-vault-469801-f4';
 const location = process.env.LOCATION || 'us-central1';
@@ -86,7 +86,7 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         console.warn('Could not fetch user feedback inline, proceeding with provided params.');
       }
 
-      // legacy prompt removed
+      // legacy prompt removedhi
 
       const constraints = [
         'Return ONLY valid JSON array of up to 5 items.',
@@ -97,7 +97,7 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
         'Avoid near-duplicates, generic names, or overused classics unless expressly aligned with likes.',
       ].join(' ');
 
-      const systemPreamble = 'You are a culinary recommender system that personalizes dish suggestionsf for users based on their preferences and feedback.';
+      const systemPreamble = 'You are a culinary recommender system that personalizes dish suggestions for users based on their preferences and feedback.';
 
       const contextBlocks: string[] = [];
       const likesListAll = userFeedback?.likes || [];
@@ -230,8 +230,22 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
 
     } catch (error) {
       console.error('Vertex AI Error:', error);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Failed to generate dish suggestion.' }));
+
+
+
+      // res.writeHead(500, { 'Content-Type': 'application/json' });
+      // res.end(JSON.stringify({ error: 'Failed to generate dish suggestion.' }));
+        if (mode === 'occasion') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ menu: MOCK_OCCASION_MENU }));
+          return;
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ dishes: MOCK_DISHES }));
+          return;
+        }
+
+
     }
   } catch (error) {
     console.error('Request Handler Error:', error);
@@ -239,3 +253,4 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
     res.end(JSON.stringify({ error: 'Invalid request body.' }));
   }
 })});
+

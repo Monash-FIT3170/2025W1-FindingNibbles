@@ -4,6 +4,7 @@ import { parse } from 'url';
 import type { IncomingMessage, ServerResponse } from 'http';
 import fetch from 'node-fetch';
 import { Meteor } from 'meteor/meteor';
+import { MOCK_DISHES } from './mockData';
 
 async function querySDXL(data: any, token: string): Promise<string> {
   const response = await fetch(
@@ -66,21 +67,39 @@ WebApp.connectHandlers.use(async (req: IncomingMessage, res: ServerResponse, nex
       }, hfToken);
 
       if (!imageBase64) {
-        // Explicit rate-limit or empty image fallback
-        res.writeHead(429, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Image generation limit reached.' }));
+        // Uses Mock Images when rate usages met.
+        console.warn('Using fallback mock image');
+        const fallback = MOCK_DISHES[Math.floor(Math.random() * MOCK_DISHES.length)].imageUrl;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ imageUrl: fallback }));
         return;
+
+        // // Explicit rate-limit or empty image fallback
+        // res.writeHead(429, { 'Content-Type': 'application/json' });
+        // res.end(JSON.stringify({ error: 'Image generation limit reached.' }));
+        // return;
+
+
       }
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ image: imageBase64 }));
     } catch (error) {
       console.error('Generate Image Error:', error);
-      // Attempt to surface rate limit when possible
-      const msg = (error as any)?.message || '';
-      const isRateLimit = msg.includes('rate') || msg.includes('quota') || msg.includes('429');
-      res.writeHead(isRateLimit ? 429 : 500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: isRateLimit ? 'Image generation limit reached.' : 'Failed to generate image.' }));
+
+      console.error('Generate Image Error:', error);
+      const fallback = MOCK_DISHES[Math.floor(Math.random() * MOCK_DISHES.length)].imageUrl;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ imageUrl: fallback }));
+
+      // // Attempt to surface rate limit when possible
+      // const msg = (error as any)?.message || '';
+      // const isRateLimit = msg.includes('rate') || msg.includes('quota') || msg.includes('429');
+      // res.writeHead(isRateLimit ? 429 : 500, { 'Content-Type': 'application/json' });
+      // res.end(JSON.stringify({ error: isRateLimit ? 'Image generation limit reached.' : 'Failed to generate image.' }));
+    
+    
+  
     }
   });
 });
