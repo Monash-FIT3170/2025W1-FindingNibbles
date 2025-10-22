@@ -1,61 +1,61 @@
-// /imports/ui/components/FoodDraftGenerator.tsx
-import React, { useState } from "react";
-import { Meteor } from "meteor/meteor";
+// // /imports/ui/components/FoodDraftGenerator.tsx
+// import React, { useState } from "react";
+// import { Meteor } from "meteor/meteor";
 
-export default function FoodDraftGenerator() {
-  const [dish, setDish] = useState("");
-  const [restaurant, setRestaurant] = useState("");
-  const [draft, setDraft] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string>("");
+// export default function FoodDraftGenerator() {
+//   const [dish, setDish] = useState("");
+//   const [restaurant, setRestaurant] = useState("");
+//   const [draft, setDraft] = useState<any>(null);
+//   const [loading, setLoading] = useState(false);
+//   const [err, setErr] = useState<string>("");
 
-  const generate = async () => {
-    setErr("");
-    setLoading(true);
-    setDraft(null);
-    try {
-      const res = await Meteor.callAsync("foodItems.generateDraft", dish, restaurant || undefined);
-      setDraft(res);
-    } catch (e: any) {
-      setErr(e?.reason || "Failed to generate.");
-    } finally {
-      setLoading(false);
-    }
-  };
+//   const generate = async () => {
+//     setErr("");
+//     setLoading(true);
+//     setDraft(null);
+//     try {
+//       const res = await Meteor.callAsync("foodItems.generateDraft", dish, restaurant || undefined);
+//       setDraft(res);
+//     } catch (e: any) {
+//       setErr(e?.reason || "Failed to generate.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
 
-  const save = async () => {
-    try {
-      const id = await Meteor.callAsync("foodItems.saveDraft", draft);
-      alert(`Saved with _id=${id}`);
-      setDraft(null);
-    } catch (e: any) {
-      setErr(e?.reason || "Failed to save.");
-    }
-  };
+//   const save = async () => {
+//     try {
+//       const id = await Meteor.callAsync("foodItems.saveDraft", draft);
+//       alert(`Saved with _id=${id}`);
+//       setDraft(null);
+//     } catch (e: any) {
+//       setErr(e?.reason || "Failed to save.");
+//     }
+//   };
 
-  return (
-    <div className="p-4 space-y-3">
-      <div className="flex gap-2">
-        <input className="border p-2 flex-1" placeholder="Dish (e.g., Margherita pizza)"
-               value={dish} onChange={e=>setDish(e.target.value)} />
-        <input className="border p-2 flex-1" placeholder="Restaurant (optional)"
-               value={restaurant} onChange={e=>setRestaurant(e.target.value)} />
-        <button className="px-4 py-2 rounded bg-blue-600 text-white"
-                onClick={generate} disabled={loading || !dish}>
-          {loading ? "Generating..." : "Generate"}
-        </button>
-      </div>
+//   return (
+//     <div className="p-4 space-y-3">
+//       <div className="flex gap-2">
+//         <input className="border p-2 flex-1" placeholder="Dish (e.g., Margherita pizza)"
+//                value={dish} onChange={e=>setDish(e.target.value)} />
+//         <input className="border p-2 flex-1" placeholder="Restaurant (optional)"
+//                value={restaurant} onChange={e=>setRestaurant(e.target.value)} />
+//         <button className="px-4 py-2 rounded bg-blue-600 text-white"
+//                 onClick={generate} disabled={loading || !dish}>
+//           {loading ? "Generating..." : "Generate"}
+//         </button>
+//       </div>
 
-      {err && <div className="text-red-600 whitespace-pre-wrap">{err}</div>}
+//       {err && <div className="text-red-600 whitespace-pre-wrap">{err}</div>}
 
-      {draft && (
-        <div className="border rounded p-3 space-y-2">
-          <pre className="text-sm overflow-auto">{JSON.stringify(draft, null, 2)}</pre>
-          <button className="px-4 py-2 rounded bg-green-600 text-white" onClick={save}>
-            Save to DB
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+//       {draft && (
+//         <div className="border rounded p-3 space-y-2">
+//           <pre className="text-sm overflow-auto">{JSON.stringify(draft, null, 2)}</pre>
+//           <button className="px-4 py-2 rounded bg-green-600 text-white" onClick={save}>
+//             Save to DB
+//           </button>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
