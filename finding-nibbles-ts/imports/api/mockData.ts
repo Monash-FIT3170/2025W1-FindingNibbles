@@ -12,7 +12,7 @@ export const MOCK_DISHES = [
   {
     name: "Tacos",
     description: "Soft or crispy tortillas filled with seasoned meat, vegetables, and salsa, creating a vibrant and flavorful street food favorite.",
-    imageUrl: "/images/tacos.png"
+    imageUrl: "/images/Tacos.png"
   },
   {
     name: "Butter Chicken",

@@ -7,7 +7,7 @@ import { SearchHistory } from './searchHistory';
 import { DishSwipes } from './dishSwipes';
 import {MOCK_DISHES, MOCK_OCCASION_MENU} from './mockData';
 
-const project = process.env.PROJECT_ID || 'sacred-vault-469801-f4';
+const project = process.env.PROJECT_ID || 'finding-nibbles-vertex';
 const location = process.env.LOCATION || 'us-central1';
 
 console.log("PROJECT_ID:", process.env.PROJECT_ID ?? 'Not set');

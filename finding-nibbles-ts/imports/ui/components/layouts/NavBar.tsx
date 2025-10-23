@@ -111,7 +111,7 @@ export const NavBar = () => {
   return (
     <>
       {/* Main Navigation Bar */}
-      <nav className="bg-[#C47B4D] shadow-lg fixed top-0 left-0 right-0 z-50" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
+      <nav className="bg-[#C47B4D] shadow-lg fixed top-0 left-0 right-0 z-1100" style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Title */}
