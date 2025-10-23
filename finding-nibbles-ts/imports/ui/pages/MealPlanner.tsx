@@ -43,6 +43,28 @@ export const MealPlanner = () => {
   const clamp = (n: number, lim: {min:number;max:number}) => Math.max(lim.min, Math.min(lim.max, n));
   const onlyDigits = (s: string) => s.replace(/[^\d]/g, ''); // strip anything not 0-9
 
+  // Parse dd/mm/yyyy -> Date or null
+  function parseDdMmYyyy(s: string): Date | null {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s);
+    if (!m) return null;
+    const [_, dd, mm, yyyy] = m;
+    const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return (d.getFullYear() === Number(yyyy) && d.getMonth() === Number(mm) - 1 && d.getDate() === Number(dd))
+      ? d
+      : null;
+  }
+  // must be within the past 6 months (inclusive) and not in the future
+  function isWithinPastSixMonths(dateStr: string): boolean {
+    const d = parseDdMmYyyy(dateStr);
+    if (!d) return false;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    d.setHours(0,0,0,0);
+    const sixMonthsAgo = new Date(today);
+    sixMonthsAgo.setMonth(today.getMonth() - 6);
+    return d >= sixMonthsAgo && d <= today;
+  }
+
   Meteor.subscribe('userData');
   const user = useTracker(() => Meteor.user() as CustomUser | null);
 
@@ -160,43 +182,54 @@ export const MealPlanner = () => {
       dialogContentRef.current?.scrollTo({ top: 0 });
       return;
     }
+    if (!dateRegex.test(date) || !isWithinPastSixMonths(date)) {
+      setErrorMessage("Date must be in 'dd/mm/yyyy' format, not in the future, and within the past 6 months.");
+      dialogContentRef.current?.scrollTo({ top: 0 });
+      return;
+    }
+    // safety: letters + spaces only
+    if (!/^[A-Za-z\s]+$/.test(meal)) {
+      setErrorMessage('Meal name can only contain letters and spaces.');
+      dialogContentRef.current?.scrollTo({ top: 0 });
+      return;
+    }
     if (meal.length > 100) {
       setErrorMessage('Error: meal name is too long.');
       dialogContentRef.current?.scrollTo({ top: 0 });
       return;
     }
-    if (Number(calories) > 10000) {
-      setErrorMessage('Error: unreasonable calorie amount.');
+
+    // numeric ranges (same limits as goals); allow empty (treated as null later)
+    const toNumOrNull = (v: string) => (v === '' ? null : Number(v));
+    const calN = toNumOrNull(calories);
+    const proN = toNumOrNull(protein);
+    const fatN = toNumOrNull(fat);
+    const carbN= toNumOrNull(carbs);
+
+    const invalid =
+      (calN != null && !isNumberInRange(calN, LIMITS.calories)) ||
+      (proN != null && !isNumberInRange(proN, LIMITS.protein))  ||
+      (fatN != null && !isNumberInRange(fatN, LIMITS.fat))      ||
+      (carbN!= null && !isNumberInRange(carbN, LIMITS.carbs));
+
+    if (invalid) {
+      setErrorMessage(
+        `Numbers out of range. Calories ${LIMITS.calories.min}-${LIMITS.calories.max}. ` +
+        `Protein ${LIMITS.protein.min}-${LIMITS.protein.max}g, ` +
+        `Carbs ${LIMITS.carbs.min}-${LIMITS.carbs.max}g, ` +
+        `Fat ${LIMITS.fat.min}-${LIMITS.fat.max}g.`
+      );
       dialogContentRef.current?.scrollTo({ top: 0 });
       return;
-    }
-    if (Number(protein) > 10000 || Number(carbs) > 10000 || Number(fat) > 10000) {
-      setErrorMessage('Error: unreasonable macro nutrient amount.');
-      dialogContentRef.current?.scrollTo({ top: 0 });
-      return;
-    }
-    if (!dateRegex.test(date)) {
-      setErrorMessage("Error: expected date format is 'dd/mm/yyyy'.");
-      dialogContentRef.current?.scrollTo({ top: 0 });
-      return;
-    }
-    const numericFields = ['calories', 'protein', 'fat', 'carbs'] as const;
-    for (let field of numericFields) {
-      const value = mealData[field];
-      if (value !== '' && parseFloat(value) < 0) {
-        setErrorMessage('Calories, protein, fat, and carbs must be non-negative.');
-        dialogContentRef.current?.scrollTo({ top: 0 });
-        return;
-      }
     }
 
     const newMeal = {
       date,
       meal,
-      calories: calories !== '' ? parseFloat(calories) : null,
-      protein: protein !== '' ? parseFloat(protein) : null,
-      fat: fat !== '' ? parseFloat(fat) : null,
-      carbs: carbs !== '' ? parseFloat(carbs) : null,
+      calories: calN,
+      protein: proN,
+      fat: fatN,
+      carbs: carbN,
     };
 
     Meteor.call('meals.insert', newMeal, (error: Meteor.Error | null) => {
@@ -408,15 +441,87 @@ export const MealPlanner = () => {
           <DialogContent ref={dialogContentRef} className="flex flex-col gap-3 py-2">
             {errorMessage && <div className="text-red-600 text-sm font-medium mb-2">{errorMessage}</div>}
             <TextField label="Date (dd/mm/yyyy) *" value={mealData.date} onChange={e => handleChange('date', e.target.value)} fullWidth />
-            <TextField label="Meal Name *" value={mealData.meal} onChange={e => handleChange('meal', e.target.value)} fullWidth />
-            <TextField label="Calories" type="number" value={mealData.calories} onChange={e => handleChange('calories', e.target.value)} fullWidth
-              inputProps={{ onWheel: (e) => e.currentTarget.blur() }} />
-            <TextField label="Protein (g)" type="number" value={mealData.protein} onChange={e => handleChange('protein', e.target.value)} fullWidth
-              inputProps={{ onWheel: (e) => e.currentTarget.blur() }} />
-            <TextField label="Fat (g)" type="number" value={mealData.fat} onChange={e => handleChange('fat', e.target.value)} fullWidth
-              inputProps={{ onWheel: (e) => e.currentTarget.blur() }} />
-            <TextField label="Carbs (g)" type="number" value={mealData.carbs} onChange={e => handleChange('carbs', e.target.value)} fullWidth
-              inputProps={{ onWheel: (e) => e.currentTarget.blur() }} />
+            <TextField
+              label="Meal Name *"
+              value={mealData.meal}
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(/[^A-Za-z\s]/g, '');
+                setMealData((prev) => ({ ...prev, meal: cleaned }));
+              }}
+              onKeyDown={(e) => {
+                const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab',' '];
+                if (!/^[A-Za-z]$/.test(e.key) && !allowed.includes(e.key)) e.preventDefault();
+              }}
+              fullWidth
+            />
+            <TextField
+              label="Calories"
+              type="text"
+              inputMode="numeric"
+              value={mealData.calories}
+              onChange={(e) => {
+                const digits = onlyDigits(e.target.value);
+                if (digits === '') { setMealData(p => ({ ...p, calories: '' })); return; }
+                const n = clamp(Number(digits), LIMITS.calories);
+                setMealData(p => ({ ...p, calories: String(n) }));
+              }}
+              onKeyDown={(e) => {
+                const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
+                if (!/^\d$/.test(e.key) && !allowed.includes(e.key)) e.preventDefault();
+              }}
+              fullWidth
+            />
+            <TextField
+              label="Protein (g)"
+              type="text"
+              inputMode="numeric"
+              value={mealData.protein}
+              onChange={(e) => {
+                const digits = onlyDigits(e.target.value);
+                if (digits === '') { setMealData(p => ({ ...p, protein: '' })); return; }
+                const n = clamp(Number(digits), LIMITS.protein);
+                setMealData(p => ({ ...p, protein: String(n) }));
+              }}
+              onKeyDown={(e) => {
+                const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
+                if (!/^\d$/.test(e.key) && !allowed.includes(e.key)) e.preventDefault();
+              }}
+              fullWidth
+            />
+            <TextField
+              label="Fat (g)"
+              type="text"
+              inputMode="numeric"
+              value={mealData.fat}
+              onChange={(e) => {
+                const digits = onlyDigits(e.target.value);
+                if (digits === '') { setMealData(p => ({ ...p, fat: '' })); return; }
+                const n = clamp(Number(digits), LIMITS.fat);
+                setMealData(p => ({ ...p, fat: String(n) }));
+              }}
+              onKeyDown={(e) => {
+                const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
+                if (!/^\d$/.test(e.key) && !allowed.includes(e.key)) e.preventDefault();
+              }}
+              fullWidth
+            />
+            <TextField
+              label="Carbs (g)"
+              type="text"
+              inputMode="numeric"
+              value={mealData.carbs}
+              onChange={(e) => {
+                const digits = onlyDigits(e.target.value);
+                if (digits === '') { setMealData(p => ({ ...p, carbs: '' })); return; }
+                const n = clamp(Number(digits), LIMITS.carbs);
+                setMealData(p => ({ ...p, carbs: String(n) }));
+              }}
+              onKeyDown={(e) => {
+                const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
+                if (!/^\d$/.test(e.key) && !allowed.includes(e.key)) e.preventDefault();
+              }}
+              fullWidth
+            />
           </DialogContent>
           <hr className="border-t border-[#e2cfc3] w-full" />
           <DialogActions sx={{ justifyContent: 'space-between' }} className="flex justify-between px-6 pb-4">
