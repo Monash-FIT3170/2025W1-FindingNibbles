@@ -864,7 +864,7 @@ export const Map = () => {
           )}
 
           <div
-            className="map-controls absolute top-[70px] left-[1%] bg-white rounded-lg shadow-lg z-[1500] 
+            className="map-controls absolute top-[70px] left-[1%] bg-white rounded-lg shadow-lg z-[45] 
             w-[300px] max-[768px]:scale-[0.8] max-[768px]:origin-top-left max-[480px]:scale-[0.6] 
             max-[480px]:origin-top-left"
           >
@@ -891,7 +891,7 @@ export const Map = () => {
 
           <div
             className="map-controls absolute top-[150px] left-[1%] bg-white p-3 rounded-lg shadow-lg 
-          z-[900] w-[200px] max-[768px]:scale-[0.8] max-[768px]:origin-top-left max-[480px]:scale-[0.6] 
+          z-[45] w-[200px] max-[768px]:scale-[0.8] max-[768px]:origin-top-left max-[480px]:scale-[0.6] 
           max-[480px]:origin-top-left"
           >
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -913,7 +913,7 @@ export const Map = () => {
           {userLocation && (
             <>
               {isMapLoading && (
-                <div className="map-controls absolute top-[1%] right-[1%] flex items-center bg-white p-3 rounded-lg shadow-md z-[1001]">
+                <div className="map-controls absolute top-[1%] right-[1%] flex items-center bg-white p-3 rounded-lg shadow-md z-[45]">
                   <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mr-2"></div>
                   <span className="text-sm font-medium">
                     Updating restaurants...
@@ -960,7 +960,7 @@ export const Map = () => {
             </div>
           </div>
           <div
-            className="map-buttons absolute bottom-[1%] left-[1%] z-[2000] flex 
+            className="map-buttons absolute bottom-[1%] left-[1%] z-[3000] flex 
             flex-col gap-2 max-[768px]:scale-[0.8] max-[768px]:origin-bottom-left 
             max-[480px]:scale-[0.6] max-[480px]:origin-bottom-left"
           >
@@ -988,7 +988,7 @@ export const Map = () => {
           {isSidebarOpen && (
             <div
               className="map-sidebar absolute top-[4rem] right-0 w-[300px] h-[calc(100vh-4rem)]
-              bg-white overflow-y-auto z-[999] p-4 shadow-md max-[768px]:w-[200px] max-[768px]:scale-[0.8] 
+              bg-white overflow-y-auto z-[3400] p-4 shadow-md max-[768px]:w-[200px] max-[768px]:scale-[0.8] 
               max-[768px]:origin-top-right max-[480px]:w-[150px] max-[480px]:scale-[0.6] max-[480px]:origin-top-right"
             >
               <div className="mb-4">
