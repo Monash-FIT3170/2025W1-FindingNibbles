@@ -49,14 +49,14 @@ export const TravelPlanning = () => {
   };
 
   // Function to check if image exists
-  const checkImageExists = async (imagePath: string): Promise<boolean> => {
-    try {
-      const response = await fetch(imagePath, { method: "HEAD" });
-      return response.ok;
-    } catch {
-      return false;
-    }
-  };
+  // const checkImageExists = async (imagePath: string): Promise<boolean> => {
+  //   try {
+  //     const response = await fetch(imagePath, { method: "HEAD" });
+  //     return response.ok;
+  //   } catch {
+  //     return false;
+  //   }
+  // };
 
   useEffect(() => {
     let subscription: Meteor.SubscriptionHandle | null = null;
