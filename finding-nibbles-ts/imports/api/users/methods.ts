@@ -1,5 +1,18 @@
 import { Meteor } from 'meteor/meteor';
 
+const LIMITS = {
+  calories: { min: 0, max: 10000 },
+  protein:  { min: 0, max: 1000 },
+  fat:      { min: 0, max: 1000 },
+  carbs:    { min: 0, max: 1000 },
+};
+
+function assertInRange(name: string, value: number, { min, max }: { min: number; max: number }) {
+  if (!Number.isFinite(value) || value < min || value > max) {
+    throw new Meteor.Error('invalid-goal', `${name} must be between ${min} and ${max}.`);
+  }
+}
+
 Meteor.methods({
   async 'users.updateProfile'({ name, email, preferences }: { name: string; email: string; preferences: string[] }) {
     if (!this.userId) {
@@ -65,9 +78,7 @@ Meteor.methods({
       throw new Meteor.Error('not-authorized', 'User must be logged in to update calorie goal');
     }
 
-    if (calorieGoal < 0) {
-      throw new Meteor.Error('invalid-goal', 'Calorie goal must be a positive number');
-    }
+    assertInRange('Calories', calorieGoal, LIMITS.calories);
 
     try {
       await Meteor.users.updateAsync(this.userId, {
@@ -88,19 +99,17 @@ Meteor.methods({
 
     const { protein, fat, carbs } = macroGoals;
 
-    if (protein < 0 || fat < 0 || carbs < 0) {
-      throw new Meteor.Error('invalid-goal', 'Macro goals must be non-negative');
-    }
+    assertInRange('Protein', protein, LIMITS.protein);
+    assertInRange('Fat', fat, LIMITS.fat);
+    assertInRange('Carbs', carbs, LIMITS.carbs);
 
     try {
       await Meteor.users.updateAsync(this.userId, {
-        $set: {
-          'profile.macroGoals': macroGoals,
-        },
+        $set: { 'profile.macroGoals': macroGoals },
       });
     } catch (error: any) {
       console.error('Update macro goals failed:', error);
       throw new Meteor.Error('update-failed', error.message);
     }
-  }
+  },
 });
