@@ -40,6 +40,12 @@ Meteor.methods({
             tripStartDate
         );
         if (!this.userId) throw new Meteor.Error("Not authorized");
+        // Server-side validation: starting and destination, if both provided, must differ
+        const startTrim = (startingPoint || "").trim();
+        const destTrim = (destination || "").trim();
+        if (startTrim && destTrim && startTrim === destTrim) {
+            throw new Meteor.Error("invalid-plan", "Starting point and destination must be different");
+        }
         return await Plans.insertAsync({
             userId: this.userId,
             title,
@@ -85,6 +91,12 @@ Meteor.methods({
             userId: this.userId,
         });
         if (!plan) throw new Meteor.Error("Plan not found or not authorized");
+        // Server-side validation: starting and destination must differ
+        const startTrim = (startingPoint || "").trim();
+        const destTrim = (destination || "").trim();
+        if (startTrim && destTrim && startTrim === destTrim) {
+            throw new Meteor.Error("invalid-plan", "Starting point and destination must be different");
+        }
         return await Plans.updateAsync(
             { _id: planId, userId: this.userId },
             {
