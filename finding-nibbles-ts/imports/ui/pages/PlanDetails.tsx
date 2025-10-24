@@ -78,16 +78,24 @@ function rotateKey(): void {
   if (!plan) return <div>Plan not found.</div>;
 
   const handleSave = () => {
+    // Client-side validation: starting and destination should be different (non-empty)
+    const startTrim = (startSearchValue || "").trim();
+    const destTrim = (destSearchValue || "").trim();
+    if (startTrim && destTrim && startTrim === destTrim) {
+      alert("Starting point and destination must be different.");
+      return;
+    }
+
     Meteor.call(
       "plans.updatePlan",
       planId,
       title,
       restaurants,
-      startSearchValue,
-      destSearchValue,
+      startTrim || undefined,
+      destTrim || undefined,
       tripStartDate ? new Date(tripStartDate) : undefined,
       (err: any) => {
-        if (err) alert("Failed to save: " + err.reason);
+        if (err) alert("Failed to save: " + (err.reason || err.message || err));
         else setIsEditing(false);
       }
     );
