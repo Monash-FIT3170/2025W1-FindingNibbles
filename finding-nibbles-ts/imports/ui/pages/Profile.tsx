@@ -1,19 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Meteor } from 'meteor/meteor';
 import type {CustomUser} from '../types/User';
-import { useNavigate } from 'react-router-dom';
+// removed unused useNavigate import
 import AddPreferenceModal from '../components/profile/AddPreferenceModal';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Accounts } from 'meteor/accounts-base';
 
 export const Profile = () => {
   const user = useTracker(() => Meteor.user() as CustomUser);
-  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [name, setName] = useState(user?.profile?.name || '');
   const [email, setEmail] = useState(user?.emails?.[0]?.address || '');
-  const [password, setPassword] = useState('');
+  // removed unused password state
   const [preferences, setPreferences] = useState<string[]>(user?.profile?.preferences || []);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -111,14 +110,24 @@ export const Profile = () => {
   const handleSave = () => {
     setLoading(true);
     setMessage('');
-    
+    // Minimal client-side validation: show a simple message when email is invalid.
+    const emailTrim = (email || '').trim();
+    // Simple check: require a valid email that ends with .com
+    const emailRegex = /^[\w.+\-]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*\.com$/i;
+    if (emailTrim && !emailRegex.test(emailTrim)) {
+      setLoading(false);
+      setMessage('Email is not valid');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
     Meteor.call(
       'users.updateProfile',
-      { name, email, preferences },
+      { name, email: emailTrim, preferences },
       (err: Meteor.Error | undefined) => {
         setLoading(false);
         if (err) {
-          setMessage(`Failed to save profile: ${err.reason}`);
+          setMessage(`Failed to save profile: ${err.reason || err.message}`);
         } else {
           setMessage('Profile updated successfully!');
           setTimeout(() => setMessage(''), 3000);

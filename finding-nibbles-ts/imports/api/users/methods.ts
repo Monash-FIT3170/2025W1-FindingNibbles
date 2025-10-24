@@ -14,7 +14,7 @@ function assertInRange(name: string, value: number, { min, max }: { min: number;
 }
 
 Meteor.methods({
-  async 'users.updateProfile'({ name, email, preferences }: { name: string; email: string; preferences: string[] }) {
+  async 'users.updateProfile'({ name, preferences }: { name: string; preferences: string[] }) {
     if (!this.userId) {
       throw new Meteor.Error('not-authorized', 'User must be logged in to update profile');
     }
@@ -39,7 +39,7 @@ Meteor.methods({
     }
 
     try {
-      const { name, type, size, data } = fileData;
+  const { name: _name, type, size, data } = fileData;
       
       if (!data) {
         throw new Meteor.Error('no-file', 'No file data provided');
