@@ -93,7 +93,7 @@ The following sections are new compared to the old handover documentation:
 ### Setup
 ```bash
 git clone https://github.com/Monash-FIT3170/2025W1-FindingNibbles
-cd 2025W1-FindingNibbles
+cd 2025W1-FindingNibbles/finding-nibbles-ts
 meteor npm install
 
 ### Run
